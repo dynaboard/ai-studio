@@ -22,6 +22,7 @@
     "postcss": "^8.4.31",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-textarea-autosize": "^8.5.3",
     "signia": "^0.1.4",
     "signia-react": "^0.1.4",
     "suspend-react": "^0.1.3",

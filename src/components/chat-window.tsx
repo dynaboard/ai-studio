@@ -4,9 +4,20 @@ import { Input } from '@/components/ui/input'
 import { SendHorizonal } from 'lucide-react'
 import React from 'react'
 import { useValue } from 'signia-react'
+import Textarea from 'react-textarea-autosize'
+import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 
 export function ChatWindow() {
   const assistantManager = useAssistantManager()
+  const { formRef, onKeyDown } = useEnterSubmit()
+
+  const inputRef = React.useRef<HTMLTextAreaElement>(null)
+
+  React.useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -46,12 +57,23 @@ export function ChatWindow() {
           )
         })}
       </div>
-      <div
-        className="p-4 flex items-center
-      "
-      >
-        <form className="relative w-full" onSubmit={handleMessage}>
-          <Input name="message" className="pr-8" disabled={disabled} />
+      <div className="p-4 flex items-center">
+        <form
+          className="relative w-full"
+          onSubmit={handleMessage}
+          ref={formRef}
+        >
+          <Textarea
+            name="message"
+            ref={inputRef}
+            className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            tabIndex={0}
+            onKeyDown={onKeyDown}
+            rows={1}
+            placeholder="Say something..."
+            spellCheck={false}
+            disabled={disabled}
+          />
           <Button
             variant="ghost"
             className="absolute right-0 top-0 hover:bg-transparent group"
