@@ -49,9 +49,8 @@ export default async function Home({
             </div>
           </div>
 
-          <div className="h-full overflow-hidden grid grid-cols-2">
+          <div className="h-full overflow-hidden container">
             <ChatWindow />
-            <div>Placeholder</div>
           </div>
         </div>
       </div>

@@ -31,7 +31,7 @@ export function ChatWindow() {
   ]);
 
   return (
-    <div className="grid h-full overflow-hidden grid-rows-[1fr,_min-content] border-r">
+    <div className="grid h-full overflow-hidden grid-rows-[1fr,_min-content]">
       <div className="w-full h-full overflow-auto p-4">
         {messages.map((message) => {
           return (
