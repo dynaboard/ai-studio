@@ -1,9 +1,8 @@
-import { Assistant, Message, Run, Thread, openai } from '@/lib/openai'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 
 import { getAllActions } from '@/actions'
-import { Action } from '@/actions/base'
+import { Assistant, Message, openai, Run, Thread } from '@/lib/openai'
 
 type AssistantState = {
   assistant: Assistant | null

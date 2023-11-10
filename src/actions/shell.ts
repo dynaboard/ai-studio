@@ -1,7 +1,7 @@
-import { Action } from '@/actions/base'
-import { z } from 'zod'
-import { Command } from '@tauri-apps/api/shell'
 import { invoke } from '@tauri-apps/api/tauri'
+import { z } from 'zod'
+
+import { Action } from '@/actions/base'
 
 const Input = z.object({
   bashScript: z.string(),
