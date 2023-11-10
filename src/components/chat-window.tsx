@@ -49,20 +49,29 @@ export function ChatWindow() {
             </span>
           </div>
         ) : (
-          messages.map((message) => {
-            return (
-              <div key={message.id} className="mb-4 flex flex-col">
-                <span className="text-xs text-muted-foreground">
-                  {message.role === 'user' ? 'You' : 'Assistant'}
-                </span>
-                <span className="text-sm">
-                  {message.content[0].type === 'text'
-                    ? message.content[0].text.value
-                    : 'Unsupported content'}
-                </span>
-              </div>
-            )
-          })
+          <>
+            {messages.map((message) => {
+              return (
+                <>
+                  <div key={message.id} className="mb-4 flex flex-col">
+                    <span className="text-xs text-muted-foreground">
+                      {message.role === 'user' ? 'You' : 'Assistant'}
+                    </span>
+                    <span className="text-sm">
+                      {message.content[0].type === 'text'
+                        ? message.content[0].text.value
+                        : 'Unsupported content'}
+                    </span>
+                  </div>
+                </>
+              )
+            })}
+            {assistantManager.loadingText !== '' && (
+              <span className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                {assistantManager.loadingText}
+              </span>
+            )}
+          </>
         )}
       </div>
       <div className="flex items-center p-4">

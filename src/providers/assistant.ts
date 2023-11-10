@@ -12,6 +12,7 @@ type AssistantState = {
   messages: Message[]
   runs: Run[]
   threads: { thread: Thread; messages: Message[]; runs: Run[] }[]
+  loadingText: string
 }
 
 export class AssistantManager {
@@ -23,6 +24,7 @@ export class AssistantManager {
     messages: [],
     runs: [],
     threads: [],
+    loadingText: '',
   })
 
   private timer: ReturnType<typeof setTimeout> | null = null
@@ -41,6 +43,17 @@ export class AssistantManager {
 
   get state() {
     return this._state.value
+  }
+
+  get loadingText() {
+    return this.state.loadingText
+  }
+
+  private updateLoadingText(text: string) {
+    this._state.update((state) => ({
+      ...state,
+      loadingText: text,
+    }))
   }
 
   async sendMessage(message: string) {
@@ -198,6 +211,7 @@ export class AssistantManager {
                       action.toJSON(),
                     )
                     console.log('Assistant discovering actions:', actions)
+                    this.updateLoadingText('Discovering actions...')
                     return {
                       callID: call.id,
                       output: this.actions.map((action) => action.toJSON()),
@@ -209,6 +223,7 @@ export class AssistantManager {
                     console.log('Assistant wants parameters for action:', {
                       actionID,
                     })
+                    this.updateLoadingText('Requesting parameters...')
                     const params = args.parameters
                     const action = this.actions.find(
                       (action) => action.id === actionID,
@@ -233,6 +248,7 @@ export class AssistantManager {
                     const args = JSON.parse(call.function.arguments)
                     const actionID = args.actionID
                     console.log('Assistant wants to call an action:', actionID)
+                    this.updateLoadingText('Calling action...')
                     const params = args.parameters
                     const action = this.actions.find(
                       (action) => action.id === actionID,
@@ -263,6 +279,7 @@ export class AssistantManager {
                     }
                   }
                   default:
+                    this.updateLoadingText('')
                     return {
                       callID: call.id,
                       output: {
@@ -314,6 +331,9 @@ export class AssistantManager {
         currentRun: null,
       }))
     }
+
+    // Clear loading text when done
+    this.updateLoadingText('')
   }
 
   @computed
