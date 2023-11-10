@@ -11,6 +11,7 @@ function App() {
   }, [])
 
   const coordinatorAssistant = assistants.data.find(
+    // Orchestrator
     (a) => a.id === 'asst_9ZKh8kVuuyioPacLMlp3lErh',
   )
 

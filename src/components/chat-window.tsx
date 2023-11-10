@@ -42,20 +42,28 @@ export function ChatWindow() {
   return (
     <div className="grid h-full grid-rows-[1fr,_min-content] overflow-hidden">
       <div className="h-full w-full overflow-auto p-4">
-        {messages.map((message) => {
-          return (
-            <div key={message.id} className="mb-4 flex flex-col">
-              <span className="text-xs text-muted-foreground">
-                {message.role === 'user' ? 'You' : 'Assistant'}
-              </span>
-              <span className="text-sm">
-                {message.content[0].type === 'text'
-                  ? message.content[0].text.value
-                  : 'Unsupported content'}
-              </span>
-            </div>
-          )
-        })}
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center">
+            <span className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              Say something to get started
+            </span>
+          </div>
+        ) : (
+          messages.map((message) => {
+            return (
+              <div key={message.id} className="mb-4 flex flex-col">
+                <span className="text-xs text-muted-foreground">
+                  {message.role === 'user' ? 'You' : 'Assistant'}
+                </span>
+                <span className="text-sm">
+                  {message.content[0].type === 'text'
+                    ? message.content[0].text.value
+                    : 'Unsupported content'}
+                </span>
+              </div>
+            )
+          })
+        )}
       </div>
       <div className="flex items-center p-4">
         <form
