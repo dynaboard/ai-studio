@@ -1,4 +1,4 @@
-import { ZodType, z } from 'zod'
+import { z, ZodType } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 
 export abstract class Action<

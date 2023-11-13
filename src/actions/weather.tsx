@@ -1,6 +1,7 @@
-import { Action } from '@/actions/base'
-import { z } from 'zod'
 import { dialog } from '@tauri-apps/api'
+import { z } from 'zod'
+
+import { Action } from '@/actions/base'
 
 const Input = z.object({
   location: z.string(),
