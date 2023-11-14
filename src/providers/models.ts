@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 
-type Model = {
+export type Model = {
   name: string
   description: string
   parameters: string

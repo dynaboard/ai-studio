@@ -6,8 +6,11 @@ import { useValue } from 'signia-react'
 import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { useAssistantManager } from '@/providers/assistant'
+import { Model } from '@/providers/models'
 
-export function ChatWindow() {
+import { Header } from './header'
+
+export function ChatWindow({ models }: { models: Model[] }) {
   const assistantManager = useAssistantManager()
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -40,7 +43,8 @@ export function ChatWindow() {
   ])
 
   return (
-    <div className="grid h-full grid-rows-[1fr,_min-content] overflow-hidden">
+    <div className="grid h-full grid-rows-[_min-content,1fr,_min-content] overflow-hidden">
+      <Header models={models} />
       <div className="h-full w-full overflow-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center">

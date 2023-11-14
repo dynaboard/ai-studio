@@ -17,41 +17,45 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-
-const groups = [
-  {
-    label: 'Open Source',
-    models: [
-      {
-        label: 'Mistral-7B-v0.1',
-        value: 'Mistral-7B-v0.1',
-      },
-    ],
-  },
-  {
-    label: 'OpenAI',
-    models: [
-      {
-        label: 'gpt-3.5-turbo-1106',
-        value: 'gpt-3.5-turbo-1106',
-      },
-      {
-        label: 'gpt-3.5-turbo',
-        value: 'gpt-3.5-turbo',
-      },
-    ],
-  },
-]
+import { Model } from '@/providers/models'
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
 
 interface ModelSwitcherProps extends PopoverTriggerProps {}
 
-export function ModelSwitcher({ className }: ModelSwitcherProps) {
+export function ModelSwitcher({
+  models,
+  className,
+}: ModelSwitcherProps & { models: Model[] }) {
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
 
-  // TODO: hoist this state to a global provider
+  const groups = [
+    {
+      label: 'Open Source',
+      models: [
+        ...models.map((model) => ({
+          label: model.name,
+          value: model.name,
+        })),
+      ],
+    },
+    // TODO: add openai call impl
+    {
+      label: 'OpenAI',
+      models: [
+        {
+          label: 'gpt-3.5-turbo-1106',
+          value: 'gpt-3.5-turbo-1106',
+        },
+        {
+          label: 'gpt-3.5-turbo',
+          value: 'gpt-3.5-turbo',
+        },
+      ],
+    },
+  ]
+
   const [selectedModel, setSelectedModel] = React.useState(groups[0].models[0])
 
   return (

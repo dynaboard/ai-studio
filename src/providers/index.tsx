@@ -35,7 +35,9 @@ export function ModelManagerProvider({
   }, [])
 
   useEffect(() => {
-    manager.destroy()
+    return () => {
+      manager.destroy()
+    }
   }, [manager])
 
   return (

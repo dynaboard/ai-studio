@@ -7,8 +7,6 @@ import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { StatusBar } from '@/components/status-bar'
 import { useModelManager } from '@/providers/models'
 
-import { Header } from './components/header'
-
 function App() {
   const downloadManager = useModelManager()
 
@@ -20,15 +18,13 @@ function App() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-<<<<<<< HEAD
       <div className="h-screen w-screen overflow-hidden">
-        <div className="grid h-full w-full grid-rows-[1fr,_24px]">
-=======
-      <div className="relative flex h-screen min-h-screen w-screen flex-col">
-        <AssistantManagerProvider assistant={coordinatorAssistant}>
->>>>>>> 8cd2e0a (sticky top)
-          <Header />
-          {models.length > 0 ? <ChatWindow /> : <ModelDownloader />}
+        <div className="grid h-screen min-h-screen w-full grid-rows-[1fr,_24px]">
+          {models.length > 0 ? (
+            <ChatWindow models={models} />
+          ) : (
+            <ModelDownloader />
+          )}
 
           <StatusBar />
         </div>
