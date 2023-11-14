@@ -7,6 +7,8 @@ import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { StatusBar } from '@/components/status-bar'
 import { useModelManager } from '@/providers/models'
 
+import { Header } from './components/header'
+
 function App() {
   const downloadManager = useModelManager()
 
@@ -20,6 +22,7 @@ function App() {
     <Suspense fallback={<div>Loading...</div>}>
       <div className="h-screen w-screen overflow-hidden">
         <div className="grid h-full w-full grid-rows-[1fr,_24px]">
+          <Header />
           {models.length > 0 ? <ChatWindow /> : <ModelDownloader />}
 
           <StatusBar />

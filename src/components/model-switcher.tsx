@@ -1,0 +1,107 @@
+import { Check, ChevronsUpDown } from 'lucide-react'
+import * as React from 'react'
+
+import { Button } from '@/components/ui/button'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Dialog } from '@/components/ui/dialog'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
+
+const groups = [
+  {
+    label: 'Open Source',
+    models: [
+      {
+        label: 'Mistral-7B-v0.1',
+        value: 'Mistral-7B-v0.1',
+      },
+    ],
+  },
+  {
+    label: 'OpenAI',
+    models: [
+      {
+        label: 'gpt-3.5-turbo-1106',
+        value: 'gpt-3.5-turbo-1106',
+      },
+      {
+        label: 'gpt-3.5-turbo',
+        value: 'gpt-3.5-turbo',
+      },
+    ],
+  },
+]
+
+type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
+
+interface ModelSwitcherProps extends PopoverTriggerProps {}
+
+export function ModelSwitcher({ className }: ModelSwitcherProps) {
+  const [showDialog, setShowDialog] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
+
+  // TODO: hoist this state to a global provider
+  const [selectedModel, setSelectedModel] = React.useState(groups[0].models[0])
+
+  return (
+    <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-label="Select a model"
+            className={cn('w-[240px] justify-between', className)}
+          >
+            <p className="truncate">{selectedModel.label}</p>
+            <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[240px] p-0">
+          <Command>
+            <CommandList>
+              <CommandInput placeholder="Search model..." />
+              <CommandEmpty>No model found.</CommandEmpty>
+              {groups.map((group) => (
+                <CommandGroup key={group.label} heading={group.label}>
+                  {group.models.map((model) => (
+                    <CommandItem
+                      key={model.value}
+                      onSelect={() => {
+                        setSelectedModel(model)
+                        setOpen(false)
+                      }}
+                      className="text-sm"
+                    >
+                      {model.label}
+                      <Check
+                        className={cn(
+                          'ml-auto h-4 w-4',
+                          model.value === selectedModel.value
+                            ? 'opacity-100'
+                            : 'opacity-0',
+                        )}
+                      />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </Dialog>
+  )
+}
