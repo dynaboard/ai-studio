@@ -20,8 +20,13 @@ function App() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
+<<<<<<< HEAD
       <div className="h-screen w-screen overflow-hidden">
         <div className="grid h-full w-full grid-rows-[1fr,_24px]">
+=======
+      <div className="relative flex h-screen min-h-screen w-screen flex-col">
+        <AssistantManagerProvider assistant={coordinatorAssistant}>
+>>>>>>> 8cd2e0a (sticky top)
           <Header />
           {models.length > 0 ? <ChatWindow /> : <ModelDownloader />}
 
