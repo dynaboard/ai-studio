@@ -30,33 +30,36 @@ export function ModelSwitcher({
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
 
-  const groups = [
-    {
-      label: 'Open Source',
-      models: [
-        ...models.map((model) => ({
-          label: model.name,
-          value: model.name,
-        })),
-      ],
-    },
-    // TODO: add openai call impl
-    {
-      label: 'OpenAI',
-      models: [
-        {
-          label: 'gpt-3.5-turbo-1106',
-          value: 'gpt-3.5-turbo-1106',
-        },
-        {
-          label: 'gpt-3.5-turbo',
-          value: 'gpt-3.5-turbo',
-        },
-      ],
-    },
-  ]
-
-  const [selectedModel, setSelectedModel] = React.useState(groups[0].models[0])
+  const selectOptions = React.useMemo(() => {
+    return [
+      {
+        label: 'Open Source',
+        models: [
+          ...models.map((model) => ({
+            label: model.name,
+            value: model.name,
+          })),
+        ],
+      },
+      // TODO: add openai call impl
+      // {
+      //   label: 'OpenAI',
+      //   models: [
+      //     {
+      //       label: 'gpt-3.5-turbo-1106',
+      //       value: 'gpt-3.5-turbo-1106',
+      //     },
+      //     {
+      //       label: 'gpt-3.5-turbo',
+      //       value: 'gpt-3.5-turbo',
+      //     },
+      //   ],
+      // },
+    ]
+  }, [models])
+  const [selectedModel, setSelectedModel] = React.useState(
+    selectOptions[0].models[0].value,
+  )
 
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
@@ -69,7 +72,7 @@ export function ModelSwitcher({
             aria-label="Select a model"
             className={cn('w-[240px] justify-between', className)}
           >
-            <p className="truncate">{selectedModel.label}</p>
+            <p className="truncate">{selectedModel}</p>
             <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -78,13 +81,13 @@ export function ModelSwitcher({
             <CommandList>
               <CommandInput placeholder="Search model..." />
               <CommandEmpty>No model found.</CommandEmpty>
-              {groups.map((group) => (
+              {selectOptions.map((group) => (
                 <CommandGroup key={group.label} heading={group.label}>
                   {group.models.map((model) => (
                     <CommandItem
                       key={model.value}
                       onSelect={() => {
-                        setSelectedModel(model)
+                        setSelectedModel(model.value)
                         setOpen(false)
                       }}
                       className="text-sm"
@@ -93,7 +96,7 @@ export function ModelSwitcher({
                       <Check
                         className={cn(
                           'ml-auto h-4 w-4',
-                          model.value === selectedModel.value
+                          model.value === selectedModel
                             ? 'opacity-100'
                             : 'opacity-0',
                         )}
