@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
+import { ElectronModelManager } from './managers/models'
 import { update } from './update'
 
 // The built directory structure
@@ -37,12 +38,18 @@ if (!app.requestSingleInstanceLock()) {
 // process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true'
 
 let win: BrowserWindow | null = null
+let modelManager: ElectronModelManager | null = null
+
 // Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
 const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
 async function createWindow() {
+  if (modelManager) {
+    modelManager.close()
+  }
+
   win = new BrowserWindow({
     title: 'Main window',
     width: 1200,
@@ -53,10 +60,12 @@ async function createWindow() {
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // Consider using contextBridge.exposeInMainWorld
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   })
+
+  modelManager = new ElectronModelManager(win)
 
   if (url) {
     // electron-vite-vue#298
@@ -80,13 +89,18 @@ async function createWindow() {
 
   // Apply electron-updater
   update(win)
+
+  modelManager.addClientEventHandlers()
 }
 
 app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
   win = null
-  if (process.platform !== 'darwin') app.quit()
+  modelManager?.close()
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
 })
 
 app.on('second-instance', () => {

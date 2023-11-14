@@ -1,4 +1,3 @@
-import { dialog } from '@tauri-apps/api'
 import { z } from 'zod'
 
 import { Action } from '@/actions/base'
@@ -25,7 +24,6 @@ export class WeatherAction extends Action<Input, Output> {
   output = Output
 
   async getParameters() {
-    await dialog.ask('What location?')
     let location = 'Charleston, SC'
     return {
       location,

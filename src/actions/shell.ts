@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api/tauri'
 import { z } from 'zod'
 
 import { Action } from '@/actions/base'
@@ -32,9 +31,7 @@ export class ShellScriptAction extends Action<Input, Output> {
     console.log('Running bash script', args)
 
     try {
-      const result = await invoke('run_shell_script', {
-        script: args.bashScript,
-      })
+      const result = 'bogus result, actually replace with logic here'
       console.log('shell result', result)
       return {
         result,
