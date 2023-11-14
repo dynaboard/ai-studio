@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { Assistant } from '@/lib/openai'
 import { AssistantContext, AssistantManager } from '@/providers/assistant'
+import { ModelManager, ModelManagerContext } from '@/providers/models'
 
 export function AssistantManagerProvider({
   children,
@@ -21,5 +22,25 @@ export function AssistantManagerProvider({
     <AssistantContext.Provider value={manager}>
       {children}
     </AssistantContext.Provider>
+  )
+}
+
+export function ModelManagerProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const manager = useMemo(() => {
+    return new ModelManager()
+  }, [])
+
+  useEffect(() => {
+    manager.destroy()
+  }, [manager])
+
+  return (
+    <ModelManagerContext.Provider value={manager}>
+      {children}
+    </ModelManagerContext.Provider>
   )
 }

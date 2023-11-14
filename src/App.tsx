@@ -2,25 +2,30 @@ import { Suspense } from 'react'
 import { suspend } from 'suspend-react'
 
 import { ChatWindow } from '@/components/chat-window'
-import { openai } from '@/lib/openai'
-import { AssistantManagerProvider } from '@/providers'
+import { DownloadStatus } from '@/components/downloads/download-status'
+import { ModelDownloader } from '@/components/downloads/model-downloader'
+import { StatusBar } from '@/components/status-bar'
+import { useModelManager } from '@/providers/models'
 
 function App() {
-  const assistants = suspend(async () => {
-    return openai.beta.assistants.list()
+  const downloadManager = useModelManager()
+
+  const models = suspend(async () => {
+    return await downloadManager.loadAvailableModels()
   }, [])
 
-  const coordinatorAssistant = assistants.data.find(
-    // Orchestrator
-    (a) => a.id === 'asst_9ZKh8kVuuyioPacLMlp3lErh',
-  )
+  console.log('Local models & files', models)
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="h-screen w-screen">
-        <AssistantManagerProvider assistant={coordinatorAssistant}>
-          <ChatWindow />
-        </AssistantManagerProvider>
+      <div className="h-screen w-screen overflow-hidden">
+        <div className="grid h-full w-full grid-rows-[1fr,_24px]">
+          {models.length > 0 ? <ChatWindow /> : <ModelDownloader />}
+
+          <StatusBar />
+        </div>
+
+        <DownloadStatus />
       </div>
     </Suspense>
   )
