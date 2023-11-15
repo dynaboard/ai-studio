@@ -19,7 +19,7 @@ function App() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="h-screen w-screen overflow-hidden">
-        <div className="grid h-screen min-h-screen w-full grid-rows-[1fr,_24px]">
+        <div className="grid h-full w-full grid-rows-[minmax(0,_1fr),_24px]">
           {models.length > 0 ? (
             <ChatWindow models={models} />
           ) : (

@@ -26,12 +26,16 @@ export class ModelManager {
   cleanupHandlers: (() => void)[] = []
 
   onDownloadProgress = (
-    event: any,
+    _event: any,
     progress: { filename: string; recievedBytes: number; totalBytes: number },
   ) => {
-    console.log('download-progress', progress)
-
     this._state.update((state) => {
+      let currentDownload = state.downloads.get(progress.filename)
+      let showStatus = state.isStatusVisible
+      if (!currentDownload && !showStatus) {
+        showStatus = true
+      }
+
       const downloads = new Map(state.downloads)
       downloads.set(progress.filename, {
         ...progress,
@@ -39,13 +43,14 @@ export class ModelManager {
       })
       return {
         ...state,
+        isStatusVisible: showStatus,
         downloads,
       }
     })
   }
 
   onDownloadComplete = (
-    event: any,
+    _event: any,
     progress: {
       filename: string
       recievedBytes: number
@@ -53,7 +58,6 @@ export class ModelManager {
       state: 'completed' | 'cancelled' | 'interrupted'
     },
   ) => {
-    console.log('download-complete', event, progress)
     this._state.update((state) => {
       const downloads = new Map(state.downloads)
       downloads.delete(progress.filename)
