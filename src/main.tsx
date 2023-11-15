@@ -2,15 +2,15 @@ import './globals.css'
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { RouterProvider } from 'react-router-dom'
 
 import { ModelManagerProvider } from '@/providers'
-
-import App from './App'
+import { router } from '@/router'
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ModelManagerProvider>
-      <App />
+      <RouterProvider router={router} />
     </ModelManagerProvider>
   </React.StrictMode>,
 )

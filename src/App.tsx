@@ -1,37 +1,33 @@
-import { Suspense } from 'react'
+import { Outlet } from 'react-router-dom'
 import { suspend } from 'suspend-react'
 
-import { ChatWindow } from '@/components/chat-window'
 import { DownloadStatus } from '@/components/downloads/download-status'
-import { ModelDownloader } from '@/components/downloads/model-downloader'
+import { Sidebar } from '@/components/sidebar'
 import { StatusBar } from '@/components/status-bar'
 import { useModelManager } from '@/providers/models/provider'
 
-function App() {
+export function App() {
   const modelManager = useModelManager()
 
-  const models = suspend(async () => {
+  suspend(async () => {
     return await modelManager.loadAvailableModels()
   }, [])
 
-  console.log('Local models & files', models)
-
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className="h-screen w-screen overflow-hidden">
-        <div className="grid h-full w-full grid-rows-[minmax(0,_1fr),_24px]">
-          {models.length > 0 ? (
-            <ChatWindow models={models} />
-          ) : (
-            <ModelDownloader />
-          )}
-
-          <StatusBar />
+    <div className="h-screen w-screen overflow-hidden">
+      <div className="grid h-full w-full grid-rows-[minmax(0,_1fr),_24px]">
+        <div className="flex transition-all">
+          <Sidebar />
+          <div className="flex-1">
+            <Outlet />
+          </div>
         </div>
+
+        <StatusBar />
 
         <DownloadStatus />
       </div>
-    </Suspense>
+    </div>
   )
 }
 

@@ -8,4 +8,5 @@ export enum ModelChannel {
   PauseDownload = 'models:pauseDownload',
   CancelDownload = 'models:cancelDownload',
   GetFilePath = 'models:getFilePath',
+  DeleteModelFile = 'models:deleteModelFile',
 }

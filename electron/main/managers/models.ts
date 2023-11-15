@@ -5,7 +5,7 @@ import {
   type Event,
   ipcMain,
 } from 'electron'
-import { access, constants } from 'fs'
+import { access, constants, unlink } from 'fs/promises'
 
 import { ModelChannel, ModelEvent } from '../../preload/events'
 
@@ -55,6 +55,12 @@ export class ElectronModelManager {
     this.downloads.set(downloadItem.getFilename(), downloadItem)
   }
 
+  async deleteModelFile(filename: string) {
+    const modelPath = `${app.getPath('userData')}/models/${filename}`
+
+    await unlink(modelPath)
+  }
+
   close() {
     this.window.off('will-download', this.onWillDownload)
     this.downloads.forEach((download) => {
@@ -94,11 +100,16 @@ export class ElectronModelManager {
 
     ipcMain.handle(ModelChannel.GetFilePath, async (_, filename) => {
       const path = `${app.getPath('userData')}/models/${filename}`
-      return new Promise((resolve) => {
-        access(path, constants.F_OK, (err) => {
-          !err ? resolve(path) : resolve(null)
-        })
-      })
+      try {
+        await access(path, constants.F_OK)
+        return path
+      } catch {
+        return null
+      }
+    })
+
+    ipcMain.handle(ModelChannel.DeleteModelFile, async (_, filename) => {
+      await this.deleteModelFile(filename)
     })
   }
 }
