@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { useAssistantManager } from '@/providers/assistant'
 
+import { Sidebar } from './sidebar'
+
 export function ChatWindow() {
   const assistantManager = useAssistantManager()
   const { formRef, onKeyDown } = useEnterSubmit()
@@ -40,7 +42,11 @@ export function ChatWindow() {
   ])
 
   return (
-    <div className="grid h-full grid-rows-[1fr,_min-content] overflow-hidden">
+    <div className="flex h-full">
+      <div className="h-full w-[260px] bg-gray-50">
+        <Sidebar />
+      </div>
+    <div className="grid h-full grow grid-rows-[1fr,_min-content] overflow-hidden">
       <div className="h-full w-full overflow-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center">
@@ -101,6 +107,7 @@ export function ChatWindow() {
           </Button>
         </form>
       </div>
+    </div>
     </div>
   )
 }
