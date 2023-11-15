@@ -14,12 +14,12 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ModelFile } from '@/providers/models/model-list'
 import {
   useAvailableModels,
   useDownloads,
   useModelManager,
-} from '@/providers/models/provider'
+} from '@/providers/models/manager'
+import { ModelFile } from '@/providers/models/model-list'
 
 import { Button } from '../ui/button'
 import { Label } from '../ui/label'

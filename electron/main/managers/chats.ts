@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import {
   LLamaChatPromptOptions,
   LlamaChatSession,
@@ -10,6 +10,12 @@ export class ElectronChatManager {
     string,
     LlamaChatSession
   >()
+
+  constructor(readonly window: BrowserWindow) {}
+
+  close() {
+    this.sessions.clear()
+  }
 
   // Assumes one model per session for now.
   private async initializeSession(modelPath: string) {
@@ -33,26 +39,34 @@ export class ElectronChatManager {
     message,
     promptOptions,
     modelPath,
+    onToken,
   }: {
     message: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
+    onToken: (token: string) => void
   }) {
     const session = await this.initializeSession(modelPath)
-    const response = await session.prompt(message, promptOptions)
+    const response = await session.prompt(message, {
+      ...promptOptions,
+      onToken: (chunks) => onToken(session.context.decode(chunks)),
+    })
     return response
   }
 
   addClientEventHandlers() {
     ipcMain.handle(
       'chats:sendMessage',
-      async (_, { message, promptOptions, modelPath }) => {
+      async (_, { message, messageID, promptOptions, modelPath }) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
 
         return this.sendMessage({
           message,
           promptOptions,
           modelPath: fullPath,
+          onToken: (token) => {
+            this.window.webContents.send('token', { token, messageID })
+          },
         })
       },
     )

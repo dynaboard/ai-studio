@@ -2,19 +2,26 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 
 import { cn } from '@/lib/utils'
-import { Message } from '@/providers/chat-window'
+import { useMessage } from '@/providers/history/manager'
 
 import { CodeBlock } from './codeblock'
 import { MemoizedReactMarkdown } from './markdown'
 
-export function ChatMessage({ message }: { message: Message }) {
+export function ChatMessage({ messageID }: { messageID: string }) {
+  const possibleMessage = useMessage(messageID)
+  const message = possibleMessage.value
+
+  if (!message) {
+    return null
+  }
+
   return (
     <div className="mb-4 flex flex-col">
-      <span className="text-xs text-muted-foreground">
+      <span className="text-muted-foreground text-xs">
         {message.role === 'user' ? 'You' : 'Assistant'}
       </span>
       <MemoizedReactMarkdown
-        className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
+        className="markdown prose prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900 max-w-none text-sm"
         remarkPlugins={[remarkGfm, remarkMath]}
         components={{
           p({ children }) {

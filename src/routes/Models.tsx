@@ -2,7 +2,7 @@ import React from 'react'
 
 import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { cn } from '@/lib/utils'
-import { useAvailableModels } from '@/providers/models/provider'
+import { useAvailableModels } from '@/providers/models/manager'
 
 export function ModelsPage() {
   const availableModels = useAvailableModels()

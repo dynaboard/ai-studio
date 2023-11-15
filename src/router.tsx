@@ -1,8 +1,9 @@
 import { Suspense } from 'react'
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, redirect } from 'react-router-dom'
 
 import App from '@/App'
-import { HomePage } from '@/routes/Home'
+import { ChatThread } from '@/routes/chats/ChatThread'
+import { ChatsIndex } from '@/routes/chats/Index'
 import { ModelsPage } from '@/routes/Models'
 
 export const router = createBrowserRouter([
@@ -20,9 +21,16 @@ export const router = createBrowserRouter([
       </Suspense>
     ),
     children: [
+      { index: true, element: <></>, loader: () => redirect('/chats') },
       {
-        index: true,
-        element: <HomePage />,
+        path: '/chats',
+        element: <ChatsIndex />,
+        children: [
+          {
+            path: '/chats/:threadID',
+            element: <ChatThread />,
+          },
+        ],
       },
       {
         path: '/models',

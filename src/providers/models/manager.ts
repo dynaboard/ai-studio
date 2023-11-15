@@ -2,14 +2,9 @@ import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
 
-import { Model, MODELS } from './model-list'
+import { ActiveDownload } from '@/providers/models/types'
 
-export type ActiveDownload = {
-  filename: string
-  receivedBytes: number
-  totalBytes: number
-  status: 'downloading' | 'paused'
-}
+import { Model, MODELS } from './model-list'
 
 type ModelManagerState = {
   isStatusVisible: boolean

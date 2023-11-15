@@ -1,6 +1,6 @@
 import prettyBytes from 'pretty-bytes'
 
-import { useModelManager } from '@/providers/models/provider'
+import { useModelManager } from '@/providers/models/manager'
 import { useSystemUsage } from '@/providers/system-usage'
 
 export function StatusBar() {

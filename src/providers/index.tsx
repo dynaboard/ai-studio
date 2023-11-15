@@ -1,28 +1,63 @@
 import { useEffect, useMemo } from 'react'
 
-import { ChatWindowContext, ChatWindowManager } from '@/providers/chat-window'
-import { ModelManager, ModelManagerContext } from '@/providers/models/provider'
+import { ChatManager, ChatManagerContext } from '@/providers/chat/manager'
+import {
+  HistoryManager,
+  HistoryManagerContext,
+  useHistoryManager,
+} from '@/providers/history/manager'
+import { ModelManager, ModelManagerContext } from '@/providers/models/manager'
 import {
   SystemUsageManager,
   SystemUsageManagerContext,
 } from '@/providers/system-usage'
 
-export function ChatWindowProvider({
+export function ChatManagerProvider({
   children,
   model,
 }: {
   children: React.ReactNode
   model?: string
 }) {
+  const historyManager = useHistoryManager()
+
   const manager = useMemo(() => {
-    return new ChatWindowManager(model)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model])
+    // we dont use the router here because we want the threadID as fast as possible
+    const url = new URL(window.location.href)
+    let threadID: string | undefined = undefined
+    if (url.pathname.startsWith('/chats')) {
+      const splitName = url.pathname.split('/')
+      threadID = splitName[splitName.length - 1]
+    }
+
+    return new ChatManager(historyManager, model, threadID)
+  }, [model, historyManager])
+
+  useEffect(() => {
+    manager.initialize()
+    return () => manager.destroy()
+  }, [manager])
 
   return (
-    <ChatWindowContext.Provider value={manager}>
+    <ChatManagerContext.Provider value={manager}>
       {children}
-    </ChatWindowContext.Provider>
+    </ChatManagerContext.Provider>
+  )
+}
+
+export function HistoryManagerProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const manager = useMemo(() => {
+    return new HistoryManager()
+  }, [])
+
+  return (
+    <HistoryManagerContext.Provider value={manager}>
+      {children}
+    </HistoryManagerContext.Provider>
   )
 }
 
