@@ -1,8 +1,15 @@
-import { LucideTrash } from 'lucide-react'
+import { LucidePlusCircle, LucideTrash } from 'lucide-react'
 import { useValue } from 'signia-react'
 
 import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useModelManager } from '@/providers/models/provider'
 
@@ -18,8 +25,8 @@ export function ModelsPage() {
   return (
     <div
       className={cn(
-        'grid h-full w-full',
-        availableModels.length > 0 ? 'grid-rows-2' : 'grid-rows-1',
+        'flex h-full w-full',
+        availableModels.length > 0 ? 'flex-col' : null,
       )}
     >
       {availableModels.length > 0 ? (
@@ -63,9 +70,25 @@ export function ModelsPage() {
           })}
         </div>
       ) : null}
-      <div className="flex h-full w-full flex-col border-t p-2">
-        <p className="text-2xl font-bold">Download more models</p>
-        <ModelDownloader displayTitle={false} />
+      <div className="flex h-full w-full p-2">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button>
+              <LucidePlusCircle size={16} />
+              <span className="pl-4">Add Model</span>
+            </Button>
+          </SheetTrigger>
+
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Download Model</SheetTitle>
+            </SheetHeader>
+
+            <div className="h-full w-full">
+              <ModelDownloader />
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   )

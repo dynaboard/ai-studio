@@ -11,13 +11,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useModelManager } from '@/providers/models/provider'
 
-export function ModelDownloader({
-  displayTitle = true,
-}: {
-  displayTitle?: boolean
-}) {
+export function ModelDownloader() {
   const [showExistingFileDialog, setShowExistingFileDialog] = useState(false)
 
   const modelManager = useModelManager()
@@ -29,7 +26,7 @@ export function ModelDownloader({
   )
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <div className="grid h-full min-h-0 w-full grid-cols-1">
       <AlertDialog open={showExistingFileDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -48,13 +45,8 @@ export function ModelDownloader({
         </AlertDialogContent>
       </AlertDialog>
 
-      {displayTitle ? (
-        <p className="mb-4 mt-6 w-full text-center text-2xl font-bold">
-          Download a model to get started
-        </p>
-      ) : null}
-      <div className="grid h-full w-full gap-4 overflow-auto">
-        <div className="mx-auto mb-4 flex w-1/2 flex-1 flex-col gap-4">
+      <ScrollArea className="grid h-full w-full gap-4 overflow-auto">
+        <div className="mx-auto mb-4 flex flex-1 flex-col gap-4">
           {modelManager.allModels.map((model) => {
             return (
               <div
@@ -102,7 +94,7 @@ export function ModelDownloader({
             )
           })}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   )
 }
