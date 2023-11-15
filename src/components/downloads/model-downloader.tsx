@@ -19,7 +19,7 @@ export function ModelDownloader() {
                 className="grid grid-rows-[min-content,_min-content,_80px] gap-1"
               >
                 <span>{model.name}</span>
-                <p className="mb-2 text-xs text-primary/70">
+                <p className="mb-2 text-xs leading-normal text-muted-foreground">
                   {model.description}
                 </p>
                 <div className="flex gap-2">

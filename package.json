@@ -25,6 +25,7 @@
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
     "electron-updater": "^6.1.1",
+    "inter-ui": "^3.19.3",
     "lucide-react": "^0.292.0",
     "openai": "^4.17.0",
     "postcss": "^8.4.31",
