@@ -85,7 +85,6 @@ function Download({ download }: { download: ActiveDownload }) {
             {download.status === 'downloading' ? `${progress}%` : 'Paused'}
           </span>
           <span className="text-xs text-foreground/50">
-            {download.totalBytes} {'  '}
             {prettyBytes(download.totalBytes)}
           </span>
         </div>
