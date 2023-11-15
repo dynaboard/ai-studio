@@ -38,8 +38,8 @@ export default defineConfig(({ command }) => {
           },
           vite: {
             build: {
+              target: 'es2022',
               sourcemap,
-              minify: isBuild,
               outDir: 'dist-electron/main',
               rollupOptions: {
                 external: Object.keys(
