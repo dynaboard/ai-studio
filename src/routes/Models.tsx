@@ -2,6 +2,7 @@ import { LucidePlusCircle, LucideTrash } from 'lucide-react'
 import { useValue } from 'signia-react'
 
 import { ModelDownloader } from '@/components/downloads/model-downloader'
+import React, { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -10,11 +11,21 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { useModelManager } from '@/providers/models/provider'
 
 export function ModelsPage() {
   const modelManager = useModelManager()
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
 
   const availableModels = useValue(
     'availableModels',
@@ -54,12 +65,42 @@ export function ModelsPage() {
                             size="sm"
                             variant="iconButton"
                             className="p-0 hover:text-destructive"
-                            onClick={() =>
-                              modelManager.deleteModelFile(file.name)
-                            }
+                            onClick={() => setShowDeleteDialog(true)}
                           >
                             <LucideTrash size={16} />
                           </Button>
+                          <AlertDialog
+                            open={showDeleteDialog}
+                            onOpenChange={setShowDeleteDialog}
+                          >
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Are you sure absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This model will
+                                  no longer be accessible by you.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => {
+                                    modelManager.deleteModelFile(file.name)
+                                    setShowDeleteDialog(false)
+                                    // toast({
+                                    //   description:
+                                    //     'This model has been deleted.',
+                                    // })
+                                  }}
+                                >
+                                  Delete
+                                </Button>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     )
