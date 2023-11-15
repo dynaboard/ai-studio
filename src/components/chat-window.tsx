@@ -6,7 +6,7 @@ import { useValue } from 'signia-react'
 import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { useAssistantManager } from '@/providers/assistant'
-import { Model } from '@/providers/models'
+import { type Model } from '@/providers/models/model-list'
 
 import { Header } from './header'
 
