@@ -7,6 +7,8 @@ import {
 } from 'electron'
 import { access, constants } from 'fs'
 
+import { ModelChannel, ModelEvent } from '../../preload/events'
+
 export class ElectronModelManager {
   downloads = new Map<string, DownloadItem>()
 
@@ -24,15 +26,16 @@ export class ElectronModelManager {
       return
     }
     downloadItem.addListener('updated', () => {
-      this.window.webContents.send('download-progress', {
+      this.window.webContents.send(ModelEvent.DownloadProgress, {
         filename: downloadItem.getFilename(),
         recievedBytes: downloadItem.getReceivedBytes(),
         totalBytes: downloadItem.getTotalBytes(),
       })
     })
 
-    downloadItem.addListener('done', () => {
-      this.window.webContents.send('download-complete', {
+    downloadItem.addListener('done', (_event, state) => {
+      this.window.webContents.send(ModelEvent.DownloadComplete, {
+        state,
         filename: downloadItem.getFilename(),
         savePath: downloadItem.getSavePath(),
         recievedBytes: downloadItem.getReceivedBytes(),
@@ -62,7 +65,7 @@ export class ElectronModelManager {
   }
 
   addClientEventHandlers() {
-    ipcMain.handle('models:cancelDownload', (_, filename) => {
+    ipcMain.handle(ModelChannel.CancelDownload, (_, filename) => {
       const downloadItem = this.downloads.get(filename)
       if (!downloadItem) {
         console.warn('No download found for:', filename)
@@ -71,7 +74,25 @@ export class ElectronModelManager {
       downloadItem.cancel()
     })
 
-    ipcMain.handle('models:getFilePath', async (_, filename) => {
+    ipcMain.handle(ModelChannel.PauseDownload, (_, filename) => {
+      const downloadItem = this.downloads.get(filename)
+      if (!downloadItem) {
+        console.warn('No download found for:', filename)
+        return
+      }
+      downloadItem.pause()
+    })
+
+    ipcMain.handle(ModelChannel.ResumeDownload, (_, filename) => {
+      const downloadItem = this.downloads.get(filename)
+      if (!downloadItem) {
+        console.warn('No download found for:', filename)
+        return
+      }
+      downloadItem.resume()
+    })
+
+    ipcMain.handle(ModelChannel.GetFilePath, async (_, filename) => {
       const path = `${app.getPath('userData')}/models/${filename}`
       return new Promise((resolve) => {
         access(path, constants.F_OK, (err) => {

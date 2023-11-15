@@ -5,13 +5,13 @@ import { ChatWindow } from '@/components/chat-window'
 import { DownloadStatus } from '@/components/downloads/download-status'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { StatusBar } from '@/components/status-bar'
-import { useModelManager } from '@/providers/models'
+import { useModelManager } from '@/providers/models/provider'
 
 function App() {
-  const downloadManager = useModelManager()
+  const modelManager = useModelManager()
 
   const models = suspend(async () => {
-    return await downloadManager.loadAvailableModels()
+    return await modelManager.loadAvailableModels()
   }, [])
 
   console.log('Local models & files', models)

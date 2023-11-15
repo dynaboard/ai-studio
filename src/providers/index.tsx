@@ -4,7 +4,9 @@ import { useEffect, useMemo } from 'react'
 
 import { Assistant } from '@/lib/openai'
 import { AssistantContext, AssistantManager } from '@/providers/assistant'
-import { ModelManager, ModelManagerContext } from '@/providers/models'
+import { ModelManager, ModelManagerContext } from '@/providers/models/provider'
+
+await Promise.resolve()
 
 export function AssistantManagerProvider({
   children,
@@ -35,9 +37,8 @@ export function ModelManagerProvider({
   }, [])
 
   useEffect(() => {
-    return () => {
-      manager.destroy()
-    }
+    manager.initialize()
+    return () => manager.destroy()
   }, [manager])
 
   return (

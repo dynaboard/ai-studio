@@ -1,4 +1,4 @@
-import { useModelManager } from '@/providers/models'
+import { useModelManager } from '@/providers/models/provider'
 
 export function ModelDownloader() {
   const downloadManager = useModelManager()
