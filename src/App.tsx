@@ -1,9 +1,18 @@
 import { Outlet } from 'react-router-dom'
+import { suspend } from 'suspend-react'
 
+import { DownloadStatus } from '@/components/downloads/download-status'
 import { Sidebar } from '@/components/sidebar'
 import { StatusBar } from '@/components/status-bar'
+import { useModelManager } from '@/providers/models/provider'
 
 export function App() {
+  const modelManager = useModelManager()
+
+  suspend(async () => {
+    return await modelManager.loadAvailableModels()
+  }, [])
+
   return (
     <div className="h-screen w-screen overflow-hidden">
       <div className="grid h-full w-full grid-rows-[minmax(0,_1fr),_24px]">
@@ -15,6 +24,8 @@ export function App() {
         </div>
 
         <StatusBar />
+
+        <DownloadStatus />
       </div>
     </div>
   )

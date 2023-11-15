@@ -19,18 +19,18 @@ type ModelManagerState = {
 export class ModelManager {
   private readonly _state = atom<ModelManagerState>('ModelManager._state', {
     isStatusVisible: false,
-    availableModels: [],
+    availableModels: [], // should be available once app renders
     downloads: new Map(),
   })
 
   cleanupHandlers: (() => void)[] = []
 
   onDownloadProgress = (
-    _event: any,
+    _event: unknown,
     progress: { filename: string; recievedBytes: number; totalBytes: number },
   ) => {
     this._state.update((state) => {
-      let currentDownload = state.downloads.get(progress.filename)
+      const currentDownload = state.downloads.get(progress.filename)
       let showStatus = state.isStatusVisible
       if (!currentDownload && !showStatus) {
         showStatus = true
@@ -50,7 +50,7 @@ export class ModelManager {
   }
 
   onDownloadComplete = (
-    _event: any,
+    _event: unknown,
     progress: {
       filename: string
       recievedBytes: number
@@ -126,6 +126,15 @@ export class ModelManager {
 
   async resumeDownload(filename: string) {
     await window.models.resumeDownload(filename)
+  }
+
+  async isModelDownloaded(filename: string) {
+    return !!(await window.models.getFilePath(filename))
+  }
+
+  async deleteModelFile(fileName: string) {
+    await window.models.deleteModelFile(fileName)
+    await this.loadAvailableModels()
   }
 
   async loadAvailableModels() {
