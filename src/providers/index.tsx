@@ -1,22 +1,19 @@
 import { useEffect, useMemo } from 'react'
 
-import { Assistant } from '@/lib/openai'
-import { AssistantContext, AssistantManager } from '@/providers/assistant'
+import { AssistantContext, AssistantManager } from '@/providers/local-assistant'
 import { ModelManager, ModelManagerContext } from '@/providers/models/provider'
-
-await Promise.resolve()
 
 export function AssistantManagerProvider({
   children,
-  assistant,
+  model,
 }: {
   children: React.ReactNode
-  assistant?: Assistant
+  model?: string
 }) {
   const manager = useMemo(() => {
-    return new AssistantManager(assistant)
+    return new AssistantManager(model)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assistant?.id])
+  }, [model])
 
   return (
     <AssistantContext.Provider value={manager}>

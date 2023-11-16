@@ -34,6 +34,12 @@ contextBridge.exposeInMainWorld('models', {
   },
 } satisfies ModelsAPI)
 
+contextBridge.exposeInMainWorld('chats', {
+  sendMessage: (message) => {
+    return ipcRenderer.invoke('chats:sendMessage', message)
+  },
+} satisfies ChatsAPI)
+
 export interface ModelsAPI {
   onDownloadProgress: (
     cb: (
@@ -59,8 +65,13 @@ export interface ModelsAPI {
   getFilePath: (filename: string) => Promise<string | null>
 }
 
+export interface ChatsAPI {
+  sendMessage: (message: string) => Promise<string>
+}
+
 declare global {
   interface Window {
     models: ModelsAPI
+    chats: ChatsAPI
   }
 }

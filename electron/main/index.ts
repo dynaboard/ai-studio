@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
+import { ElectronChatManager } from './managers/chats'
 import { ElectronModelManager } from './managers/models'
 import { update } from './update'
 
@@ -39,6 +40,7 @@ if (!app.requestSingleInstanceLock()) {
 
 let win: BrowserWindow | null = null
 let modelManager: ElectronModelManager | null = null
+let chatManager: ElectronChatManager | null = null
 
 // Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
@@ -66,6 +68,7 @@ async function createWindow() {
   })
 
   modelManager = new ElectronModelManager(win)
+  chatManager = new ElectronChatManager()
 
   if (url) {
     // electron-vite-vue#298
@@ -91,6 +94,7 @@ async function createWindow() {
   update(win)
 
   modelManager.addClientEventHandlers()
+  chatManager.addClientEventHandlers()
 }
 
 app.whenReady().then(createWindow)

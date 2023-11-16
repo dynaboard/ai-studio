@@ -5,7 +5,7 @@ import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
-import { useAssistantManager } from '@/providers/assistant'
+import { useAssistantManager } from '@/providers/local-assistant'
 import { type Model } from '@/providers/models/model-list'
 
 import { Header } from './header'
@@ -54,18 +54,17 @@ export function ChatWindow({ models }: { models: Model[] }) {
           </div>
         ) : (
           <>
-            {messages.map((message) => {
+            {messages.map((message, index) => {
               return (
                 <>
-                  <div key={message.id} className="mb-4 flex flex-col">
+                  <div
+                    key={`${message}-${index}`}
+                    className="mb-4 flex flex-col"
+                  >
                     <span className="text-xs text-muted-foreground">
                       {message.role === 'user' ? 'You' : 'Assistant'}
                     </span>
-                    <span className="text-sm">
-                      {message.content[0].type === 'text'
-                        ? message.content[0].text.value
-                        : 'Unsupported content'}
-                    </span>
+                    <span className="text-sm">{message.message}</span>
                   </div>
                 </>
               )
