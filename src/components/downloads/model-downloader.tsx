@@ -67,7 +67,7 @@ export function ModelDownloader() {
                       <a
                         href={file.url}
                         key={file.name}
-                        className="flex flex-1 flex-col rounded-lg border bg-card p-2 text-card-foreground shadow-sm"
+                        className="group flex flex-1 flex-col rounded-lg border bg-card p-2 text-card-foreground shadow-sm"
                         download={file.name}
                         onClickCapture={(event) => {
                           if (hasLocalFile) {
@@ -101,7 +101,7 @@ export function ModelDownloader() {
                                     setShowDeleteDialog(true)
                                   }}
                                 >
-                                  <LucideTrash className="h-4 w-4 text-muted-foreground" />
+                                  <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
                                 </Button>
                                 <AlertDialog
                                   open={showDeleteDialog}
@@ -147,7 +147,7 @@ export function ModelDownloader() {
                                 className="p-0 hover:text-destructive"
                               >
                                 {/* TODO: add animated download indicator */}
-                                <Download className="h-4 w-4 text-muted-foreground" />
+                                <Download className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
                               </Button>
                             )}
                           </div>
