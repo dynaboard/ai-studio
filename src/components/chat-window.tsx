@@ -5,7 +5,7 @@ import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
-import { useAssistantManager } from '@/providers/local-assistant'
+import { useAssistantManager } from '@/providers/assistant'
 import { type Model } from '@/providers/models/model-list'
 
 import { Header } from './header'
@@ -21,7 +21,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
       inputRef.current.focus()
     }
     assistantManager.setModel(models[0].files[0].name)
-  }, [])
+  }, [assistantManager, models])
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()

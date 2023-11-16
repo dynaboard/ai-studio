@@ -3,8 +3,8 @@ import { useValue } from 'signia-react'
 
 import { ChatWindow } from '@/components/chat-window'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
-import { useModelManager } from '@/providers/models/provider'
 import { AssistantManagerProvider } from '@/providers'
+import { useModelManager } from '@/providers/models/provider'
 
 export function HomePage() {
   const modelManager = useModelManager()

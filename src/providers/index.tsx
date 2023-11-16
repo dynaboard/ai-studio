@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 
-import { AssistantContext, AssistantManager } from '@/providers/local-assistant'
+import { AssistantContext, AssistantManager } from '@/providers/assistant'
 import { ModelManager, ModelManagerContext } from '@/providers/models/provider'
 
 export function AssistantManagerProvider({
@@ -11,7 +11,7 @@ export function AssistantManagerProvider({
   model?: string
 }) {
   const manager = useMemo(() => {
-    return new AssistantManager()
+    return new AssistantManager(model)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model])
 
