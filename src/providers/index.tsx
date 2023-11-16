@@ -1,5 +1,3 @@
-'use client'
-
 import { useEffect, useMemo } from 'react'
 
 import { Assistant } from '@/lib/openai'

@@ -22,11 +22,9 @@ export function HomePage() {
         {availableModels.length > 0 ? (
           <ChatWindow models={availableModels} />
         ) : (
-          <div className="flex h-full flex-col gap-2 overflow-hidden p-2">
-            <p className="mb-4 mt-6 w-full text-center text-2xl font-bold">
-              Download a model to get started
-            </p>
-            <ModelDownloader />
+          // TODO: revisit to improve this getting started flow
+          <div className="flex h-full flex-col gap-2 overflow-hidden">
+            <ModelDownloader subtitle="Download a model to get started." />
           </div>
         )}
       </div>
