@@ -136,9 +136,7 @@ export function ModelSwitcher({
               {selectedModelData?.label ?? 'Select a model'}
             </p>
 
-            <span className="mr-1 flex items-center justify-center whitespace-nowrap rounded-full bg-primary px-2 py-1 text-xs leading-3 text-primary-foreground">
-              {selectedModelData?.quantization}
-            </span>
+            <Pill>{selectedModelData?.quantization}</Pill>
 
             <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -167,9 +165,7 @@ export function ModelSwitcher({
                         >
                           <div className="flex flex-1 justify-between">
                             <span>{model.label}</span>
-                            <span className="flex items-center justify-center rounded-full bg-primary px-2 py-1 text-xs leading-3 text-primary-foreground">
-                              {model.quantization}
-                            </span>
+                            <Pill>{model.quantization}</Pill>
                           </div>
                           <Check
                             className={cn(
@@ -192,5 +188,13 @@ export function ModelSwitcher({
         </PopoverContent>
       </Popover>
     </Dialog>
+  )
+}
+
+function Pill({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mr-1 flex items-center justify-center whitespace-nowrap rounded-full bg-secondary px-2 py-1 text-xs leading-3 text-secondary-foreground">
+      {children}
+    </span>
   )
 }
