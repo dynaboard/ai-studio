@@ -30,7 +30,10 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
-    void assistantManager.sendMessage(message)
+    void assistantManager.sendMessage({
+      message,
+      model: assistantManager.model,
+    })
     event.currentTarget.reset()
   }
 

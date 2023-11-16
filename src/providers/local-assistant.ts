@@ -1,7 +1,6 @@
+import { randomUUID } from 'crypto'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
-
-import { getAllActions } from '@/actions'
 
 type ModelThread = {
   id: string
@@ -18,8 +17,7 @@ type Message = {
 }
 
 type ModelState = {
-  model?: string
-  currentThread?: ModelThread
+  currentModel?: string
   sendingMessage: boolean
   messages: Message[]
   threads: {
@@ -31,27 +29,12 @@ type ModelState = {
 
 export class AssistantManager {
   private readonly _state = atom<ModelState>('AssistantManager._state', {
-    model: undefined,
-    currentThread: undefined,
+    currentModel: undefined,
     sendingMessage: false,
     messages: [],
     threads: [],
     loadingText: '',
   })
-
-  private timer: ReturnType<typeof setTimeout> | null = null
-
-  private actions = getAllActions()
-
-  constructor(public model?: string) {
-    if (model) {
-      this._state.update((state) => ({ ...state, model }))
-    }
-
-    this.getThreads().then((data) => {
-      this._state.update((state) => ({ ...state, threads: data }))
-    })
-  }
 
   get state() {
     return this._state.value
@@ -61,16 +44,17 @@ export class AssistantManager {
     return this.state.loadingText
   }
 
-  private updateLoadingText(text: string) {
-    this._state.update((state) => ({
-      ...state,
-      loadingText: text,
-    }))
-  }
-
-  async sendMessage(message: string) {
-    if (!this.model) {
-      console.error('No model selected')
+  async sendMessage({
+    message,
+    thread,
+    model,
+  }: {
+    message: string
+    thread?: string
+    model?: string
+  }) {
+    if (!model && !thread) {
+      console.error('No assistant selected')
       return
     }
 
@@ -88,26 +72,26 @@ export class AssistantManager {
     })
 
     // No thread, so we will create a run a thread with an initial message from the user
-    if (!this.state.currentThread) {
+    if (!thread && model) {
       const modelOptions = {
-        modelPath: 'mistral-7b-instruct-v0.1.Q4_K_M.gguf',
+        modelPath: model,
       }
 
       const thread = {
-        id: '1',
-        name: 'mistral-7b',
+        id: crypto.randomUUID(),
+        name: `${model}`,
         modelOptions,
-        sendMessage: (message: string) => {
-          return window.chats.sendMessage(message)
-        },
       }
 
-      const response = await thread.sendMessage(message)
+      const response = await window.chats.sendMessage({
+        message,
+        modelPath: thread.modelOptions.modelPath,
+      })
 
       // Save the thread ID to local storage to load later
-      const threadIDs = this.localThreadIDs
-      threadIDs.push(thread.id)
-      localStorage.setItem('threadIDs', JSON.stringify(threadIDs))
+      const threads = this.localThreads
+      threads.push(thread)
+      localStorage.setItem('threadIDs', JSON.stringify(threads))
 
       this._state.update((state) => {
         const messages = state.messages
@@ -121,65 +105,65 @@ export class AssistantManager {
           messages: [...messages],
         }
       })
-    } else {
-      // Or we've got an existing thread we want to continue, so we'll just add a new message
-      const response = await this.state.currentThread.sendMessage(message)
-
-      this._state.update((state) => {
-        const messages = state.messages
-        messages.push({
-          role: 'assistant',
-          message: response,
+    } else if (thread) {
+      const existingThread = this.getThread(thread)
+      if (existingThread) {
+        // Or we've got an existing thread we want to continue, so we'll just add a new message
+        const response = await window.chats.sendMessage({
+          message,
+          modelPath: existingThread.thread.modelOptions.modelPath,
         })
 
-        return {
-          ...state,
-          messages: [...messages],
-        }
-      })
+        this._state.update((state) => {
+          const messages = state.messages
+          messages.push({
+            role: 'assistant',
+            message: response,
+          })
+
+          return {
+            ...state,
+            messages: [...messages],
+          }
+        })
+      }
     }
   }
 
-  async getThreads() {
+  getThreads() {
     if (typeof window === 'undefined') {
       return []
     }
 
-    const threads = await Promise.all(
-      this.localThreadIDs.map(async (id) => {
-        const thread = {
-          id,
-          name: 'mistral-7b',
-          modelOptions: {
-            modelPath: 'mistral-7b-instruct-v0.1.Q4_K_M.gguf',
-          },
-          sendMessage: (message: string) => {
-            return window.chats.sendMessage(message)
-          },
-        }
+    const threads = this.localThreads.map((localThread) => {
+      const messages: Message[] = []
 
-        const messages: Message[] = []
-
-        return {
-          thread,
-          messages,
-        }
-      }),
-    )
+      return {
+        ...localThread,
+        messages,
+      }
+    })
 
     return threads
   }
 
-  async getThread(id: string): Promise<
+  getThread(id: string):
     | {
         thread: ModelThread
         messages: Message[]
       }
-    | undefined
-  > {
+    | undefined {
     return this.threads.find((thread) => thread.thread.id === id)
   }
 
+  setModel(model: string) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentModel: model,
+      }
+    })
+  }
   @computed
   get messages() {
     return this.state.messages
@@ -191,14 +175,23 @@ export class AssistantManager {
   }
 
   @computed
+  get model() {
+    return this.state.currentModel
+  }
+
+  @computed
   get paused() {
     return false
   }
 
-  get localThreadIDs(): string[] {
-    const threadIDs = localStorage.getItem('threadIDs')
+  get localThreads(): {
+    id: string
+    name: string
+    modelOptions: { modelPath: string }
+  }[] {
+    const threads = localStorage.getItem('threads')
     try {
-      return JSON.parse(threadIDs || '[]')
+      return JSON.parse(threads || '[]')
     } catch {
       return []
     }

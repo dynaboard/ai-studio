@@ -11,7 +11,7 @@ export function AssistantManagerProvider({
   model?: string
 }) {
   const manager = useMemo(() => {
-    return new AssistantManager(model)
+    return new AssistantManager()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model])
 

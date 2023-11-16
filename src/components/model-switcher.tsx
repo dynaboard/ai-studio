@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { useAssistantManager } from '@/providers/local-assistant'
 import type { Model } from '@/providers/models/model-list'
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
@@ -37,15 +38,19 @@ export function ModelSwitcher({
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
   const [selectedModel, setSelectedModel] = React.useState(models[0].name)
+  const assistantManager = useAssistantManager()
 
   const selectOptions = React.useMemo(() => {
     return [
       {
         label: 'Open Source',
-        models: models.map((model) => ({
-          label: model.name,
-          value: model.name,
-        })),
+        models: [
+          ...models.map((model) => ({
+            label: model.name,
+            value: model.name,
+            modelPath: model.files[0].name,
+          })),
+        ],
       },
       // TODO: add openai call impl
       // {
@@ -69,6 +74,7 @@ export function ModelSwitcher({
       models: {
         label: string
         value: string
+        modelPath: string
       }[]
     }[]
   >(selectOptions)
@@ -129,6 +135,7 @@ export function ModelSwitcher({
                           key={model.value}
                           onSelect={() => {
                             setSelectedModel(model.value)
+                            assistantManager.setModel(model.modelPath)
                             setOpen(false)
                           }}
                           className="text-sm"

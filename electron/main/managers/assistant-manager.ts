@@ -5,34 +5,41 @@ import {
 
 export class AssistantManager {
   private timer: ReturnType<typeof setTimeout> | null = null
-  private session: LlamaChatSession | null = null
+  private sessions: Map<string, LlamaChatSession> = new Map<
+    string,
+    LlamaChatSession
+  >()
 
-  constructor(public modelPath: string) {
-    // Delay the creation of the session until it's needed
-  }
+  constructor() {}
 
-  private async initializeSession() {
-    if (!this.session) {
+  private async initializeSession(modelPath: string) {
+    const session = this.sessions.get(modelPath)
+    if (!session) {
       const { LlamaContext, LlamaChatSession, LlamaModel } = await import(
         'node-llama-cpp'
       )
-      const model = new LlamaModel({ modelPath: this.modelPath })
+      const model = new LlamaModel({ modelPath })
       const context = new LlamaContext({ model })
-      this.session = new LlamaChatSession({
+      const newSession = new LlamaChatSession({
         context,
       })
+      this.sessions.set(modelPath, newSession)
+      return newSession
     }
+    return session
   }
 
-  async sendMessage(message: string, promptOptions?: LLamaChatPromptOptions) {
-    await this.initializeSession()
-
-    if (!this.session) {
-      console.error('Failed to initialize the session')
-      return
-    }
-
-    const response = await this.session.prompt(message, promptOptions)
+  async sendMessage({
+    message,
+    promptOptions,
+    modelPath,
+  }: {
+    message: string
+    promptOptions?: LLamaChatPromptOptions
+    modelPath: string
+  }) {
+    const session = await this.initializeSession(modelPath)
+    const response = await session.prompt(message, promptOptions)
     return response
   }
 }

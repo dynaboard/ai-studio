@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-
+import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { ModelChannel, ModelEvent } from './events'
 
 contextBridge.exposeInMainWorld('models', {
@@ -66,7 +66,15 @@ export interface ModelsAPI {
 }
 
 export interface ChatsAPI {
-  sendMessage: (message: string) => Promise<string>
+  sendMessage: ({
+    message,
+    promptOptions,
+    modelPath,
+  }: {
+    message: string
+    promptOptions?: LLamaChatPromptOptions
+    modelPath: string
+  }) => Promise<string>
 }
 
 declare global {
