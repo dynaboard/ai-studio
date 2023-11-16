@@ -20,6 +20,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
     if (inputRef.current) {
       inputRef.current.focus()
     }
+    assistantManager.setModel(models[0].files[0].name)
   }, [])
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
