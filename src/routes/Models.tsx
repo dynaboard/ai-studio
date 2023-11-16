@@ -17,7 +17,7 @@ export function ModelsPage() {
   return (
     <div
       className={cn(
-        'flex h-full w-full p-4 pr-1',
+        'flex h-full w-full',
         availableModels.length > 0 ? 'flex-col' : null,
       )}
     >

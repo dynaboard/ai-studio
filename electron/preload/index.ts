@@ -38,7 +38,7 @@ export interface ModelsAPI {
   onDownloadProgress: (
     cb: (
       event: IpcRendererEvent,
-      data: { filename: string; recievedBytes: number; totalBytes: number },
+      data: { filename: string; receivedBytes: number; totalBytes: number },
     ) => void,
   ) => () => void
   onDownloadComplete: (
@@ -46,7 +46,7 @@ export interface ModelsAPI {
       event: IpcRendererEvent,
       data: {
         filename: string
-        recievedBytes: number
+        receivedBytes: number
         totalBytes: number
         state: 'completed' | 'cancelled' | 'interrupted'
       },

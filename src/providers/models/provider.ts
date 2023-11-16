@@ -5,7 +5,7 @@ import { Model, MODELS } from './model-list'
 
 export type ActiveDownload = {
   filename: string
-  recievedBytes: number
+  receivedBytes: number
   totalBytes: number
   status: 'downloading' | 'paused'
 }
@@ -27,7 +27,7 @@ export class ModelManager {
 
   onDownloadProgress = (
     _event: unknown,
-    progress: { filename: string; recievedBytes: number; totalBytes: number },
+    progress: { filename: string; receivedBytes: number; totalBytes: number },
   ) => {
     this._state.update((state) => {
       const currentDownload = state.downloads.get(progress.filename)
@@ -53,7 +53,7 @@ export class ModelManager {
     _event: unknown,
     progress: {
       filename: string
-      recievedBytes: number
+      receivedBytes: number
       totalBytes: number
       state: 'completed' | 'cancelled' | 'interrupted'
     },

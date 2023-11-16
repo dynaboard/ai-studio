@@ -28,7 +28,7 @@ export class ElectronModelManager {
     downloadItem.addListener('updated', () => {
       this.window.webContents.send(ModelEvent.DownloadProgress, {
         filename: downloadItem.getFilename(),
-        recievedBytes: downloadItem.getReceivedBytes(),
+        receivedBytes: downloadItem.getReceivedBytes(),
         totalBytes: downloadItem.getTotalBytes(),
       })
     })
@@ -38,7 +38,7 @@ export class ElectronModelManager {
         state,
         filename: downloadItem.getFilename(),
         savePath: downloadItem.getSavePath(),
-        recievedBytes: downloadItem.getReceivedBytes(),
+        receivedBytes: downloadItem.getReceivedBytes(),
         totalBytes: downloadItem.getTotalBytes(),
       })
       downloadItem.removeAllListeners()

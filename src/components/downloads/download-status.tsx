@@ -50,7 +50,7 @@ function Download({ download }: { download: ActiveDownload }) {
   const modelManager = useModelManager()
 
   const progress = (
-    (download.recievedBytes / download.totalBytes) *
+    (download.receivedBytes / download.totalBytes) *
     100
   ).toPrecision(3)
 
