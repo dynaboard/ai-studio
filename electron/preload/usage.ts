@@ -9,7 +9,10 @@ contextBridge.exposeInMainWorld('usage', {
 } satisfies UsageAPI)
 
 export interface UsageAPI {
-  getSystemUsage: () => Promise<Electron.ProcessMemoryInfo>
+  getSystemUsage: () => Promise<{
+    memory: Electron.ProcessMemoryInfo
+    cpu: Electron.CPUUsage
+  }>
 }
 
 declare global {

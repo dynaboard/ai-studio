@@ -5,8 +5,10 @@ import { UsageChannel } from '../../preload/events'
 
 export class SystemUsageManager {
   async getSystemUsage() {
-    // TODO: actually track llamacpp process memory
-    return process.getProcessMemoryInfo()
+    return {
+      memory: await process.getProcessMemoryInfo(),
+      cpu: process.getCPUUsage(),
+    }
   }
 
   addClientEventHandlers() {

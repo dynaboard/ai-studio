@@ -3,15 +3,24 @@ import { atom } from 'signia'
 import { useValue } from 'signia-react'
 
 type SystemUsageState = {
-  usage: Electron.ProcessMemoryInfo
+  usage: {
+    memory: Electron.ProcessMemoryInfo
+    cpu: Electron.CPUUsage
+  }
 }
 
 export class SystemUsageManager {
   private _state = atom<SystemUsageState>('SystemUsageState', {
     usage: {
-      private: 0,
-      residentSet: 0,
-      shared: 0,
+      memory: {
+        private: 0,
+        residentSet: 0,
+        shared: 0,
+      },
+      cpu: {
+        percentCPUUsage: 0,
+        idleWakeupsPerSecond: 0,
+      },
     },
   })
 
@@ -37,7 +46,10 @@ export class SystemUsageManager {
     }
   }
 
-  getSystemUsage(): Promise<Electron.ProcessMemoryInfo> {
+  getSystemUsage(): Promise<{
+    memory: Electron.ProcessMemoryInfo
+    cpu: Electron.CPUUsage
+  }> {
     return window.usage.getSystemUsage()
   }
 

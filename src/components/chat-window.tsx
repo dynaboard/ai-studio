@@ -59,17 +59,12 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <>
             {messages.map((message, index) => {
               return (
-                <>
-                  <div
-                    key={`${message}-${index}`}
-                    className="mb-4 flex flex-col"
-                  >
-                    <span className="text-xs text-muted-foreground">
-                      {message.role === 'user' ? 'You' : 'Assistant'}
-                    </span>
-                    <span className="text-sm">{message.message}</span>
-                  </div>
-                </>
+                <div key={`${message}-${index}`} className="mb-4 flex flex-col">
+                  <span className="text-xs text-muted-foreground">
+                    {message.role === 'user' ? 'You' : 'Assistant'}
+                  </span>
+                  <span className="text-sm">{message.message}</span>
+                </div>
               )
             })}
             {chatWindowManager.loadingText !== '' && (
