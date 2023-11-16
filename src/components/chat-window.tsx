@@ -5,13 +5,13 @@ import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
-import { useAssistantManager } from '@/providers/assistant'
+import { useChatWindowManager } from '@/providers/chat-window'
 import { type Model } from '@/providers/models/model-list'
 
 import { Header } from './header'
 
 export function ChatWindow({ models }: { models: Model[] }) {
-  const assistantManager = useAssistantManager()
+  const chatWindowManager = useChatWindowManager()
   const { formRef, onKeyDown } = useEnterSubmit()
 
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
@@ -20,8 +20,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
     if (inputRef.current) {
       inputRef.current.focus()
     }
-    assistantManager.setModel(models[0].files[0].name)
-  }, [assistantManager, models])
+    chatWindowManager.setModel(models[0].files[0].name)
+  }, [chatWindowManager, models])
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -31,19 +31,18 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
-    void assistantManager.sendMessage({
+    void chatWindowManager.sendMessage({
       message,
-      model: assistantManager.model,
     })
     event.currentTarget.reset()
   }
 
-  const disabled = useValue('disabled', () => assistantManager.paused, [
-    assistantManager,
+  const disabled = useValue('disabled', () => chatWindowManager.paused, [
+    chatWindowManager,
   ])
 
-  const messages = useValue('messages', () => assistantManager.messages, [
-    assistantManager,
+  const messages = useValue('messages', () => chatWindowManager.messages, [
+    chatWindowManager,
   ])
 
   return (
@@ -73,9 +72,9 @@ export function ChatWindow({ models }: { models: Model[] }) {
                 </>
               )
             })}
-            {assistantManager.loadingText !== '' && (
+            {chatWindowManager.loadingText !== '' && (
               <span className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                {assistantManager.loadingText}
+                {chatWindowManager.loadingText}
               </span>
             )}
           </>

@@ -3,7 +3,7 @@ import { useValue } from 'signia-react'
 
 import { ChatWindow } from '@/components/chat-window'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
-import { AssistantManagerProvider } from '@/providers'
+import { ChatWindowProvider } from '@/providers'
 import { useModelManager } from '@/providers/models/provider'
 
 export function HomePage() {
@@ -21,9 +21,9 @@ export function HomePage() {
     <Suspense fallback={<div>Loading...</div>}>
       <div className="grid h-full w-full">
         {availableModels.length > 0 ? (
-          <AssistantManagerProvider model={availableModels[0].files[0].name}>
+          <ChatWindowProvider model={availableModels[0].files[0].name}>
             <ChatWindow models={availableModels} />
-          </AssistantManagerProvider>
+          </ChatWindowProvider>
         ) : (
           // TODO: revisit to improve this getting started flow
           <div className="flex h-full flex-col gap-2 overflow-hidden">

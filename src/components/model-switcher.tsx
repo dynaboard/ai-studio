@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { useAssistantManager } from '@/providers/assistant'
+import { useChatWindowManager } from '@/providers/chat-window'
 import type { Model } from '@/providers/models/model-list'
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
@@ -38,7 +38,7 @@ export function ModelSwitcher({
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
   const [selectedModel, setSelectedModel] = React.useState(models[0].name)
-  const assistantManager = useAssistantManager()
+  const chatWindowManager = useChatWindowManager()
 
   const selectOptions = React.useMemo(() => {
     return [
@@ -135,7 +135,7 @@ export function ModelSwitcher({
                           key={model.value}
                           onSelect={() => {
                             setSelectedModel(model.value)
-                            assistantManager.setModel(model.modelPath)
+                            chatWindowManager.setModel(model.modelPath)
                             setOpen(false)
                           }}
                           className="text-sm"

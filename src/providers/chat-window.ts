@@ -13,7 +13,7 @@ type ModelState = {
   loadingText: string
 }
 
-export class AssistantManager {
+export class ChatWindowManager {
   private readonly _state = atom<ModelState>('AssistantManager._state', {
     currentModel: undefined,
     sendingMessage: false,
@@ -37,7 +37,7 @@ export class AssistantManager {
   }
 
   async sendMessage({ message, model }: { message: string; model?: string }) {
-    if (!model) {
+    if (!model && !this.model) {
       console.error('No assistant selected')
       return
     }
@@ -55,29 +55,25 @@ export class AssistantManager {
       }
     })
 
-    if (model) {
-      const modelOptions = {
-        modelPath: model,
+    const modelPath = (model || this.model)!
+
+    const response = await window.chats.sendMessage({
+      message,
+      modelPath,
+    })
+
+    this._state.update((state) => {
+      const messages = state.messages
+      messages.push({
+        role: 'assistant',
+        message: response,
+      })
+
+      return {
+        ...state,
+        messages: [...messages],
       }
-
-      const response = await window.chats.sendMessage({
-        message,
-        modelPath: modelOptions.modelPath,
-      })
-
-      this._state.update((state) => {
-        const messages = state.messages
-        messages.push({
-          role: 'assistant',
-          message: response,
-        })
-
-        return {
-          ...state,
-          messages: [...messages],
-        }
-      })
-    }
+    })
   }
 
   setModel(model: string) {
@@ -104,8 +100,8 @@ export class AssistantManager {
   }
 }
 
-export const AssistantContext = createContext(new AssistantManager())
+export const ChatWindowContext = createContext(new ChatWindowManager())
 
-export function useAssistantManager() {
-  return useContext(AssistantContext)
+export function useChatWindowManager() {
+  return useContext(ChatWindowContext)
 }

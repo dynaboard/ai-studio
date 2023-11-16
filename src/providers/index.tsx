@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react'
 
-import { AssistantContext, AssistantManager } from '@/providers/assistant'
+import { ChatWindowContext, ChatWindowManager } from '@/providers/chat-window'
 import { ModelManager, ModelManagerContext } from '@/providers/models/provider'
 
-export function AssistantManagerProvider({
+export function ChatWindowProvider({
   children,
   model,
 }: {
@@ -11,14 +11,14 @@ export function AssistantManagerProvider({
   model?: string
 }) {
   const manager = useMemo(() => {
-    return new AssistantManager(model)
+    return new ChatWindowManager(model)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model])
 
   return (
-    <AssistantContext.Provider value={manager}>
+    <ChatWindowContext.Provider value={manager}>
       {children}
-    </AssistantContext.Provider>
+    </ChatWindowContext.Provider>
   )
 }
 
