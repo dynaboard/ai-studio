@@ -84,6 +84,7 @@ export class ChatWindowManager {
       }
     })
   }
+
   @computed
   get messages() {
     return this.state.messages

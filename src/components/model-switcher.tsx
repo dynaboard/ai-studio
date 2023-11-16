@@ -30,6 +30,18 @@ const fuseOptions = {
   threshold: 0.4,
 }
 
+type PickerModel = {
+  label: string
+  value: string
+  modelPath: string
+  quantization: string
+}
+
+type Option = {
+  label: string
+  models: PickerModel[]
+}
+
 export function ModelSwitcher({
   models,
   className,
@@ -37,19 +49,24 @@ export function ModelSwitcher({
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
-  const [selectedModel, setSelectedModel] = React.useState(models[0].name)
+  const [selectedModel, setSelectedModel] = React.useState(
+    models[0].files[0].name,
+  )
   const chatWindowManager = useChatWindowManager()
 
-  const selectOptions = React.useMemo(() => {
+  const selectOptions: Option[] = React.useMemo(() => {
     return [
       {
         label: 'Open Source',
         models: [
-          ...models.map((model) => ({
-            label: model.name,
-            value: model.name,
-            modelPath: model.files[0].name,
-          })),
+          ...models.flatMap((model) =>
+            model.files.map((file) => ({
+              label: model.name,
+              value: file.name,
+              modelPath: file.name,
+              quantization: file.quantization,
+            })),
+          ),
         ],
       },
       // TODO: add openai call impl
@@ -68,14 +85,11 @@ export function ModelSwitcher({
       // },
     ]
   }, [models])
+
   const [filteredItems, setFilteredItems] = React.useState<
     {
       label: string
-      models: {
-        label: string
-        value: string
-        modelPath: string
-      }[]
+      models: PickerModel[]
     }[]
   >(selectOptions)
 
@@ -103,6 +117,10 @@ export function ModelSwitcher({
     [allModels, selectOptions],
   )
 
+  const selectedModelData = React.useMemo(() => {
+    return allModels.find((model) => model.value === selectedModel)
+  }, [selectedModel, allModels])
+
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -112,13 +130,18 @@ export function ModelSwitcher({
             role="combobox"
             aria-expanded={open}
             aria-label="Select a model"
-            className={cn('w-[240px] justify-between', className)}
+            className={cn('flex w-[275px] justify-between', className)}
           >
-            <p className="truncate">{selectedModel}</p>
+            <p className="flex-1 truncate text-left">
+              {selectedModelData?.label ?? 'Select a model'}
+            </p>
+
+            <Pill>{selectedModelData?.quantization}</Pill>
+
             <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[240px] p-0">
+        <PopoverContent className="w-[275px] p-0">
           <Command shouldFilter={false} loop>
             <CommandList>
               <CommandInput
@@ -138,9 +161,12 @@ export function ModelSwitcher({
                             chatWindowManager.setModel(model.modelPath)
                             setOpen(false)
                           }}
-                          className="text-sm"
+                          className="gap-1 text-sm"
                         >
-                          {model.label}
+                          <div className="flex flex-1 justify-between">
+                            <span>{model.label}</span>
+                            <Pill>{model.quantization}</Pill>
+                          </div>
                           <Check
                             className={cn(
                               'ml-auto h-4 w-4',
@@ -162,5 +188,13 @@ export function ModelSwitcher({
         </PopoverContent>
       </Popover>
     </Dialog>
+  )
+}
+
+function Pill({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mr-1 flex items-center justify-center whitespace-nowrap rounded-full bg-secondary px-2 py-1 text-xs leading-3 text-secondary-foreground">
+      {children}
+    </span>
   )
 }
