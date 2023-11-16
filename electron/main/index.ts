@@ -4,6 +4,7 @@ import { join } from 'node:path'
 
 import { ElectronChatManager } from './managers/chats'
 import { ElectronModelManager } from './managers/models'
+import { SystemUsageManager } from './managers/usage'
 import { update } from './update'
 
 // The built directory structure
@@ -41,6 +42,9 @@ if (!app.requestSingleInstanceLock()) {
 let win: BrowserWindow | null = null
 let modelManager: ElectronModelManager | null = null
 let chatManager: ElectronChatManager | null = null
+
+const usageManager = new SystemUsageManager()
+usageManager.addClientEventHandlers()
 
 // Here, you can also use other preload
 const preload = join(__dirname, '../preload/index.js')
@@ -102,6 +106,7 @@ app.whenReady().then(createWindow)
 app.on('window-all-closed', () => {
   win = null
   modelManager?.close()
+
   if (process.platform !== 'darwin') {
     app.quit()
   }
