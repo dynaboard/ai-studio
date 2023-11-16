@@ -4,13 +4,15 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 
-import { ModelManagerProvider } from '@/providers'
+import { ModelManagerProvider, SystemUsageManagerProvider } from '@/providers'
 import { router } from '@/router'
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ModelManagerProvider>
-      <RouterProvider router={router} />
+      <SystemUsageManagerProvider>
+        <RouterProvider router={router} />
+      </SystemUsageManagerProvider>
     </ModelManagerProvider>
   </React.StrictMode>,
 )

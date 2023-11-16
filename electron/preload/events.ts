@@ -10,3 +10,7 @@ export enum ModelChannel {
   GetFilePath = 'models:getFilePath',
   DeleteModelFile = 'models:deleteModelFile',
 }
+
+export enum UsageChannel {
+  GetSystemUsage = 'usage:getSystemUsage',
+}
