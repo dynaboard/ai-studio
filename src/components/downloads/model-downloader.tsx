@@ -1,3 +1,4 @@
+import { Download, LucideTrash } from 'lucide-react'
 import prettyBytes from 'pretty-bytes'
 import { useState } from 'react'
 import { useValue } from 'signia-react'
@@ -13,8 +14,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useModelManager } from '@/providers/models/provider'
+
 import { Button } from '../ui/button'
-import { Download, LucideTrash } from 'lucide-react'
 import { Label } from '../ui/label'
 
 export function ModelDownloader() {
@@ -30,9 +31,8 @@ export function ModelDownloader() {
 
   return (
     <div className="grid h-full min-h-0 w-full grid-cols-1">
-
-      <ScrollArea className="grid h-full w-full gap-4 overflow-auto">
-        <div className="mx-auto mb-4 flex flex-1 flex-col gap-4">
+      <ScrollArea className="grid h-full w-full gap-4 overflow-auto pr-4">
+        <div className="mx-auto mb-4 flex flex-1 flex-col gap-8">
           {modelManager.allModels.map((model) => {
             return (
               <div
@@ -78,7 +78,7 @@ export function ModelDownloader() {
                               Size: {prettyBytes(file.sizeBytes)}
                             </span>
                           </div>
-                          <div className="flex flex-col justify-center items-center">
+                          <div className="flex flex-col items-center justify-center">
                             {hasLocalFile ? (
                               <>
                                 <Button
@@ -87,7 +87,7 @@ export function ModelDownloader() {
                                   className="p-0 hover:text-destructive"
                                   onClick={() => setShowDeleteDialog(true)}
                                 >
-                                  <LucideTrash size={16} />
+                                  <LucideTrash className="h-4 w-4 text-muted-foreground" />
                                 </Button>
                                 <AlertDialog
                                   open={showDeleteDialog}
@@ -138,7 +138,8 @@ export function ModelDownloader() {
                                 variant="iconButton"
                                 className="p-0 hover:text-destructive"
                               >
-                                <Download size={16} />
+                                {/* TODO: add animated download indicator */}
+                                <Download className="h-4 w-4 text-muted-foreground" />
                               </Button>
                             )}
                           </div>

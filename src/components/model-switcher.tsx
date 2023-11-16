@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import * as React from 'react'
 
@@ -23,23 +24,28 @@ type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
 
 interface ModelSwitcherProps extends PopoverTriggerProps {}
 
+const fuseOptions = {
+  keys: ['value'],
+  threshold: 0.4,
+}
+
 export function ModelSwitcher({
   models,
   className,
 }: ModelSwitcherProps & { models: Model[] }) {
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('')
+  const [selectedModel, setSelectedModel] = React.useState(models[0].name)
 
   const selectOptions = React.useMemo(() => {
     return [
       {
         label: 'Open Source',
-        models: [
-          ...models.map((model) => ({
-            label: model.name,
-            value: model.name,
-          })),
-        ],
+        models: models.map((model) => ({
+          label: model.name,
+          value: model.name,
+        })),
       },
       // TODO: add openai call impl
       // {
@@ -57,8 +63,38 @@ export function ModelSwitcher({
       // },
     ]
   }, [models])
-  const [selectedModel, setSelectedModel] = React.useState(
-    selectOptions[0].models[0].value,
+  const [filteredItems, setFilteredItems] = React.useState<
+    {
+      label: string
+      models: {
+        label: string
+        value: string
+      }[]
+    }[]
+  >(selectOptions)
+
+  const allModels = selectOptions.flatMap((group) => group.models)
+
+  const handleFuzzySearch = React.useCallback(
+    (newValue: string) => {
+      setSearch(newValue)
+
+      if (!newValue) {
+        setFilteredItems(selectOptions)
+        return
+      }
+
+      const fuse = new Fuse(allModels, fuseOptions)
+      const results = fuse.search(newValue)
+      const filteredOptions = selectOptions.map((group) => ({
+        label: group.label,
+        models: group.models.filter((model) =>
+          results.some((result) => result.item.value === model.value),
+        ),
+      }))
+      setFilteredItems(filteredOptions)
+    },
+    [allModels, selectOptions],
   )
 
   return (
@@ -77,34 +113,43 @@ export function ModelSwitcher({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[240px] p-0">
-          <Command>
+          <Command shouldFilter={false} loop>
             <CommandList>
-              <CommandInput placeholder="Search model..." />
-              <CommandEmpty>No model found.</CommandEmpty>
-              {selectOptions.map((group) => (
-                <CommandGroup key={group.label} heading={group.label}>
-                  {group.models.map((model) => (
-                    <CommandItem
-                      key={model.value}
-                      onSelect={() => {
-                        setSelectedModel(model.value)
-                        setOpen(false)
-                      }}
-                      className="text-sm"
-                    >
-                      {model.label}
-                      <Check
-                        className={cn(
-                          'ml-auto h-4 w-4',
-                          model.value === selectedModel
-                            ? 'opacity-100'
-                            : 'opacity-0',
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
+              <CommandInput
+                placeholder="Search model..."
+                value={search}
+                onValueChange={handleFuzzySearch}
+              />
+              {filteredItems.map(
+                (group) =>
+                  group.models.length > 0 && (
+                    <CommandGroup key={group.label} heading={group.label}>
+                      {group.models.map((model) => (
+                        <CommandItem
+                          key={model.value}
+                          onSelect={() => {
+                            setSelectedModel(model.value)
+                            setOpen(false)
+                          }}
+                          className="text-sm"
+                        >
+                          {model.label}
+                          <Check
+                            className={cn(
+                              'ml-auto h-4 w-4',
+                              model.value === selectedModel
+                                ? 'opacity-100'
+                                : 'opacity-0',
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ),
+              )}
+              {filteredItems.every((group) => group.models.length === 0) && (
+                <CommandEmpty>No model found.</CommandEmpty>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
