@@ -5,6 +5,7 @@ import {
 
 export class AssistantManager {
   private timer: ReturnType<typeof setTimeout> | null = null
+
   private sessions: Map<string, LlamaChatSession> = new Map<
     string,
     LlamaChatSession
@@ -12,6 +13,7 @@ export class AssistantManager {
 
   constructor() {}
 
+  // Assumes one model per session for now.
   private async initializeSession(modelPath: string) {
     const session = this.sessions.get(modelPath)
     if (!session) {
