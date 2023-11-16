@@ -14,7 +14,7 @@ type ModelState = {
 }
 
 export class ChatWindowManager {
-  private readonly _state = atom<ModelState>('AssistantManager._state', {
+  private readonly _state = atom<ModelState>('ChatWindowManager._state', {
     currentModel: undefined,
     sendingMessage: false,
     messages: [],
@@ -38,7 +38,7 @@ export class ChatWindowManager {
 
   async sendMessage({ message, model }: { message: string; model?: string }) {
     if (!model && !this.model) {
-      console.error('No assistant selected')
+      console.error('No model selected')
       return
     }
 

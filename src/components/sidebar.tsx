@@ -3,7 +3,7 @@ import { LucideFileBox, LucideHome, LucideIcon, LucideMenu } from 'lucide-react'
 import React, { useCallback, useState } from 'react'
 import { Link as BaseLink, useMatches } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useMatchMediaEffect } from '@/lib/hooks/use-match-media'
 import { cn } from '@/lib/utils'
 
@@ -18,12 +18,15 @@ function Link({
   return (
     <BaseLink
       className={cn(
-        'flex items-center gap-x-3 rounded-md px-4 py-2 text-sm font-semibold leading-6 hover:bg-secondary',
-        active ? 'text-primary' : '',
+        buttonVariants({
+          variant: 'ghost',
+        }),
+        'h-8 w-full justify-start gap-x-3',
+        active ? 'bg-accent' : '',
       )}
       {...props}
     >
-      <Icon size={16} className="h-6 shrink-0" aria-hidden="true" />
+      <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
       {children}
     </BaseLink>
   )
@@ -52,15 +55,16 @@ export function Sidebar() {
       animate={{
         width: open ? '220px' : '52px',
       }}
+      transition={{ ease: [0.165, 0.84, 0.44, 1] }}
     >
-      <div className="flex h-16 items-center gap-2 border-r p-2">
+      <div className="flex h-16 items-center gap-2 border-r px-2">
         <Button
           size="sm"
           variant="iconButton"
           className="p-2"
           onClick={() => setOpen(!open)}
         >
-          <LucideMenu size={16} />
+          <LucideMenu className="h-4 w-4" />
         </Button>
 
         <strong key="title" className="text-bold flex-1 overflow-hidden">
@@ -68,18 +72,14 @@ export function Sidebar() {
         </strong>
       </div>
       <nav className="h-full w-full border-r" data-menu-open={open}>
-        <ul>
-          <li>
-            <Link to="/" icon={LucideHome}>
-              <span className={!open ? 'hidden' : undefined}>Home</span>
-            </Link>
-          </li>
-          <li>
-            <Link to="/models" icon={LucideFileBox}>
-              <span className={!open ? 'hidden' : undefined}>Models</span>
-            </Link>
-          </li>
-        </ul>
+        <div className={cn('space-y-[1px] p-2', !open ? 'p-0' : '')}>
+          <Link to="/" icon={LucideHome}>
+            <span className={cn(!open ? 'hidden' : undefined)}>Home</span>
+          </Link>
+          <Link to="/models" icon={LucideFileBox}>
+            <span className={cn(!open ? 'hidden' : undefined)}>Models</span>
+          </Link>
+        </div>
       </nav>
     </motion.div>
   )
