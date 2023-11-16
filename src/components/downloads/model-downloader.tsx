@@ -19,7 +19,7 @@ import { useModelManager } from '@/providers/models/provider'
 import { Button } from '../ui/button'
 import { Label } from '../ui/label'
 
-export function ModelDownloader() {
+export function ModelDownloader({ subtitle }: { subtitle?: string }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const modelManager = useModelManager()
@@ -37,8 +37,9 @@ export function ModelDownloader() {
           Models
         </h1>
         <span className="sm:text-md text-md prose text-left text-muted-foreground">
-          Explore the OS community&apos;s AI chat models. Download ready-to-use
-          models to your machine. Start chatting in seconds.
+          {subtitle
+            ? subtitle
+            : `Explore the OS community's AI chat models. Download ready-to-use models to your machine. Start chatting in seconds.`}
         </span>
       </div>
       <ScrollArea className="grid h-full w-full gap-4 overflow-auto">
@@ -101,7 +102,7 @@ export function ModelDownloader() {
                                     setShowDeleteDialog(true)
                                   }}
                                 >
-                                  <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
+                                  <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-red-600" />
                                 </Button>
                                 <AlertDialog
                                   open={showDeleteDialog}
