@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
-
+import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { ModelChannel, ModelEvent } from './events'
 
 contextBridge.exposeInMainWorld('models', {
@@ -34,6 +34,12 @@ contextBridge.exposeInMainWorld('models', {
   },
 } satisfies ModelsAPI)
 
+contextBridge.exposeInMainWorld('chats', {
+  sendMessage: (message) => {
+    return ipcRenderer.invoke('chats:sendMessage', message)
+  },
+} satisfies ChatsAPI)
+
 export interface ModelsAPI {
   onDownloadProgress: (
     cb: (
@@ -59,8 +65,21 @@ export interface ModelsAPI {
   getFilePath: (filename: string) => Promise<string | null>
 }
 
+export interface ChatsAPI {
+  sendMessage: ({
+    message,
+    promptOptions,
+    modelPath,
+  }: {
+    message: string
+    promptOptions?: LLamaChatPromptOptions
+    modelPath: string
+  }) => Promise<string>
+}
+
 declare global {
   interface Window {
     models: ModelsAPI
+    chats: ChatsAPI
   }
 }
