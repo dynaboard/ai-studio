@@ -4,6 +4,8 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 
+import { Button } from './ui/button'
+
 interface Props {
   language: string
   value: string
@@ -18,7 +20,27 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
   }
 
   return (
-    <div className="codeblock relative my-3 w-full font-sans text-xs">
+    <div className="codeblock group relative my-3 w-full font-sans text-xs">
+      <div className="relative flex items-center justify-between">
+        <div className="mt-2 flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-2 text-xs text-muted-foreground opacity-0 hover:bg-inherit hover:text-gray-900 focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0 group-hover:opacity-100"
+            onClick={onCopy}
+          >
+            {isCopied ? (
+              <Check className="h-3 w-3 text-muted-foreground/80 hover:text-gray-900" />
+            ) : (
+              <Clipboard
+                className="text-muted-foreground/8 h-3 w-3 cursor-pointer hover:text-gray-900"
+                onClick={onCopy}
+              />
+            )}
+            <span className="sr-only">Copy code</span>
+          </Button>
+        </div>
+      </div>
       <SyntaxHighlighter
         language={language}
         PreTag="div"
@@ -26,20 +48,6 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
       >
         {value}
       </SyntaxHighlighter>
-
-      <div className="relative flex items-center justify-between">
-        <div className="mt-2 flex items-center">
-          {isCopied ? (
-            <Check className="h-3 w-3 text-muted-foreground/80" />
-          ) : (
-            <Clipboard
-              className="h-3 w-3 cursor-pointer text-muted-foreground/80"
-              onClick={onCopy}
-            />
-          )}
-          <span className="sr-only">Copy code</span>
-        </div>
-      </div>
     </div>
   )
 })
