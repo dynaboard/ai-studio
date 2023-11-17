@@ -26,7 +26,7 @@ type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
 interface ModelSwitcherProps extends PopoverTriggerProps {}
 
 const fuseOptions = {
-  keys: ['value'],
+  keys: ['label'],
   threshold: 0.4,
 }
 
