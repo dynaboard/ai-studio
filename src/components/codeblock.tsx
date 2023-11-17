@@ -30,12 +30,9 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
             onClick={onCopy}
           >
             {isCopied ? (
-              <Check className="h-3 w-3 text-muted-foreground/80 hover:text-gray-900" />
+              <Check className="h-3 w-3" />
             ) : (
-              <Clipboard
-                className="text-muted-foreground/8 h-3 w-3 cursor-pointer hover:text-gray-900"
-                onClick={onCopy}
-              />
+              <Clipboard className="h-3 w-3 cursor-pointer" onClick={onCopy} />
             )}
             <span className="sr-only">Copy code</span>
           </Button>
