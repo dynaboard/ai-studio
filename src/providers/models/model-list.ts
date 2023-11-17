@@ -3,14 +3,16 @@ export type Model = {
   description: string
   parameters: string
   promptTemplate: 'none' | 'mistral' | 'llama' | 'zephyr'
-  files: {
-    name: string
-    url: string
-    format: 'gguf'
-    repository: string
-    quantization: string
-    sizeBytes: number
-  }[]
+  files: ModelFile[]
+}
+
+export type ModelFile = {
+  name: string
+  url: string
+  format: 'gguf'
+  repository: string
+  quantization: string
+  sizeBytes: number
 }
 
 export const MODELS: Model[] = [
