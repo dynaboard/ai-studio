@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
+import { useValue } from 'signia-react'
 
 import { Model, MODELS } from './model-list'
 
@@ -66,6 +67,7 @@ export class ModelManager {
         downloads,
       }
     })
+    void this.loadAvailableModels()
   }
 
   initialize() {
@@ -104,6 +106,7 @@ export class ModelManager {
         downloads,
       }
     })
+    await this.loadAvailableModels()
   }
 
   async pauseDownload(filename: string) {
@@ -194,4 +197,20 @@ export const ModelManagerContext = createContext(new ModelManager())
 
 export function useModelManager() {
   return useContext(ModelManagerContext)
+}
+
+export function useAvailableModels() {
+  const modelManager = useModelManager()
+
+  return useValue('useAvailableModels', () => modelManager.availableModels, [
+    modelManager.availableModels,
+  ])
+}
+
+export function useDownloads() {
+  const modelManager = useModelManager()
+
+  return useValue('useDownloads', () => modelManager.downloads, [
+    modelManager.downloads,
+  ])
 }

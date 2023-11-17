@@ -1,19 +1,12 @@
 import { Suspense } from 'react'
-import { useValue } from 'signia-react'
 
 import { ChatWindow } from '@/components/chat-window'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { ChatWindowProvider } from '@/providers'
-import { useModelManager } from '@/providers/models/provider'
+import { useAvailableModels } from '@/providers/models/provider'
 
 export function HomePage() {
-  const modelManager = useModelManager()
-
-  const availableModels = useValue(
-    'availableModels',
-    () => modelManager.availableModels,
-    [modelManager],
-  )
+  const availableModels = useAvailableModels()
 
   console.log('Local models & files', availableModels)
 

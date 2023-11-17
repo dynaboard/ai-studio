@@ -1,18 +1,11 @@
 import React from 'react'
-import { useValue } from 'signia-react'
 
 import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { cn } from '@/lib/utils'
-import { useModelManager } from '@/providers/models/provider'
+import { useAvailableModels } from '@/providers/models/provider'
 
 export function ModelsPage() {
-  const modelManager = useModelManager()
-
-  const availableModels = useValue(
-    'availableModels',
-    () => modelManager.availableModels,
-    [modelManager],
-  )
+  const availableModels = useAvailableModels()
 
   return (
     <div

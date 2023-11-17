@@ -1,7 +1,6 @@
-import { Download, LucideTrash } from 'lucide-react'
+import { LucideDownload, LucideLoader2, LucideTrash } from 'lucide-react'
 import prettyBytes from 'pretty-bytes'
 import { useState } from 'react'
-import { useValue } from 'signia-react'
 
 import {
   AlertDialog,
@@ -11,24 +10,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useModelManager } from '@/providers/models/provider'
+import { ModelFile } from '@/providers/models/model-list'
+import {
+  useAvailableModels,
+  useDownloads,
+  useModelManager,
+} from '@/providers/models/provider'
 
 import { Button } from '../ui/button'
 import { Label } from '../ui/label'
 
 export function ModelDownloader({ subtitle }: { subtitle?: string }) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-
   const modelManager = useModelManager()
-
-  const availableModels = useValue(
-    'availableModels',
-    () => modelManager.availableModels,
-    [modelManager],
-  )
 
   return (
     <div className="grid h-full min-h-0 w-full grid-cols-1">
@@ -57,105 +54,9 @@ export function ModelDownloader({ subtitle }: { subtitle?: string }) {
                   {model.description}
                 </p>
                 <div className="flex gap-2">
-                  {model.files.map((file) => {
-                    const hasLocalFile = availableModels.some((model) =>
-                      model.files.some(
-                        (localFile) => localFile.name === file.name,
-                      ),
-                    )
-
-                    return (
-                      <a
-                        href={file.url}
-                        key={file.name}
-                        className="group flex flex-1 flex-col rounded-lg border bg-card p-2 text-card-foreground shadow-sm"
-                        download={file.name}
-                        onClickCapture={(event) => {
-                          if (hasLocalFile) {
-                            event.preventDefault()
-                            setShowDeleteDialog(true)
-                          } else {
-                            event.stopPropagation()
-                          }
-                        }}
-                      >
-                        <div className="grid h-full grid-cols-[1fr_36px]">
-                          <div className="flex flex-col justify-between">
-                            <span className="text-xs">{file.name}</span>
-                            <div className="flex flex-row gap-2">
-                              <Badge className="hover:bg-primary">
-                                {file.quantization}
-                              </Badge>
-                              <Badge variant="outline">
-                                {prettyBytes(file.sizeBytes)}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-center justify-center">
-                            {hasLocalFile ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="iconButton"
-                                  className="p-0 hover:text-destructive"
-                                  onClick={() => {
-                                    setShowDeleteDialog(true)
-                                  }}
-                                >
-                                  <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-red-600" />
-                                </Button>
-                                <AlertDialog
-                                  open={showDeleteDialog}
-                                  onOpenChange={setShowDeleteDialog}
-                                >
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
-                                        Are you sure absolutely sure?
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        This action cannot be undone. This model
-                                        will no longer be accessible by you.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel
-                                        onClick={() => {
-                                          setShowDeleteDialog(false)
-                                        }}
-                                      >
-                                        Cancel
-                                      </AlertDialogCancel>
-                                      <Button
-                                        variant="destructive"
-                                        onClick={() => {
-                                          modelManager.deleteModelFile(
-                                            file.name,
-                                          )
-                                          setShowDeleteDialog(false)
-                                        }}
-                                      >
-                                        Delete
-                                      </Button>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="iconButton"
-                                className="p-0 hover:text-destructive"
-                              >
-                                {/* TODO: add animated download indicator */}
-                                <Download className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </a>
-                    )
-                  })}
+                  {model.files.map((file) => (
+                    <FileEntry key={file.name} file={file} />
+                  ))}
                 </div>
               </div>
             )
@@ -163,5 +64,115 @@ export function ModelDownloader({ subtitle }: { subtitle?: string }) {
         </div>
       </ScrollArea>
     </div>
+  )
+}
+
+function FileEntry({ file }: { file: ModelFile }) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  const modelManager = useModelManager()
+  const availableModels = useAvailableModels()
+  const downloads = useDownloads()
+
+  const hasLocalFile = availableModels.some((model) =>
+    model.files.some((localFile) => localFile.name === file.name),
+  )
+
+  const isDownloading = !!downloads.find(
+    (download) => download.filename === file.name,
+  )
+
+  return (
+    <a
+      href={file.url}
+      key={file.name}
+      className="group flex flex-1 flex-col rounded-lg border bg-card p-2 text-card-foreground shadow-sm"
+      download={file.name}
+      onClickCapture={(event) => {
+        if (isDownloading) {
+          event.preventDefault()
+          return
+        }
+
+        if (hasLocalFile) {
+          event.preventDefault()
+          setShowDeleteDialog(true)
+        } else {
+          event.stopPropagation()
+        }
+      }}
+    >
+      <div className="grid h-full grid-cols-[1fr_36px]">
+        <div className="flex flex-col justify-between">
+          <span className="text-xs">{file.name}</span>
+          <div className="flex flex-row gap-2">
+            <Badge className="hover:bg-primary">{file.quantization}</Badge>
+            <Badge variant="outline">{prettyBytes(file.sizeBytes)}</Badge>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center">
+          {hasLocalFile ? (
+            <>
+              <AlertDialog open={showDeleteDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="iconButton"
+                    className="block p-0 hover:text-destructive"
+                    onClick={() => {
+                      setShowDeleteDialog(true)
+                    }}
+                  >
+                    <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-red-600" />
+                  </Button>
+                </AlertDialogTrigger>
+
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Are you sure absolutely sure?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This action cannot be undone. This model will no longer be
+                      accessible by you.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel
+                      onClick={() => {
+                        setShowDeleteDialog(false)
+                      }}
+                    >
+                      Cancel
+                    </AlertDialogCancel>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        modelManager.deleteModelFile(file.name)
+                        setShowDeleteDialog(false)
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              variant="iconButton"
+              className="p-0 hover:text-primary"
+            >
+              {isDownloading ? (
+                <LucideLoader2 className="h-4 w-4 animate-spin text-muted-foreground group-hover:text-muted-foreground/80" />
+              ) : (
+                <LucideDownload className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    </a>
   )
 }
