@@ -1,7 +1,6 @@
 import { Check, Clipboard } from 'lucide-react'
 import { FC, memo } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 
@@ -22,9 +21,8 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
     <div className="codeblock relative my-3 w-full font-sans text-xs">
       <SyntaxHighlighter
         language={language}
-        style={oneDark}
         PreTag="div"
-        customStyle={{ margin: 0 }}
+        customStyle={{ margin: 0, borderRadius: 'var(--radius)' }}
       >
         {value}
       </SyntaxHighlighter>
