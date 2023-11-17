@@ -1,6 +1,8 @@
 import { SendHorizonal } from 'lucide-react'
 import React from 'react'
 import Textarea from 'react-textarea-autosize'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
@@ -8,7 +10,9 @@ import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { useChatWindowManager } from '@/providers/chat-window'
 import { type Model } from '@/providers/models/model-list'
 
+import { CodeBlock } from './codeblock'
 import { Header } from './header'
+import { MemoizedReactMarkdown } from './markdown'
 
 export function ChatWindow({ models }: { models: Model[] }) {
   const chatWindowManager = useChatWindowManager()
@@ -63,7 +67,38 @@ export function ChatWindow({ models }: { models: Model[] }) {
                   <span className="text-xs text-muted-foreground">
                     {message.role === 'user' ? 'You' : 'Assistant'}
                   </span>
-                  <span className="text-sm">{message.message}</span>
+                  <div className="flex-1 space-y-2 overflow-hidden">
+                    <MemoizedReactMarkdown
+                      className="prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 break-words"
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      components={{
+                        p({ children }) {
+                          return (
+                            <p className="mb-2 text-sm last:mb-0">{children}</p>
+                          )
+                        },
+                        code({ children, className, ...props }) {
+                          const value = String(children).replace(/\n$/, '')
+                          const match = /language-(\w+)/.exec(className || '')
+
+                          return match ? (
+                            <CodeBlock
+                              key={Math.random()}
+                              language={(match && match[1]) || ''}
+                              value={value}
+                              {...props}
+                            />
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          )
+                        },
+                      }}
+                    >
+                      {message.message}
+                    </MemoizedReactMarkdown>
+                  </div>
                 </div>
               )
             })}
