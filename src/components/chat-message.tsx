@@ -14,11 +14,11 @@ export function ChatMessage({ message }: { message: Message }) {
         {message.role === 'user' ? 'You' : 'Assistant'}
       </span>
       <MemoizedReactMarkdown
-        className="markdown prose prose-neutral dark:prose-invert w-full break-words text-sm"
+        className="markdown prose md:prose-lg lg:prose-xl dark:prose-invert break-words text-sm"
         remarkPlugins={[remarkGfm, remarkMath]}
         components={{
           p({ children }) {
-            return <p className="my-2 first:mt-0 last:mb-0">{children}</p>
+            return <p className="mt-2 first:mt-0">{children}</p>
           },
           code({ inline, className, children, ...props }) {
             if (children.length) {
@@ -52,6 +52,19 @@ export function ChatMessage({ message }: { message: Message }) {
                 {children}
               </code>
             )
+          },
+          ol({ children }) {
+            return <ol className="list-decimal pl-4">{children}</ol>
+          },
+          ul({ children }) {
+            return (
+              <ul className="mt-2 list-disc pl-4 first:mt-0 last:mb-0">
+                {children}
+              </ul>
+            )
+          },
+          li({ children }) {
+            return <li className="mt-2 first:mt-0">{children}</li>
           },
         }}
       >
