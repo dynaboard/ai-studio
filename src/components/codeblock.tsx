@@ -1,54 +1,15 @@
 import { Check, Copy } from 'lucide-react'
 import { FC, memo } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { coldarkDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
-import { Button } from '@/components/ui/button'
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
+
+import { Button } from './ui/button'
 
 interface Props {
   language: string
   value: string
-}
-
-interface languageMap {
-  [key: string]: string | undefined
-}
-
-export const programmingLanguages: languageMap = {
-  javascript: '.js',
-  python: '.py',
-  java: '.java',
-  c: '.c',
-  cpp: '.cpp',
-  'c++': '.cpp',
-  'c#': '.cs',
-  ruby: '.rb',
-  php: '.php',
-  swift: '.swift',
-  'objective-c': '.m',
-  kotlin: '.kt',
-  typescript: '.ts',
-  go: '.go',
-  perl: '.pl',
-  rust: '.rs',
-  scala: '.scala',
-  haskell: '.hs',
-  lua: '.lua',
-  shell: '.sh',
-  sql: '.sql',
-  html: '.html',
-  css: '.css',
-  // add more file extensions here, make sure the key is same as language prop in CodeBlock.tsx component
-}
-
-export const generateRandomString = (length: number, lowercase = false) => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXY3456789' // excluding similar looking characters like Z, 2, I, 1, O, 0
-  let result = ''
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return lowercase ? result.toLowerCase() : result
 }
 
 export const CodeBlock: FC<Props> = memo(({ language, value }) => {
@@ -60,14 +21,15 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
   }
 
   return (
-    <div className="relative w-full bg-zinc-950 font-sans">
-      <div className="flex w-full items-center justify-between bg-zinc-800 px-6 py-2 pr-4 text-zinc-100">
+    <div className="codeblock relative my-3 w-full font-sans text-xs">
+      {/* rgb(40, 44, 52) is from the default SyntaxHighlighter's bg */}
+      <div className="relative flex h-10 items-center justify-between rounded-t-md bg-zinc-800 px-4 py-2 font-sans text-xs text-zinc-100">
         <span className="text-xs lowercase">{language}</span>
         <div className="flex items-center">
           <Button
             variant="ghost"
             size="icon"
-            className="text-xs hover:bg-zinc-800 focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
+            className="text-xs hover:bg-inherit hover:text-muted-foreground focus-visible:ring-1 focus-visible:ring-slate-700 focus-visible:ring-offset-0"
             onClick={onCopy}
           >
             {isCopied ? (
@@ -79,22 +41,16 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
           </Button>
         </div>
       </div>
+
       <SyntaxHighlighter
         language={language}
-        style={coldarkDark}
+        style={oneDark}
         PreTag="div"
-        showLineNumbers
         customStyle={{
           margin: 0,
-          width: '100%',
-          background: 'transparent',
-          padding: '24px 16px',
-        }}
-        codeTagProps={{
-          style: {
-            fontSize: '12px',
-            fontFamily: 'var(--font-mono)',
-          },
+          borderRadius:
+            // Essentially `.rounded-b-md`
+            '0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px)',
         }}
       >
         {value}
