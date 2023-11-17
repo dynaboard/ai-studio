@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 
-type Message = {
+export type Message = {
   role: 'user' | 'system' | 'assistant'
   message: string
 }
