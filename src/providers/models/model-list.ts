@@ -19,7 +19,7 @@ export const MODELS: Model[] = [
   {
     name: 'Mistral 7B Instruct v0.1',
     description:
-      'This model is fine-tuned for chat, but excels in many different workflows.',
+      'This model has been fine-tuned to follow instructions. Similar performance to Llama  13B.',
     parameters: '7B',
     promptTemplate: 'mistral',
     files: [
@@ -46,7 +46,7 @@ export const MODELS: Model[] = [
   {
     name: 'Zephyr 7B β',
     description:
-      'This model is trained to act as a helpful assistant for a variety of tasks.',
+      'Fine-tuned on Mistral 7B for chat. Not aligned to reduce chance of problematic output.',
     parameters: '7B',
     promptTemplate: 'zephyr',
     files: [
@@ -71,7 +71,7 @@ export const MODELS: Model[] = [
   {
     name: 'Llama 2 7B Chat',
     description:
-      'This model is trained to act as a helpful assistant for a variety of tasks.',
+      'Fine-tuned Llama 2 for better chat performance.',
     parameters: '7B',
     promptTemplate: 'none',
     files: [
@@ -104,7 +104,7 @@ export const MODELS: Model[] = [
   {
     name: 'CodeLlama 7B Instruct',
     description:
-      'This model is trained to act as a helpful assistant for a variety of tasks.',
+      'Fine-tuned on both code generation and instruction following from Llama 2 7B. Worse at general purpose tasks.',
     parameters: '7B',
     promptTemplate: 'llama',
     files: [
@@ -140,7 +140,7 @@ export const MODELS: Model[] = [
   {
     name: 'CodeLlama 13B Instruct',
     description:
-      'This model is trained to act as a helpful assistant for a variety of tasks.',
+      'Fine-tuned on both code generation and instruction following from Llama 2 13B.',
     parameters: '13B',
     promptTemplate: 'llama',
     files: [
@@ -176,7 +176,7 @@ export const MODELS: Model[] = [
   {
     name: 'Phind CodeLlama 34B v2',
     description:
-      'This model is trained to act as a helpful assistant for a variety of tasks.',
+      'Fine-tuned on additional code samples by the Phind team for better output. Larger model that runs slower.',
     parameters: '34B',
     promptTemplate: 'llama',
     files: [
