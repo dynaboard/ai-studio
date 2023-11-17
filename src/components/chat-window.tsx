@@ -1,14 +1,19 @@
 import { SendHorizonal } from 'lucide-react'
 import React from 'react'
 import Textarea from 'react-textarea-autosize'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
+import { cn } from '@/lib/utils'
 import { useChatWindowManager } from '@/providers/chat-window'
 import { type Model } from '@/providers/models/model-list'
 
+import { CodeBlock } from './codeblock'
 import { Header } from './header'
+import { MemoizedReactMarkdown } from './markdown'
 
 export function ChatWindow({ models }: { models: Model[] }) {
   const chatWindowManager = useChatWindowManager()
@@ -59,11 +64,79 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <>
             {messages.map((message, index) => {
               return (
-                <div key={`${message}-${index}`} className="mb-4 flex flex-col">
+                <div
+                  key={`${message}-${index}`}
+                  className="message mb-4 flex flex-col"
+                >
                   <span className="text-xs text-muted-foreground">
                     {message.role === 'user' ? 'You' : 'Assistant'}
                   </span>
-                  <span className="text-sm">{message.message}</span>
+                  <MemoizedReactMarkdown
+                    className="markdown prose dark:prose-invert flex-1"
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    components={{
+                      p({ children }) {
+                        return (
+                          <p className="mb-2 text-xs last:mb-0">{children}</p>
+                        )
+                      },
+                      code({ inline, className, children, ...props }) {
+                        if (children.length) {
+                          if (children[0] == '▍') {
+                            return (
+                              <span className="mt-1 animate-pulse cursor-default">
+                                ▍
+                              </span>
+                            )
+                          }
+
+                          children[0] = (children[0] as string).replace(
+                            '`▍`',
+                            '▍',
+                          )
+                        }
+
+                        const match = /language-(\w+)/.exec(className || '')
+                        const value = String(children).replace(/\n$/, '')
+
+                        return !inline ? (
+                          <CodeBlock
+                            key={Math.random()}
+                            language={(match && match[1]) || ''}
+                            value={value}
+                            {...props}
+                          />
+                        ) : (
+                          <code className={cn(className, 'text-xs')} {...props}>
+                            {children}
+                          </code>
+                        )
+                      },
+                      table({ children }) {
+                        return (
+                          <table className="border-collapse border border-black px-3 py-1 dark:border-white">
+                            {children}
+                          </table>
+                        )
+                      },
+                      th({ children }) {
+                        return (
+                          <th className="break-words border border-black bg-gray-500 px-3 py-1 text-white dark:border-white">
+                            {children}
+                          </th>
+                        )
+                      },
+                      td({ children }) {
+                        return (
+                          <td className="break-words border border-black px-3 py-1 dark:border-white">
+                            {children}
+                          </td>
+                        )
+                      },
+                    }}
+                  >
+                    {message.message}
+                  </MemoizedReactMarkdown>
                 </div>
               )
             })}

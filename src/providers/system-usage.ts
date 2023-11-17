@@ -33,7 +33,7 @@ export class SystemUsageManager {
 
     this.timer = window.setInterval(() => {
       this.getSystemUsage().then((usage) => {
-        console.log('usage', usage)
+        // console.log('usage', usage)
         this._state.set({ usage })
       })
     }, 2000)
