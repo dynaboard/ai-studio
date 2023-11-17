@@ -14,11 +14,11 @@ export function ChatMessage({ message }: { message: Message }) {
         {message.role === 'user' ? 'You' : 'Assistant'}
       </span>
       <MemoizedReactMarkdown
-        className="markdown prose md:prose-lg lg:prose-xl dark:prose-invert break-words text-sm"
+        className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
         remarkPlugins={[remarkGfm, remarkMath]}
         components={{
           p({ children }) {
-            return <p className="mt-2 first:mt-0">{children}</p>
+            return <p className="mb-2 leading-relaxed last:mb-0">{children}</p>
           },
           code({ inline, className, children, ...props }) {
             if (children.length) {
@@ -45,26 +45,13 @@ export function ChatMessage({ message }: { message: Message }) {
               <code
                 className={cn(
                   className,
-                  'inline-flex items-center rounded border border-neutral-200 bg-neutral-50 p-1 text-xs leading-4 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100',
+                  'inline-flex h-5 items-center rounded border border-neutral-200 bg-neutral-50 p-[1px] text-xs leading-7 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100',
                 )}
                 {...props}
               >
                 {children}
               </code>
             )
-          },
-          ol({ children }) {
-            return <ol className="list-decimal pl-4">{children}</ol>
-          },
-          ul({ children }) {
-            return (
-              <ul className="mt-2 list-disc pl-4 first:mt-0 last:mb-0">
-                {children}
-              </ul>
-            )
-          },
-          li({ children }) {
-            return <li className="mt-2 first:mt-0">{children}</li>
           },
         }}
       >

@@ -20,7 +20,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
   }
 
   return (
-    <div className="codeblock group relative my-3 w-full font-sans text-xs">
+    <div className="codeblock group relative text-xs">
       <div className="relative flex items-center justify-between">
         <Button
           variant="ghost"
@@ -29,7 +29,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
           onClick={onCopy}
         >
           {isCopied ? (
-            <Check className="h-3 w-3" />
+            <Check className="h-3 w-3 " />
           ) : (
             <Clipboard className="h-3 w-3 cursor-pointer" onClick={onCopy} />
           )}
@@ -39,7 +39,7 @@ export const CodeBlock: FC<Props> = memo(({ language, value }) => {
       <SyntaxHighlighter
         language={language}
         PreTag="div"
-        customStyle={{ margin: 0, borderRadius: 'var(--radius)' }}
+        customStyle={{ margin: 0 }}
       >
         {value}
       </SyntaxHighlighter>
