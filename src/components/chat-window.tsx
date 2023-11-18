@@ -1,10 +1,10 @@
 import { SendHorizonal } from 'lucide-react'
 import React from 'react'
+import ScrollToBottom from 'react-scroll-to-bottom'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import {
   useChatManager,
@@ -61,13 +61,14 @@ export function ChatWindow({ models }: { models: Model[] }) {
           </span>
         </div>
       ) : (
-        <div className="h-full overflow-hidden">
-          <ScrollArea className="h-full">
-            {messages.map((message) => (
-              <ChatMessage key={message.id} messageID={message.id} />
-            ))}
-          </ScrollArea>
-        </div>
+        <ScrollToBottom
+          mode="bottom"
+          className="relative h-full w-full overflow-y-auto"
+        >
+          {messages.map((message) => (
+            <ChatMessage key={message.id} messageID={message.id} />
+          ))}
+        </ScrollToBottom>
       )}
 
       <div className="flex items-center">
