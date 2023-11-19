@@ -159,15 +159,11 @@ function FileEntry({ file }: { file: ModelFile }) {
               </AlertDialog>
             </>
           ) : (
-            <Button
-              size="sm"
-              variant="iconButton"
-              className="p-0 hover:text-primary"
-            >
+            <Button size="sm" variant="iconButton" className="p-">
               {isDownloading ? (
-                <LucideLoader2 className="h-4 w-4 animate-spin text-muted-foreground group-hover:text-muted-foreground/80" />
+                <LucideLoader2 className="h-4 w-4 animate-spin text-muted-foreground group-hover:text-gray-800" />
               ) : (
-                <LucideDownload className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
+                <LucideDownload className="h-4 w-4 text-muted-foreground group-hover:text-gray-800" />
               )}
             </Button>
           )}
