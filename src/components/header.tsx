@@ -18,7 +18,7 @@ export function Header({
         // @ts-expect-error this is an electron specific property, so we can drag the window around, but it's not in any types
         WebkitAppRegion: 'drag',
       }}
-      className="sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b bg-background/95 p-2 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b p-2 backdrop-blur"
     >
       <div
         className="flex h-full items-center gap-4"
@@ -31,7 +31,7 @@ export function Header({
 
         {currentThread ? (
           <div>
-            <span className="text-sm font-medium text-muted-foreground">
+            <span className="text-muted-foreground text-sm font-medium">
               {currentThread.title}
             </span>
           </div>

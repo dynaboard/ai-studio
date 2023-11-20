@@ -150,6 +150,27 @@ export class HistoryManager {
     })
   }
 
+  changeThreadModel(threadID: string, model: string) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID) {
+          return {
+            ...thread,
+            modelID: model,
+          }
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
   addMessage({ threadID, message }: { threadID: string; message: Message }) {
     this._state.update((state) => {
       const threads = state.threads.map((thread) => {
@@ -262,7 +283,10 @@ export class HistoryManager {
     })
   }
 
-  getThread(threadID: string) {
+  getThread(threadID: string | undefined) {
+    if (!threadID) {
+      return
+    }
     return this.threads.find((thread) => thread.id === threadID)
   }
 }
@@ -275,7 +299,10 @@ export function useHistoryManager() {
 
 export function useThreads() {
   const historyManager = useHistoryManager()
-  return useValue('threads', () => historyManager.threads, [historyManager])
+  return useValue('threads', () => historyManager.threads, [
+    historyManager,
+    historyManager.threads,
+  ])
 }
 
 export function useThread(threadID?: string) {

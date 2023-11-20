@@ -3,11 +3,11 @@ import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
 
 import { Message } from '@/providers/chat/types'
-import { HistoryManager } from '@/providers/history/manager'
+import { HistoryManager, useThread } from '@/providers/history/manager'
 
 type ModelState = {
   currentModel?: string
-  currentThread?: string
+  currentThreadID?: string
   sendingMessage: boolean
   messages: Message[]
   loadingText: string
@@ -17,7 +17,7 @@ export class ChatManager {
   private readonly _state = atom<ModelState>('ChatManager._state', {
     sendingMessage: false,
     messages: [],
-    currentThread: undefined,
+    currentThreadID: undefined,
     currentModel: undefined,
     loadingText: '',
   })
@@ -37,13 +37,13 @@ export class ChatManager {
     this._state.update((state) => ({
       ...state,
       messages,
-      currentThread: threadID,
+      currentThreadID: threadID,
       currentModel: model,
     }))
   }
 
   handleChatToken = (token: string, messageID: string) => {
-    const threadID = this.state.currentThread
+    const threadID = this.state.currentThreadID
     if (!threadID) {
       return
     }
@@ -144,6 +144,10 @@ export class ChatManager {
   }
 
   setModel(model: string) {
+    const currentThreadID = this.state.currentThreadID
+    if (currentThreadID) {
+      this.historyManager.changeThreadModel(currentThreadID, model)
+    }
     this._state.update((state) => {
       return {
         ...state,
@@ -161,7 +165,7 @@ export class ChatManager {
       return {
         ...state,
         messages,
-        currentThread: threadID,
+        currentThreadID: threadID,
       }
     })
   }
@@ -202,12 +206,15 @@ export function useChatManager() {
 
 export function useCurrentModel() {
   const chatManager = useChatManager()
-  return useValue('useCurrentModel', () => chatManager.model, [chatManager])
+  const currentThreadID = useCurrentThreadID()
+  return useThread(currentThreadID)?.modelID ?? chatManager.model
 }
 
 export function useCurrentThreadID() {
   const chatManager = useChatManager()
-  return useValue('useCurrentThreadID', () => chatManager.state.currentThread, [
-    chatManager,
-  ])
+  return useValue(
+    'useCurrentThreadID',
+    () => chatManager.state.currentThreadID,
+    [chatManager],
+  )
 }
