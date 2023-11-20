@@ -72,7 +72,7 @@ async function createWindow() {
   })
 
   modelManager = new ElectronModelManager(win)
-  chatManager = new ElectronChatManager()
+  chatManager = new ElectronChatManager(win)
 
   if (url) {
     // electron-vite-vue#298

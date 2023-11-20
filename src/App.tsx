@@ -4,14 +4,14 @@ import { suspend } from 'suspend-react'
 import { DownloadStatus } from '@/components/downloads/download-status'
 import { Sidebar } from '@/components/sidebar'
 import { StatusBar } from '@/components/status-bar'
-import { useModelManager } from '@/providers/models/provider'
+import { useModelManager } from '@/providers/models/manager'
 
 export function App() {
   const modelManager = useModelManager()
 
   suspend(async () => {
     return await modelManager.loadAvailableModels()
-  }, [])
+  }, [modelManager])
 
   return (
     <div className="h-screen w-screen overflow-hidden">

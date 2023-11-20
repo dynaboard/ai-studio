@@ -1,5 +1,10 @@
 import { motion } from 'framer-motion'
-import { LucideFileBox, LucideHome, LucideIcon, LucideMenu } from 'lucide-react'
+import {
+  LucideFileBox,
+  LucideIcon,
+  LucideMenu,
+  LucideMessageCircle,
+} from 'lucide-react'
 import React, { useCallback, useState } from 'react'
 import { Link as BaseLink, useMatches } from 'react-router-dom'
 
@@ -73,8 +78,8 @@ export function Sidebar() {
       </div>
       <nav className="h-full w-full border-r" data-menu-open={open}>
         <div className={cn('space-y-[1px] p-2', !open ? 'p-0' : '')}>
-          <Link to="/" icon={LucideHome}>
-            <span className={cn(!open ? 'hidden' : undefined)}>Home</span>
+          <Link to="/chats" icon={LucideMessageCircle}>
+            <span className={cn(!open ? 'hidden' : undefined)}>Chats</span>
           </Link>
           <Link to="/models" icon={LucideFileBox}>
             <span className={cn(!open ? 'hidden' : undefined)}>Models</span>

@@ -18,7 +18,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { useChatWindowManager } from '@/providers/chat-window'
+import { useChatManager, useCurrentModel } from '@/providers/chat/manager'
 import type { Model } from '@/providers/models/model-list'
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
@@ -49,10 +49,8 @@ export function ModelSwitcher({
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
-  const [selectedModel, setSelectedModel] = React.useState(
-    models[0].files[0].name,
-  )
-  const chatWindowManager = useChatWindowManager()
+  const selectedModel = useCurrentModel()
+  const chatManager = useChatManager()
 
   const selectOptions: Option[] = React.useMemo(() => {
     return [
@@ -157,8 +155,7 @@ export function ModelSwitcher({
                         <CommandItem
                           key={model.value}
                           onSelect={() => {
-                            setSelectedModel(model.value)
-                            chatWindowManager.setModel(model.modelPath)
+                            chatManager.setModel(model.modelPath)
                             setOpen(false)
                           }}
                           className="gap-1 text-sm"

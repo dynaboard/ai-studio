@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    @apply hidden w-1.5 h-2.5 group-hover:block transition-colors;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent rounded-full;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

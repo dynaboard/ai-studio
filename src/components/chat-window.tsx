@@ -4,15 +4,23 @@ import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
-import { useChatWindowManager } from '@/providers/chat-window'
+import {
+  useChatManager,
+  useCurrentModel,
+  useCurrentThreadID,
+} from '@/providers/chat/manager'
+import { useThreadMessages } from '@/providers/history/manager'
 import { type Model } from '@/providers/models/model-list'
 
 import { ChatMessage } from './chat-message'
-import { Header } from './header'
 
 export function ChatWindow({ models }: { models: Model[] }) {
-  const chatWindowManager = useChatWindowManager()
+  const chatManager = useChatManager()
+  const currentModel = useCurrentModel()
+  const currentThreadID = useCurrentThreadID()
+
   const { formRef, onKeyDown } = useEnterSubmit()
 
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
@@ -21,8 +29,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
     if (inputRef.current) {
       inputRef.current.focus()
     }
-    chatWindowManager.setModel(models[0].files[0].name)
-  }, [chatWindowManager, models])
+    chatManager.setModel(models[0].files[0].name)
+  }, [chatManager, models])
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -32,44 +40,37 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
-    void chatWindowManager.sendMessage({
+    void chatManager.sendMessage({
       message,
+      model: currentModel,
+      threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
     })
     event.currentTarget.reset()
   }
 
-  const disabled = useValue('disabled', () => chatWindowManager.paused, [
-    chatWindowManager,
-  ])
+  const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
-  const messages = useValue('messages', () => chatWindowManager.messages, [
-    chatWindowManager,
-  ])
+  const messages = useThreadMessages(currentThreadID)
 
   return (
-    <div className="grid h-full grid-rows-[_min-content,1fr,_min-content] overflow-hidden">
-      <Header models={models} />
-      <div className="h-full w-full overflow-auto p-4">
-        {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center">
-            <span className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-              Say something to get started
-            </span>
-          </div>
-        ) : (
-          <>
-            {messages.map((message, idx) => {
-              return <ChatMessage key={idx} message={message} />
-            })}
-            {chatWindowManager.loadingText !== '' && (
-              <span className="inline-flex items-center rounded-lg bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                {chatWindowManager.loadingText}
-              </span>
-            )}
-          </>
-        )}
-      </div>
-      <div className="flex items-center p-4">
+    <div className="grid h-full flex-1 grid-rows-[1fr,_min-content]">
+      {messages.length === 0 ? (
+        <div className="flex h-full flex-col items-center justify-center">
+          <span className="bg-muted text-muted-foreground inline-flex items-center rounded-lg px-3 py-1 text-sm font-medium">
+            Say something to get started
+          </span>
+        </div>
+      ) : (
+        <div className="h-full overflow-hidden">
+          <ScrollArea className="h-full">
+            {messages.map((message) => (
+              <ChatMessage key={message.id} messageID={message.id} />
+            ))}
+          </ScrollArea>
+        </div>
+      )}
+
+      <div className="flex items-center">
         <form
           className="relative w-full"
           onSubmit={handleMessage}
@@ -78,7 +79,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <Textarea
             name="message"
             ref={inputRef}
-            className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
             rows={1}
