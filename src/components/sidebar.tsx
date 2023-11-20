@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { LucideFileBox, LucideIcon, LucideMessageCircle } from 'lucide-react'
 import React from 'react'
 import { Link as BaseLink, useMatches } from 'react-router-dom'
@@ -31,32 +30,19 @@ function Link({
   )
 }
 
-export function Sidebar({ open }: { open: boolean }) {
+export function Sidebar() {
   return (
-    <motion.div
-      className="h-full w-[240px] border-r"
-      initial={{
-        width: '240px',
-      }}
-      animate={{
-        width: open ? '240px' : '0',
-      }}
-      transition={{ ease: [0.165, 0.84, 0.44, 1] }}
-    >
-      <nav className="h-full w-full" data-menu-open={open}>
-        <div className={cn('space-y-[1px] p-2', !open ? 'p-0' : '')}>
+    <div className="col-start-1 col-end-3 h-full border-r">
+      <nav className="h-full w-full">
+        <div className={cn('space-y-[1px] p-2')}>
           <Link to="/chats" icon={LucideMessageCircle}>
-            <span className={(cn(!open ? 'hidden' : undefined), 'select-none')}>
-              Chats
-            </span>
+            <span className={cn('select-none')}>Chats</span>
           </Link>
           <Link to="/models" icon={LucideFileBox}>
-            <span className={(cn(!open ? 'hidden' : undefined), 'select-none')}>
-              Models
-            </span>
+            <span className={cn('select-none')}>Models</span>
           </Link>
         </div>
       </nav>
-    </motion.div>
+    </div>
   )
 }

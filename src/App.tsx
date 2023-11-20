@@ -9,6 +9,7 @@ import { useModelManager } from '@/providers/models/manager'
 
 import { Sidebar } from './components/sidebar'
 import { useMatchMediaEffect } from './lib/hooks/use-match-media'
+import { cn } from './lib/utils'
 
 export function App() {
   const modelManager = useModelManager()
@@ -32,21 +33,32 @@ export function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden">
-      <div className="grid h-full w-full grid-rows-[1fr,_24px]">
-        <div
-          className="bg-background fixed top-0 my-[3px] flex h-8 w-screen items-center space-x-4 pl-[74px]"
-          id="drag"
-        >
-          <PanelLeft
-            className="text-muted-foreground ml-2 h-4 w-4 cursor-pointer"
-            id="no-drag"
-            onClick={() => setOpen(!open)}
-          />
+      <div className="grid h-full w-full grid-rows-[_36px,1fr,_24px]">
+        <div className="titlebar grid grid-cols-12">
+          <div
+            className={cn(
+              'bg-background col-start-2 col-end-3 flex h-9 items-center',
+              open ? 'border-r' : '',
+            )}
+            id="drag"
+          >
+            <PanelLeft
+              className="text-muted-foreground h-4 w-4 cursor-pointer"
+              id="no-drag"
+              onClick={() => setOpen(!open)}
+            />
+          </div>
+          <div className="col-span-10 grid place-items-center">title</div>
         </div>
 
-        <div className="mt-8 flex transition-all">
-          <Sidebar open={open} />
-          <div className="flex-1">
+        <div className="grid grid-cols-12">
+          {open && <Sidebar />}
+          <div
+            className={
+              (cn(''),
+              open ? 'col-start-3 col-end-[-1]' : 'col-start-1 col-end-[-1]')
+            }
+          >
             <Outlet />
           </div>
         </div>

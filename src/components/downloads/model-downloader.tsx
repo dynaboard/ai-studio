@@ -28,19 +28,19 @@ export function ModelDownloader({ subtitle }: { subtitle?: string }) {
   const modelManager = useModelManager()
 
   return (
-    <div className="grid h-full min-h-0 w-full grid-cols-1">
-      <div className="sticky top-0 z-50 min-h-min w-full border-b bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="grid h-full w-full grid-cols-1">
+      <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 min-h-min w-full border-b p-4 backdrop-blur">
         <h1 className="mb-1 mt-2 text-left text-xl font-bold leading-tight tracking-tighter md:block md:text-2xl lg:leading-[1.1]">
           Models
         </h1>
-        <span className="sm:text-md text-md prose text-left text-muted-foreground">
+        <span className="sm:text-md text-md prose text-muted-foreground text-left">
           {subtitle
             ? subtitle
             : `Explore the OS community's AI chat models. Download ready-to-use models to your machine. Start chatting in seconds.`}
         </span>
       </div>
       <ScrollArea className="grid h-full w-full gap-4 overflow-auto">
-        <div className="mx-auto flex flex-1 flex-col gap-8 bg-zinc-50 p-4 dark:bg-zinc-900">
+        <div className="mx-auto flex flex-1 flex-col gap-8 bg-slate-50 p-4 dark:bg-slate-900">
           {modelManager.allModels.map((model) => {
             return (
               <div
@@ -50,7 +50,7 @@ export function ModelDownloader({ subtitle }: { subtitle?: string }) {
                 <Label className="font-semibold leading-none tracking-tight">
                   {model.name}
                 </Label>
-                <p className="mb-2 text-sm leading-normal text-muted-foreground">
+                <p className="text-muted-foreground mb-2 text-sm leading-normal">
                   {model.description}
                 </p>
                 <div className="flex gap-2">
@@ -86,7 +86,7 @@ function FileEntry({ file }: { file: ModelFile }) {
     <a
       href={file.url}
       key={file.name}
-      className="group flex flex-1 flex-col rounded-lg border bg-card p-2 text-card-foreground shadow-sm"
+      className="bg-card text-card-foreground group flex flex-1 flex-col rounded-lg border p-2 shadow-sm"
       download={file.name}
       onClickCapture={(event) => {
         if (isDownloading) {
@@ -118,12 +118,12 @@ function FileEntry({ file }: { file: ModelFile }) {
                   <Button
                     size="sm"
                     variant="iconButton"
-                    className="block p-0 hover:text-destructive"
+                    className="hover:text-destructive block p-0"
                     onClick={() => {
                       setShowDeleteDialog(true)
                     }}
                   >
-                    <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-red-600" />
+                    <LucideTrash className="text-muted-foreground h-4 w-4 group-hover:text-red-600" />
                   </Button>
                 </AlertDialogTrigger>
 
@@ -162,12 +162,12 @@ function FileEntry({ file }: { file: ModelFile }) {
             <Button
               size="sm"
               variant="iconButton"
-              className="p-0 hover:text-primary"
+              className="hover:text-primary p-0"
             >
               {isDownloading ? (
-                <LucideLoader2 className="h-4 w-4 animate-spin text-muted-foreground group-hover:text-muted-foreground/80" />
+                <LucideLoader2 className="text-muted-foreground group-hover:text-muted-foreground/80 h-4 w-4 animate-spin" />
               ) : (
-                <LucideDownload className="h-4 w-4 text-muted-foreground group-hover:text-muted-foreground/80" />
+                <LucideDownload className="text-muted-foreground group-hover:text-muted-foreground/80 h-4 w-4" />
               )}
             </Button>
           )}
