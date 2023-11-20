@@ -161,6 +161,16 @@ export class ChatManager {
       ? this.historyManager.getThread(threadID)?.messages ?? []
       : []
 
+    const thread = this.historyManager.getThread(threadID)
+
+    if (thread) {
+      window.chats.loadMessageList({
+        modelPath: thread.modelID,
+        threadID: thread.id,
+        messages,
+      })
+    }
+
     this._state.update((state) => {
       return {
         ...state,

@@ -61,10 +61,6 @@ export function ModelSwitcher({
   const currentThreadID = useCurrentThreadID()
   const messages = useThreadMessages(currentThreadID)
 
-  console.log('thread', {
-    selectedModel,
-  })
-
   const disableModelPicker = messages.length > 0
 
   const selectOptions: Option[] = React.useMemo(() => {
