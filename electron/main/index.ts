@@ -69,6 +69,7 @@ async function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
+    titleBarStyle: 'hiddenInset',
   })
 
   modelManager = new ElectronModelManager(win)

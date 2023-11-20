@@ -1,15 +1,9 @@
 import { motion } from 'framer-motion'
-import {
-  LucideFileBox,
-  LucideIcon,
-  LucideMenu,
-  LucideMessageCircle,
-} from 'lucide-react'
-import React, { useCallback, useState } from 'react'
+import { LucideFileBox, LucideIcon, LucideMessageCircle } from 'lucide-react'
+import React from 'react'
 import { Link as BaseLink, useMatches } from 'react-router-dom'
 
-import { Button, buttonVariants } from '@/components/ui/button'
-import { useMatchMediaEffect } from '@/lib/hooks/use-match-media'
+import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 function Link({
@@ -37,20 +31,7 @@ function Link({
   )
 }
 
-export function Sidebar() {
-  const [open, setOpen] = useState(false)
-
-  useMatchMediaEffect(
-    '(min-width: 768px)',
-    useCallback((matches) => {
-      if (matches) {
-        setOpen(true)
-      } else {
-        setOpen(false)
-      }
-    }, []),
-  )
-
+export function Sidebar({ open }: { open: boolean }) {
   return (
     <motion.div
       className="h-full w-[220px]"
@@ -62,20 +43,16 @@ export function Sidebar() {
       }}
       transition={{ ease: [0.165, 0.84, 0.44, 1] }}
     >
-      <div className="flex h-16 items-center gap-2 border-r px-2">
-        <Button
-          size="sm"
-          variant="iconButton"
-          className="p-2"
-          onClick={() => setOpen(!open)}
-        >
-          <LucideMenu className="h-4 w-4" />
-        </Button>
-
+      {/* <div
+        className={cn(
+          'flex h-16 items-center border-r px-2',
+          !open ? 'hidden' : undefined,
+        )}
+      >
         <strong key="title" className="text-bold flex-1 overflow-hidden">
           Playground
         </strong>
-      </div>
+      </div> */}
       <nav className="h-full w-full border-r" data-menu-open={open}>
         <div className={cn('space-y-[1px] p-2', !open ? 'p-0' : '')}>
           <Link to="/chats" icon={LucideMessageCircle}>
