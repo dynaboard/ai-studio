@@ -62,7 +62,9 @@ export function ChatMessage({ messageID }: { messageID: string }) {
           },
         }}
       >
-        {message.message}
+        {message.role === 'assistant' && message.state === 'pending'
+          ? 'Thinking...'
+          : message.message}
       </MemoizedReactMarkdown>
     </div>
   )

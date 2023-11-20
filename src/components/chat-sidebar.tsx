@@ -96,8 +96,10 @@ const Cursor = React.memo(function Cursor({
 
 function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const historyManager = useHistoryManager()
-  const navigate = useNavigate()
+  const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
+
+  const navigate = useNavigate()
 
   return (
     <div
@@ -142,12 +144,13 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
             <Button
               variant="iconButton"
               className="hover:text-destructive hidden h-full w-0 p-0 group-hover/node:block group-hover/node:w-auto"
-              onClick={(event) => {
+              onClick={async (event) => {
                 event.preventDefault()
 
                 const firstThread = historyManager.threads.find(
                   (t) => t.id !== node.data.id,
                 )
+                await chatManager.cleanupChatSession(node.data.id)
                 historyManager.deleteThread(node.data.id)
                 navigate(`/chats/${firstThread?.id ?? ''}`, { replace: true })
               }}

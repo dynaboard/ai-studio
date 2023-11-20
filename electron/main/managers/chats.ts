@@ -17,9 +17,10 @@ export class ElectronChatManager {
     this.sessions.clear()
   }
 
-  // Assumes one model per session for now.
-  private async initializeSession(modelPath: string) {
-    const session = this.sessions.get(modelPath)
+  // Assumes one model per thread for now.
+  private async initializeSession(modelPath: string, threadID: string) {
+    const key = `${modelPath}-${threadID}`
+    const session = this.sessions.get(key)
     if (!session) {
       const { LlamaContext, LlamaChatSession, LlamaModel } = await import(
         'node-llama-cpp'
@@ -29,7 +30,7 @@ export class ElectronChatManager {
       const newSession = new LlamaChatSession({
         context,
       })
-      this.sessions.set(modelPath, newSession)
+      this.sessions.set(key, newSession)
       return newSession
     }
     return session
@@ -37,16 +38,18 @@ export class ElectronChatManager {
 
   async sendMessage({
     message,
+    threadID,
     promptOptions,
     modelPath,
     onToken,
   }: {
     message: string
+    threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const session = await this.initializeSession(modelPath)
+    const session = await this.initializeSession(modelPath, threadID)
     const response = await session.prompt(message, {
       ...promptOptions,
       onToken: (chunks) => onToken(session.context.decode(chunks)),
@@ -57,17 +60,30 @@ export class ElectronChatManager {
   addClientEventHandlers() {
     ipcMain.handle(
       'chats:sendMessage',
-      async (_, { message, messageID, promptOptions, modelPath }) => {
+      async (_, { message, threadID, messageID, promptOptions, modelPath }) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
 
         return this.sendMessage({
           message,
+          threadID,
           promptOptions,
           modelPath: fullPath,
           onToken: (token) => {
             this.window.webContents.send('token', { token, messageID })
           },
         })
+      },
+    )
+
+    ipcMain.handle(
+      'chats:cleanupSession',
+      async (_, { modelPath, threadID }) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        const key = `${fullPath}-${threadID}`
+        const session = this.sessions.get(key)
+        if (session) {
+          this.sessions.delete(key)
+        }
       },
     )
   }

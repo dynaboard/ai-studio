@@ -133,6 +133,7 @@ export class ChatManager {
       messageID: assistantMessageID,
       message,
       modelPath,
+      threadID,
     })
 
     this.historyManager.editMessage({
@@ -163,6 +164,16 @@ export class ChatManager {
         currentThread: threadID,
       }
     })
+  }
+
+  async cleanupChatSession(threadID: string) {
+    const thread = this.historyManager.getThread(threadID)
+    if (!thread) {
+      return
+    }
+
+    const modelPath = thread.modelID
+    await window.chats.cleanupSession({ modelPath, threadID: thread.id })
   }
 
   @computed

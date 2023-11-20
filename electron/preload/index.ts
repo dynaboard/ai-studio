@@ -8,6 +8,9 @@ contextBridge.exposeInMainWorld('chats', {
   sendMessage: (message) => {
     return ipcRenderer.invoke('chats:sendMessage', message)
   },
+  cleanupSession: ({ modelPath, threadID }) => {
+    return ipcRenderer.invoke('chats:cleanupSession', { modelPath, threadID })
+  },
   onToken: (callback) => {
     const handler = (
       _event: Electron.IpcRendererEvent,
@@ -28,14 +31,24 @@ export interface ChatsAPI {
   sendMessage: ({
     message,
     messageID,
+    threadID,
     promptOptions,
     modelPath,
   }: {
     message: string
     messageID: string
+    threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
   }) => Promise<string>
+
+  cleanupSession: ({
+    modelPath,
+    threadID,
+  }: {
+    modelPath: string
+    threadID: string
+  }) => Promise<void>
 
   onToken: (callback: (token: string, messageID: string) => void) => () => void
 }
