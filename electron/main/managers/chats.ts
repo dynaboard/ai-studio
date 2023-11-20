@@ -85,6 +85,7 @@ The AI's task is to understand the context and utilize the previous conversation
     )
 
     messageList.add({ role: 'user', message })
+    console.log('prompt', messageList.format())
     const response = await session.prompt(messageList.format(), {
       ...promptOptions,
       onToken: (chunks) => onToken(session.context.decode(chunks)),

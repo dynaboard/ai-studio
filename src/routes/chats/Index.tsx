@@ -21,7 +21,7 @@ export function ChatsIndex() {
               <div className="h-full w-[250px] border-r">
                 <ThreadsSidebar />
               </div>
-              <div className="grid h-full w-full flex-1 grid-rows-[minmax(0,_1fr),_min-content] p-4">
+              <div className="grid h-full w-full flex-1 grid-rows-[minmax(0,_1fr),_min-content]">
                 <Outlet />
               </div>
             </div>
