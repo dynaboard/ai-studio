@@ -61,6 +61,7 @@ export function ThreadsSidebar() {
         </Button>
       </div>
       <div className="group flex-1" ref={ref}>
+        {/* TODO(@omarestrella): remove the awful focus styling on these nodes */}
         <Tree
           className="scrollbar"
           data={history}
@@ -69,6 +70,9 @@ export function ThreadsSidebar() {
           rowHeight={30}
           onMove={({ dragIds, index }) => {
             historyManager.moveThreads(dragIds, index)
+          }}
+          onRename={({ id, name }) => {
+            historyManager.renameThread(id, name)
           }}
           renderCursor={Cursor}
         >
