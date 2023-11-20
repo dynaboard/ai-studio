@@ -34,32 +34,26 @@ function Link({
 export function Sidebar({ open }: { open: boolean }) {
   return (
     <motion.div
-      className="h-full w-[220px]"
+      className="h-full w-[240px] border-r"
       initial={{
-        width: '220px',
+        width: '240px',
       }}
       animate={{
-        width: open ? '220px' : '52px',
+        width: open ? '240px' : '0',
       }}
       transition={{ ease: [0.165, 0.84, 0.44, 1] }}
     >
-      {/* <div
-        className={cn(
-          'flex h-16 items-center border-r px-2',
-          !open ? 'hidden' : undefined,
-        )}
-      >
-        <strong key="title" className="text-bold flex-1 overflow-hidden">
-          Playground
-        </strong>
-      </div> */}
-      <nav className="h-full w-full border-r" data-menu-open={open}>
+      <nav className="h-full w-full" data-menu-open={open}>
         <div className={cn('space-y-[1px] p-2', !open ? 'p-0' : '')}>
           <Link to="/chats" icon={LucideMessageCircle}>
-            <span className={cn(!open ? 'hidden' : undefined)}>Chats</span>
+            <span className={(cn(!open ? 'hidden' : undefined), 'select-none')}>
+              Chats
+            </span>
           </Link>
           <Link to="/models" icon={LucideFileBox}>
-            <span className={cn(!open ? 'hidden' : undefined)}>Models</span>
+            <span className={(cn(!open ? 'hidden' : undefined), 'select-none')}>
+              Models
+            </span>
           </Link>
         </div>
       </nav>

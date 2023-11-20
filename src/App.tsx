@@ -1,6 +1,6 @@
-import { FileBox, MessageCircle, PanelLeft } from 'lucide-react'
+import { PanelLeft } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { suspend } from 'suspend-react'
 
 import { DownloadStatus } from '@/components/downloads/download-status'
@@ -8,7 +8,6 @@ import { StatusBar } from '@/components/status-bar'
 import { useModelManager } from '@/providers/models/manager'
 
 import { Sidebar } from './components/sidebar'
-import { Separator } from './components/ui/separator'
 import { useMatchMediaEffect } from './lib/hooks/use-match-media'
 
 export function App() {
@@ -34,18 +33,15 @@ export function App() {
   return (
     <div className="h-screen w-screen overflow-hidden">
       <div className="grid h-full w-full grid-rows-[1fr,_24px]">
-        <div className="fixed top-0 my-[3px] flex h-8 w-screen items-center  space-x-4 bg-background pl-[74px]">
+        <div
+          className="bg-background fixed top-0 my-[3px] flex h-8 w-screen items-center space-x-4 pl-[74px]"
+          id="drag"
+        >
           <PanelLeft
-            className="ml-2 h-4 w-4 cursor-pointer text-muted-foreground"
+            className="text-muted-foreground ml-2 h-4 w-4 cursor-pointer"
+            id="no-drag"
             onClick={() => setOpen(!open)}
           />
-          <Separator orientation="vertical" className="h-5" />
-          <Link to="/chats">
-            <MessageCircle className="h-4 w-4 cursor-pointer text-muted-foreground" />
-          </Link>
-          <Link to="/models">
-            <FileBox className="h-4 w-4 cursor-pointer text-muted-foreground" />
-          </Link>
         </div>
 
         <div className="mt-8 flex transition-all">
