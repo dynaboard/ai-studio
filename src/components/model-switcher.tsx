@@ -2,6 +2,7 @@ import Fuse from 'fuse.js'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import * as React from 'react'
 
+import { InfoMarker } from '@/components/info'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -18,7 +19,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { useChatManager, useCurrentModel } from '@/providers/chat/manager'
+import {
+  useChatManager,
+  useCurrentModel,
+  useCurrentThreadID,
+} from '@/providers/chat/manager'
+import { useThreadMessages } from '@/providers/history/manager'
 import type { Model } from '@/providers/models/model-list'
 
 type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>
@@ -49,8 +55,17 @@ export function ModelSwitcher({
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
+
   const selectedModel = useCurrentModel()
   const chatManager = useChatManager()
+  const currentThreadID = useCurrentThreadID()
+  const messages = useThreadMessages(currentThreadID)
+
+  console.log('thread', {
+    selectedModel,
+  })
+
+  const disableModelPicker = messages.length > 0
 
   const selectOptions: Option[] = React.useMemo(() => {
     return [
@@ -121,23 +136,40 @@ export function ModelSwitcher({
 
   return (
     <Dialog open={showDialog} onOpenChange={setShowDialog}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(open) =>
+          disableModelPicker ? setOpen(false) : setOpen(open)
+        }
+      >
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            aria-label="Select a model"
-            className={cn('flex w-[275px] justify-between', className)}
-          >
-            <p className="flex-1 truncate text-left">
-              {selectedModelData?.label ?? 'Select a model'}
-            </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              aria-label="Select a model"
+              className={cn('flex w-[275px] justify-between', className)}
+              disabled={disableModelPicker}
+            >
+              <p className="flex-1 truncate text-left">
+                {selectedModelData?.label ?? 'Select a model'}
+              </p>
 
-            <Pill>{selectedModelData?.quantization}</Pill>
+              <Pill>{selectedModelData?.quantization}</Pill>
 
-            <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
-          </Button>
+              <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+
+            {disableModelPicker ? (
+              <InfoMarker>
+                <span className="break-words text-xs">
+                  You&rsquo;re currently in a chat session. To change the model,
+                  please start a new thread.
+                </span>
+              </InfoMarker>
+            ) : null}
+          </div>
         </PopoverTrigger>
         <PopoverContent className="w-[275px] p-0">
           <Command shouldFilter={false} loop>
@@ -190,7 +222,7 @@ export function ModelSwitcher({
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mr-1 flex items-center justify-center whitespace-nowrap rounded-full bg-secondary px-2 py-1 text-xs leading-3 text-secondary-foreground">
+    <span className="bg-secondary text-secondary-foreground mr-1 flex items-center justify-center whitespace-nowrap rounded-full px-2 py-1 text-xs leading-3">
       {children}
     </span>
   )
