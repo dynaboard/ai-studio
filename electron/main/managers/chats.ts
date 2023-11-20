@@ -1,15 +1,21 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { LlamaContext } from 'node-llama-cpp'
 import {
   LLamaChatPromptOptions,
   LlamaChatSession,
 } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import path from 'path'
 
+import { BasicMessageList } from '../message-list/basic'
+
+export type ChatSession = {
+  session: LlamaChatSession
+  context: LlamaContext
+  messageList: BasicMessageList
+}
+
 export class ElectronChatManager {
-  private sessions: Map<string, LlamaChatSession> = new Map<
-    string,
-    LlamaChatSession
-  >()
+  private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
 
@@ -22,16 +28,40 @@ export class ElectronChatManager {
     const key = `${modelPath}-${threadID}`
     const session = this.sessions.get(key)
     if (!session) {
-      const { LlamaContext, LlamaChatSession, LlamaModel } = await import(
-        'node-llama-cpp'
-      )
+      const {
+        LlamaContext,
+        LlamaChatSession,
+        LlamaModel,
+        GeneralChatPromptWrapper,
+      } = await import('node-llama-cpp')
       const model = new LlamaModel({ modelPath })
       const context = new LlamaContext({ model })
-      const newSession = new LlamaChatSession({
+      const chatSession = {
+        session: new LlamaChatSession({
+          context,
+          systemPrompt: `You are a helpful AI assistant that remembers previous conversation between yourself the "assistant" and a human the "user":
+### user:
+<previous user message>
+### assistant:
+<previous AI assistant message>
+
+### user:
+<new user prompt>
+
+The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`,
+          promptWrapper: new GeneralChatPromptWrapper({
+            instructionName: 'user',
+            responseName: 'assistant',
+          }),
+        }),
         context,
-      })
-      this.sessions.set(key, newSession)
-      return newSession
+        messageList: new BasicMessageList({
+          messageList: [],
+        }),
+      }
+
+      this.sessions.set(key, chatSession)
+      return chatSession
     }
     return session
   }
@@ -49,11 +79,17 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const session = await this.initializeSession(modelPath, threadID)
-    const response = await session.prompt(message, {
+    const { messageList, session } = await this.initializeSession(
+      modelPath,
+      threadID,
+    )
+
+    messageList.add({ role: 'user', message })
+    const response = await session.prompt(messageList.format(), {
       ...promptOptions,
       onToken: (chunks) => onToken(session.context.decode(chunks)),
     })
+    messageList.add({ role: 'assistant', message: response })
     return response
   }
 
