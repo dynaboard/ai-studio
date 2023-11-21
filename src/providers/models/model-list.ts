@@ -70,8 +70,7 @@ export const MODELS: Model[] = [
   },
   {
     name: 'Llama 2 7B Chat',
-    description:
-      'Fine-tuned Llama 2 for better chat performance.',
+    description: 'Fine-tuned Llama 2 for better chat performance.',
     parameters: '7B',
     promptTemplate: 'none',
     files: [
@@ -206,6 +205,33 @@ export const MODELS: Model[] = [
         url: 'https://huggingface.co/TheBloke/Phind-CodeLlama-34B-v2-GGUF/resolve/main/phind-codellama-34b-v2.Q8_0.gguf?download=true',
         quantization: '8-bit',
         sizeBytes: 35856052384,
+      },
+    ],
+  },
+  {
+    name: 'Gorilla OpenFunctions',
+    description:
+      'Fine-tuned to formulate executable API calls given natural language instructions.',
+    parameters: '7B',
+    promptTemplate: 'llama',
+    files: [
+      {
+        name: 'gorilla-llm_gorilla-openfunctions-v1.Q4_K_M.gguf',
+        format: 'gguf',
+        repository:
+          'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf',
+        url: 'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf/resolve/main/gorilla-llm_gorilla-openfunctions-v1.Q4_K_M.gguf?download=true',
+        quantization: '4-bit',
+        sizeBytes: 4081004288,
+      },
+      {
+        name: 'gorilla-llm_gorilla-openfunctions-v1.Q6_K.gguf',
+        format: 'gguf',
+        repository:
+          'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf',
+        url: 'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf/resolve/main/gorilla-llm_gorilla-openfunctions-v1.Q6_K.gguf?download=true',
+        quantization: '6-bit',
+        sizeBytes: 5529194240,
       },
     ],
   },
