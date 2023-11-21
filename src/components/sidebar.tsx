@@ -32,17 +32,15 @@ function Link({
 
 export function Sidebar() {
   return (
-    <div className="col-start-1 col-end-3 border-r">
-      <nav className="h-full w-full">
-        <div className={cn('space-y-[1px] p-2')}>
-          <Link to="/chats" icon={LucideMessageCircle}>
-            <span className="select-none">Chats</span>
-          </Link>
-          <Link to="/models" icon={LucideFileBox}>
-            <span className="select-none">Models</span>
-          </Link>
-        </div>
-      </nav>
-    </div>
+    <nav className="h-full w-full">
+      <div className={cn('space-y-[1px] p-2')}>
+        <Link to="/chats" icon={LucideMessageCircle}>
+          <span className="select-none">Chats</span>
+        </Link>
+        <Link to="/models" icon={LucideFileBox}>
+          <span className="select-none">Models</span>
+        </Link>
+      </div>
+    </nav>
   )
 }

@@ -34,14 +34,16 @@ export function App() {
       <div className="grid h-full grid-rows-[36px,auto,24px]">
         <Titlebar open={open} setOpen={setOpen} />
 
-        <div className="grid min-h-full grid-cols-12">
-          {open && <Sidebar />}
+        <div className="grid min-h-full grid-cols-[min-content,_minmax(0,_1fr)]">
+          {open ? (
+            <div className="w-[175px] border-r">
+              <Sidebar />
+            </div>
+          ) : (
+            <div />
+          )}
 
-          <div
-            className={
-              open ? 'col-start-3 col-end-[-1]' : 'col-start-1 col-end-[-1]'
-            }
-          >
+          <div className="h-full w-full">
             <Outlet />
           </div>
         </div>

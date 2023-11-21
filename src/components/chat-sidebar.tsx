@@ -93,7 +93,7 @@ const Cursor = React.memo(function Cursor({
 }) {
   return (
     <motion.div
-      className="pointer-events-none absolute z-10 h-[2px] w-full bg-primary"
+      className="bg-primary pointer-events-none absolute z-10 h-[2px] w-full"
       style={{
         left,
         top,
@@ -130,7 +130,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
         ref={dragHandle}
         style={style}
         className={cn(
-          'group/node h-full items-center justify-between gap-2 rounded leading-3 transition hover:bg-secondary',
+          'group/node hover:bg-secondary h-full items-center justify-between gap-2 rounded leading-3 transition',
           currentThreadID === node.data.id && 'bg-secondary',
         )}
         onDoubleClickCapture={(event) => {
@@ -172,7 +172,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
             <div className="flex h-full items-center">
               <Button
                 variant="iconButton"
-                className="hidden h-full w-0 p-0 hover:text-destructive group-hover/node:block group-hover/node:w-auto"
+                className="hover:text-destructive hidden h-full w-0 p-0 group-hover/node:block group-hover/node:w-auto"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <LucideTrash size={14} />
