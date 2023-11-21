@@ -8,12 +8,7 @@ export function ModelsPage() {
   const availableModels = useAvailableModels()
 
   return (
-    <div
-      className={cn(
-        'flex h-full w-full',
-        availableModels.length > 0 ? 'flex-col' : null,
-      )}
-    >
+    <div className={cn('flex h-full w-full overflow-scroll')}>
       <ModelDownloader />
     </div>
   )

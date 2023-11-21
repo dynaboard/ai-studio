@@ -57,7 +57,6 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const availableModels = useAvailableModels()
 
   return (
-    // <div className="chat-window grid h-full grid-rows-[_min-content,1fr,_min-content] p-4">
     <div className="chat-window h-full">
       <Header models={availableModels} currentThreadID={undefined} />
       {messages.length === 0 ? (

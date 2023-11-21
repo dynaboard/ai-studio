@@ -14,12 +14,11 @@ export function Titlebar({
   const currentPageName = pathname.split('/').pop()
 
   return (
-    <div className="titlebar fixed top-0 z-50 grid h-9 w-full grid-cols-12 border-b">
+    <div className="titlebar sticky top-0 z-50 grid h-9 w-full grid-cols-12 border-b">
       <div
         className={cn(
-          'bg-background col-start-2 col-end-3 flex items-center',
-          // open ? 'border-r' : '',
-          // open ? 'justify-end pr-2' : 'justify-end',
+          'bg-background col-start-1 col-end-3 flex items-center justify-end pr-2',
+          open ? 'border-r' : '',
         )}
         id="drag"
       >

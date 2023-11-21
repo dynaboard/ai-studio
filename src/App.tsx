@@ -9,7 +9,6 @@ import { useModelManager } from '@/providers/models/manager'
 import { Sidebar } from './components/sidebar'
 import { Titlebar } from './components/titlebar'
 import { useMatchMediaEffect } from './lib/hooks/use-match-media'
-import { cn } from './lib/utils'
 
 export function App() {
   const modelManager = useModelManager()
@@ -32,15 +31,14 @@ export function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden">
-      <div className="grid h-full w-full grid-rows-[_36px,1fr,_24px]">
+      <div className="grid grid-rows-[_36px,1fr,_24px]">
         <Titlebar open={open} setOpen={setOpen} />
 
-        <div className="mt-9 grid grid-cols-12">
+        <div className="grid grid-cols-12">
           {open && <Sidebar />}
           <div
             className={
-              (cn(''),
-              open ? 'col-start-3 col-end-[-1]' : 'col-start-1 col-end-[-1]')
+              open ? 'col-start-3 col-end-[-1]' : 'col-start-1 col-end-[-1]'
             }
           >
             <Outlet />
