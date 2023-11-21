@@ -2,6 +2,7 @@ import {
   LucideBot,
   LucideCopy,
   LucidePencil,
+  LucideRepeat,
   LucideTrash2,
   LucideUser2,
 } from 'lucide-react'
@@ -22,8 +23,8 @@ import {
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { cn } from '@/lib/utils'
-import { useCurrentThreadID } from '@/providers/chat/manager'
-import { useHistoryManager, useMessage } from '@/providers/history/manager'
+import { useChatManager, useCurrentThreadID } from '@/providers/chat/manager'
+import { useMessage } from '@/providers/history/manager'
 
 import { CodeBlock } from './codeblock'
 import { MemoizedReactMarkdown } from './markdown'
@@ -35,7 +36,7 @@ export function ChatMessage({
   messageID: string
   onHeightChange: () => void
 }) {
-  const historyManager = useHistoryManager()
+  const chatManager = useChatManager()
   const possibleMessage = useMessage(messageID)
   const currentThreadID = useCurrentThreadID()
 
@@ -92,7 +93,7 @@ export function ChatMessage({
                 if (formData.has('message')) {
                   const message = formData.get('message') as string
                   if (message.trim().length > 0) {
-                    historyManager.editMessage({
+                    chatManager.editMessage({
                       threadID: currentThreadID,
                       messageID: messageID,
                       contents: message,
@@ -201,7 +202,7 @@ export function ChatMessage({
                   variant="iconButton"
                   className="text-muted-foreground hover:text-destructive h-4 p-0"
                   onClick={() =>
-                    historyManager.deleteMessage({
+                    chatManager.deleteMessage({
                       threadID: currentThreadID,
                       messageID,
                     })
@@ -224,6 +225,22 @@ export function ChatMessage({
                   <LucideCopy size={14} />
                 </Button>
               </MessageControlTooltip>
+              {message.role === 'assistant' ? (
+                <MessageControlTooltip description="Regenerate">
+                  <Button
+                    variant="iconButton"
+                    className="text-muted-foreground hidden h-4 p-0 group-last:block"
+                    onClick={() => {
+                      chatManager.regenerateMessage({
+                        threadID: currentThreadID,
+                        messageID,
+                      })
+                    }}
+                  >
+                    <LucideRepeat size={14} />
+                  </Button>
+                </MessageControlTooltip>
+              ) : null}
             </TooltipProvider>
           )}
         </div>

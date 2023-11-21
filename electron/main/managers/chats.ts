@@ -79,8 +79,9 @@ The AI's task is to understand the context and utilize the previous conversation
     const { messageList } = await this.initializeSession(modelPath, threadID)
 
     messageList.clear()
-    messages.forEach(({ role, message }) => {
+    messages.forEach(({ role, message, id }) => {
       messageList.add({
+        id,
         role,
         message,
       })
@@ -89,12 +90,16 @@ The AI's task is to understand the context and utilize the previous conversation
 
   async sendMessage({
     message,
+    messageID,
+    assistantMessageID,
     threadID,
     promptOptions,
     modelPath,
     onToken,
   }: {
     message: string
+    messageID: string
+    assistantMessageID: string
     threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
@@ -105,28 +110,74 @@ The AI's task is to understand the context and utilize the previous conversation
       threadID,
     )
 
-    messageList.add({ role: 'user', message })
+    messageList.add({ role: 'user', message, id: messageID })
     const response = await session.prompt(messageList.format(), {
       ...promptOptions,
       onToken: (chunks) => onToken(session.context.decode(chunks)),
     })
-    messageList.add({ role: 'assistant', message: response })
+    messageList.add({
+      role: 'assistant',
+      message: response,
+      id: assistantMessageID,
+    })
+    return response
+  }
+
+  async regenerateMessage({
+    messageID,
+    threadID,
+    promptOptions,
+    modelPath,
+    onToken,
+  }: {
+    messageID: string
+    threadID: string
+    promptOptions?: LLamaChatPromptOptions
+    modelPath: string
+    onToken: (token: string) => void
+  }) {
+    const { messageList, session } = await this.initializeSession(
+      modelPath,
+      threadID,
+    )
+
+    messageList.delete(messageID)
+    const response = await session.prompt(messageList.format(), {
+      ...promptOptions,
+      onToken: (chunks) => onToken(session.context.decode(chunks)),
+    })
+    messageList.add({ role: 'assistant', message: response, id: messageID })
     return response
   }
 
   addClientEventHandlers() {
     ipcMain.handle(
       'chats:sendMessage',
-      async (_, { message, threadID, messageID, promptOptions, modelPath }) => {
+      async (
+        _,
+        {
+          message,
+          threadID,
+          messageID,
+          assistantMessageID,
+          promptOptions,
+          modelPath,
+        },
+      ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
 
         return this.sendMessage({
           message,
+          messageID,
+          assistantMessageID,
           threadID,
           promptOptions,
           modelPath: fullPath,
           onToken: (token) => {
-            this.window.webContents.send('token', { token, messageID })
+            this.window.webContents.send('token', {
+              token,
+              messageID: assistantMessageID,
+            })
           },
         })
       },
@@ -149,6 +200,22 @@ The AI's task is to understand the context and utilize the previous conversation
       async (_, { modelPath, threadID, messages }) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
         return this.loadMessageList({ modelPath: fullPath, threadID, messages })
+      },
+    )
+
+    ipcMain.handle(
+      'chats:regenerateMessage',
+      async (_, { messageID, threadID, promptOptions, modelPath }) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        return this.regenerateMessage({
+          messageID,
+          threadID,
+          promptOptions,
+          modelPath: fullPath,
+          onToken: (token) => {
+            this.window.webContents.send('token', { token, messageID })
+          },
+        })
       },
     )
   }

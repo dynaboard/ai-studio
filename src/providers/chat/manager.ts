@@ -132,7 +132,8 @@ export class ChatManager {
     })
 
     const response = await window.chats.sendMessage({
-      messageID: assistantMessageID,
+      messageID: newUserMessage.id,
+      assistantMessageID,
       message,
       modelPath,
       threadID,
@@ -141,6 +142,41 @@ export class ChatManager {
     this.historyManager.editMessage({
       threadID,
       messageID: assistantMessageID,
+      contents: response,
+    })
+  }
+
+  async regenerateMessage({
+    threadID,
+    messageID,
+  }: {
+    threadID: string
+    messageID: string
+  }) {
+    const thread = this.historyManager.getThread(threadID)
+    if (!thread) {
+      console.error(
+        'Cannot regenerate a message without a valid thread (this should be an impossible state).',
+      )
+      return
+    }
+
+    this.historyManager.editMessage({
+      threadID,
+      messageID,
+      contents: '',
+      state: 'pending',
+    })
+
+    const response = await window.chats.regenerateMessage({
+      messageID,
+      threadID,
+      modelPath: thread.modelID,
+    })
+
+    this.historyManager.editMessage({
+      threadID,
+      messageID,
       contents: response,
     })
   }
@@ -159,19 +195,12 @@ export class ChatManager {
   }
 
   setCurrentThread(threadID?: string) {
-    const messages = threadID
-      ? this.historyManager.getThread(threadID)?.messages ?? []
-      : []
-
-    const thread = this.historyManager.getThread(threadID)
-
-    if (thread) {
-      window.chats.loadMessageList({
-        modelPath: thread.modelID,
-        threadID: thread.id,
-        messages,
-      })
+    if (!threadID) {
+      return
     }
+    const messages = this.historyManager.getThread(threadID)?.messages ?? []
+
+    this.loadMessageList(threadID)
 
     this._state.update((state) => {
       return {
@@ -180,6 +209,50 @@ export class ChatManager {
         currentThreadID: threadID,
       }
     })
+  }
+
+  async loadMessageList(threadID: string) {
+    const thread = this.historyManager.getThread(threadID)
+
+    if (thread) {
+      console.log('messages', thread.messages)
+      window.chats.loadMessageList({
+        modelPath: thread.modelID,
+        threadID: thread.id,
+        messages: thread.messages,
+      })
+    }
+  }
+
+  async editMessage({
+    threadID,
+    messageID,
+    contents,
+    state,
+  }: {
+    threadID: string
+    messageID: string
+    contents: string
+    state?: 'sent' | 'pending'
+  }) {
+    this.historyManager.editMessage({
+      threadID,
+      messageID,
+      contents,
+      state,
+    })
+    await this.loadMessageList(threadID)
+  }
+
+  async deleteMessage({
+    threadID,
+    messageID,
+  }: {
+    threadID: string
+    messageID: string
+  }) {
+    this.historyManager.deleteMessage({ threadID, messageID })
+    await this.loadMessageList(threadID)
   }
 
   async cleanupChatSession(threadID: string) {
