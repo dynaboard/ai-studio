@@ -55,7 +55,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
   }
 
   return (
-    <div className="mb-4 flex flex-col first:mt-4">
+    <div className="grid-cols group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4 hover:bg-secondary/75">
       <div className="mt-[3px]">
         <span className="bg-secondary text-xs text-muted-foreground">
           {message.role === 'user' ? (
