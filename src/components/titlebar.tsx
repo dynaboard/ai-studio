@@ -2,6 +2,11 @@ import { PanelLeft } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 
 import { cn } from '@/lib/utils'
+import { useThread } from '@/providers/history/manager'
+
+function toCapitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
 
 export function Titlebar({
   open,
@@ -12,6 +17,8 @@ export function Titlebar({
 }) {
   const { pathname } = useLocation()
   const currentPageName = pathname.split('/').pop()
+  const currentThread = useThread(currentPageName)
+  const currentThreadTitle = currentThread?.title
 
   return (
     <div className="titlebar sticky top-0 z-50 grid h-9 w-full grid-cols-12 border-b">
@@ -32,8 +39,7 @@ export function Titlebar({
         className="col-span-10 grid place-items-center text-sm font-medium"
         id="drag"
       >
-        {/* TODO: use thread name if thread is selected */}
-        {currentPageName}
+        {currentThreadTitle ?? toCapitalize(String(currentPageName))}
       </div>
     </div>
   )

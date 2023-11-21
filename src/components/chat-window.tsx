@@ -61,7 +61,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
       <Header models={availableModels} currentThreadID={undefined} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center">
-          <span className="bg-muted text-muted-foreground inline-flex items-center rounded-lg px-3 py-1 text-sm font-medium">
+          <span className="bg-muted text-muted-foreground inline-flex select-none items-center rounded-lg px-3 py-1 text-sm font-medium">
             Say something to get started
           </span>
         </div>
