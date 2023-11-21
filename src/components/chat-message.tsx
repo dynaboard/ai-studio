@@ -176,80 +176,59 @@ export function ChatMessage({
               Submit new message using Enter
             </span>
           ) : (
-            <MessageControls
-              isCopied={isCopied}
-              onEdit={() => {
-                // we can avoid a useEffect
-                ReactDOM.flushSync(() => {
-                  setEditing(true)
-                })
+            <TooltipProvider>
+              <MessageControlTooltip description="Edit">
+                <Button
+                  variant="iconButton"
+                  className="text-muted-foreground h-4 p-0"
+                  onClick={() => {
+                    // we can avoid a useEffect
+                    ReactDOM.flushSync(() => {
+                      setEditing(true)
+                    })
 
-                if (inputRef.current) {
-                  inputRef.current.value = message.message
-                  inputRef.current?.focus()
-                }
-              }}
-              onDelete={() =>
-                historyManager.deleteMessage({
-                  threadID: currentThreadID,
-                  messageID,
-                })
-              }
-              onCopy={() => {
-                copyToClipboard(message.message)
-              }}
-            />
+                    if (inputRef.current) {
+                      inputRef.current.value = message.message
+                      inputRef.current?.focus()
+                    }
+                  }}
+                >
+                  <LucidePencil size={14} />
+                </Button>
+              </MessageControlTooltip>
+              <MessageControlTooltip description="Delete">
+                <Button
+                  variant="iconButton"
+                  className="text-muted-foreground hover:text-destructive h-4 p-0"
+                  onClick={() =>
+                    historyManager.deleteMessage({
+                      threadID: currentThreadID,
+                      messageID,
+                    })
+                  }
+                >
+                  <LucideTrash2 size={14} />
+                </Button>
+              </MessageControlTooltip>
+              <MessageControlTooltip
+                open={isCopied ? true : undefined} // intentionally undefined
+                description={isCopied ? 'Copied' : 'Copy'}
+              >
+                <Button
+                  variant="iconButton"
+                  className="text-muted-foreground h-4 p-0"
+                  onClick={() => {
+                    copyToClipboard(message.message)
+                  }}
+                >
+                  <LucideCopy size={14} />
+                </Button>
+              </MessageControlTooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>
     </div>
-  )
-}
-
-function MessageControls({
-  isCopied,
-  onEdit,
-  onDelete,
-  onCopy,
-}: {
-  isCopied: boolean
-  onEdit: () => void
-  onDelete: () => void
-  onCopy: () => void
-}) {
-  return (
-    <TooltipProvider>
-      <MessageControlTooltip description="Edit">
-        <Button
-          variant="iconButton"
-          className="text-muted-foreground h-4 p-0"
-          onClick={onEdit}
-        >
-          <LucidePencil size={14} />
-        </Button>
-      </MessageControlTooltip>
-      <MessageControlTooltip description="Delete">
-        <Button
-          variant="iconButton"
-          className="text-muted-foreground hover:text-destructive h-4 p-0"
-          onClick={onDelete}
-        >
-          <LucideTrash2 size={14} />
-        </Button>
-      </MessageControlTooltip>
-      <MessageControlTooltip
-        open={isCopied ? true : undefined} // intentionally undefined
-        description={isCopied ? 'Copied' : 'Copy'}
-      >
-        <Button
-          variant="iconButton"
-          className="text-muted-foreground h-4 p-0"
-          onClick={onCopy}
-        >
-          <LucideCopy size={14} />
-        </Button>
-      </MessageControlTooltip>
-    </TooltipProvider>
   )
 }
 

@@ -34,19 +34,22 @@ export function ChatWindow({ models }: { models: Model[] }) {
 
   const messages = useThreadMessages(currentThreadID)
 
-  const scrollToBottom = () => {
-    const scrollHeight = scrollAreaRef.current?.querySelector(
-      '[data-radix-scroll-area-viewport]',
-    )?.scrollHeight
-    if (!userScrolled) {
-      scrollAreaRef.current
-        ?.querySelector('[data-radix-scroll-area-viewport]')
-        ?.scrollTo({
-          top: scrollHeight,
-          behavior: 'smooth',
-        })
-    }
-  }
+  const scrollToBottom = React.useCallback(
+    (behavior?: ScrollBehavior) => {
+      const scrollHeight = scrollAreaRef.current?.querySelector(
+        '[data-radix-scroll-area-viewport]',
+      )?.scrollHeight
+      if (!userScrolled) {
+        scrollAreaRef.current
+          ?.querySelector('[data-radix-scroll-area-viewport]')
+          ?.scrollTo({
+            top: scrollHeight,
+            behavior: behavior ?? 'smooth',
+          })
+      }
+    },
+    [userScrolled],
+  )
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -72,8 +75,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
   }, [chatManager, models])
 
   React.useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    scrollToBottom('auto')
+  }, [messages, scrollToBottom])
 
   const availableModels = useAvailableModels()
 
