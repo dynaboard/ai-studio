@@ -21,12 +21,11 @@ export function Titlebar({
   const currentThreadTitle = currentThread?.title
 
   return (
-    <div className="titlebar sticky top-0 z-50 grid h-9 w-full grid-cols-12 ">
+    // TODO: detect is full screen then pl to 0
+    <div className="titlebar sticky top-0 z-50 flex h-9 w-full items-center justify-between bg-gray-100 pl-[76px]">
       <div
         className={cn(
-          // TODO: handle fullscreen positioning with the empty traffic lights
-          'col-start-1 col-end-3 flex items-center justify-end bg-gray-100 pr-3',
-          !open ? 'border-b' : '',
+          'col-start-1 col-end-3 mt-[2px] flex items-center justify-end',
         )}
         id="drag"
       >
@@ -38,8 +37,7 @@ export function Titlebar({
       </div>
       <div
         className={cn(
-          'col-span-10 grid place-items-center border-b bg-gray-100 text-sm font-medium ',
-          // !open ? '' : 'border-l',
+          'col-span-10 grid flex-1 place-items-center text-sm font-medium',
         )}
         id="drag"
       >
