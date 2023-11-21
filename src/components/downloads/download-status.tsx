@@ -28,8 +28,8 @@ export function DownloadStatus() {
   ])
 
   return isVisible ? (
-    <div className="fixed bottom-0 left-0">
-      <div className="flex min-h-[160px] w-screen flex-col gap-2 border-t border-t-border bg-background/80 p-4  backdrop-blur-sm">
+    <div className="fixed bottom-0 left-0 z-50">
+      <div className="border-t-border bg-background/80 flex min-h-[160px] w-screen flex-col gap-2 border-t p-4 backdrop-blur-sm">
         {downloads.map((download) => {
           return <Download download={download} key={download.filename} />
         })}
@@ -75,16 +75,16 @@ function Download({ download }: { download: ActiveDownload }) {
         <span className="text-xs">
           {modelData.model?.name} ({modelData.file?.quantization})
         </span>
-        <span className="text-xs text-foreground/50">{download.filename}</span>
+        <span className="text-foreground/50 text-xs">{download.filename}</span>
       </div>
 
       <div className="flex flex-1 flex-col gap-1">
         <Progress value={Number(progress)} />
         <div className="flex justify-between gap-2">
-          <span className="text-xs text-foreground/50">
+          <span className="text-foreground/50 text-xs">
             {download.status === 'downloading' ? `${progress}%` : 'Paused'}
           </span>
-          <span className="text-xs text-foreground/50">
+          <span className="text-foreground/50 text-xs">
             {prettyBytes(download.totalBytes)}
           </span>
         </div>

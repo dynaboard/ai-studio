@@ -55,9 +55,9 @@ export function ChatMessage({ messageID }: { messageID: string }) {
   }
 
   return (
-    <div className="grid-cols hover:bg-secondary/75 group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4">
+    <div className="grid-cols group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4 hover:bg-secondary/75">
       <div className="mt-[3px]">
-        <span className="text-muted-foreground bg-secondary text-xs">
+        <span className="bg-secondary text-xs text-muted-foreground">
           {message.role === 'user' ? (
             <LucideUser2 size={18} />
           ) : (
@@ -89,7 +89,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
               <Textarea
                 name="message"
                 ref={inputRef}
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring mb-1 flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mb-1 flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                 tabIndex={0}
                 onKeyDown={onKeyDown}
                 rows={1}
@@ -98,7 +98,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
             </form>
           ) : (
             <MemoizedReactMarkdown
-              className="markdown prose prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900 max-w-none text-sm"
+              className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
               remarkPlugins={[remarkGfm, remarkMath]}
               components={{
                 p({ children }) {
@@ -156,7 +156,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
           )}
         >
           {editing ? (
-            <span className="text-muted-foreground text-xs">
+            <span className="text-xs text-muted-foreground">
               Submit new message using Enter
             </span>
           ) : (
@@ -206,7 +206,7 @@ function MessageControls({
       <MessageControlTooltip description="Edit">
         <Button
           variant="iconButton"
-          className="text-muted-foreground h-4 p-0"
+          className="h-4 p-0 text-muted-foreground"
           onClick={onEdit}
         >
           <LucidePencil size={14} />
@@ -215,7 +215,7 @@ function MessageControls({
       <MessageControlTooltip description="Delete">
         <Button
           variant="iconButton"
-          className="hover:text-destructive text-muted-foreground h-4 p-0"
+          className="h-4 p-0 text-muted-foreground hover:text-destructive"
           onClick={onDelete}
         >
           <LucideTrash2 size={14} />
@@ -227,7 +227,7 @@ function MessageControls({
       >
         <Button
           variant="iconButton"
-          className="text-muted-foreground h-4 p-0"
+          className="h-4 p-0 text-muted-foreground"
           onClick={onCopy}
         >
           <LucideCopy size={14} />

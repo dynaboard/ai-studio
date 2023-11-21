@@ -12,9 +12,11 @@ import {
   useCurrentThreadID,
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
+import { useAvailableModels } from '@/providers/models/manager'
 import { type Model } from '@/providers/models/model-list'
 
 import { ChatMessage } from './chat-message'
+import { Header } from './header'
 
 export function ChatWindow({ models }: { models: Model[] }) {
   const chatManager = useChatManager()
@@ -52,25 +54,28 @@ export function ChatWindow({ models }: { models: Model[] }) {
 
   const messages = useThreadMessages(currentThreadID)
 
+  const availableModels = useAvailableModels()
+
   return (
-    <div className="grid h-full flex-1 grid-rows-[1fr,_min-content]">
+    // 36px - titlebar height
+    // 24px - statusbar height
+    <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
+      <Header models={availableModels} currentThreadID={undefined} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center">
-          <span className="bg-muted text-muted-foreground inline-flex items-center rounded-lg px-3 py-1 text-sm font-medium">
+          <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
             Say something to get started
           </span>
         </div>
       ) : (
-        <div className="h-full overflow-hidden">
-          <ScrollArea className="h-full">
-            {messages.map((message) => (
-              <ChatMessage key={message.id} messageID={message.id} />
-            ))}
-          </ScrollArea>
-        </div>
+        <ScrollArea className="h-full py-0">
+          {messages.map((message) => (
+            <ChatMessage key={message.id} messageID={message.id} />
+          ))}
+        </ScrollArea>
       )}
 
-      <div className="flex items-center p-4">
+      <div className="flex h-fit items-center p-4 pt-2">
         <form
           className="relative w-full"
           onSubmit={handleMessage}
@@ -79,7 +84,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <Textarea
             name="message"
             ref={inputRef}
-            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
             rows={1}

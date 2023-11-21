@@ -35,7 +35,7 @@ export function ThreadsSidebar() {
   ])
 
   return (
-    <div className="flex h-full flex-col gap-2 p-2">
+    <div className="threads-sidebar flex h-screen flex-col gap-2 p-2">
       <div className="flex w-full items-center gap-2">
         <Button
           size="sm"
@@ -57,11 +57,10 @@ export function ThreadsSidebar() {
           }}
         >
           <LucidePlusCircle size={14} className="mr-2" />
-          <span>New Thread</span>
+          <span className="select-none">New Thread</span>
         </Button>
       </div>
       <div className="group flex-1" ref={ref}>
-        {/* TODO(@omarestrella): remove the awful focus styling on these nodes */}
         <Tree
           className="scrollbar"
           data={history}
@@ -94,7 +93,7 @@ const Cursor = React.memo(function Cursor({
 }) {
   return (
     <motion.div
-      className="bg-primary pointer-events-none absolute z-10 h-[2px] w-full"
+      className="pointer-events-none absolute z-10 h-[2px] w-full bg-primary"
       style={{
         left,
         top,
@@ -131,7 +130,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
         ref={dragHandle}
         style={style}
         className={cn(
-          'group/node hover:bg-secondary h-full items-center justify-between gap-2 rounded leading-3 transition',
+          'group/node h-full items-center justify-between gap-2 rounded leading-3 transition hover:bg-secondary',
           currentThreadID === node.data.id && 'bg-secondary',
         )}
         onDoubleClickCapture={(event) => {
@@ -173,7 +172,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
             <div className="flex h-full items-center">
               <Button
                 variant="iconButton"
-                className="hover:text-destructive hidden h-full w-0 p-0 group-hover/node:block group-hover/node:w-auto"
+                className="hidden h-full w-0 p-0 hover:text-destructive group-hover/node:block group-hover/node:w-auto"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <LucideTrash size={14} />
