@@ -14,19 +14,10 @@ export function Header({
 
   return (
     <div
-      style={{
-        // @ts-expect-error this is an electron specific property, so we can drag the window around, but it's not in any types
-        WebkitAppRegion: 'drag',
-      }}
-      className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b p-2 backdrop-blur"
+      className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b px-4 backdrop-blur"
+      id="drag"
     >
-      <div
-        className="flex h-full items-center gap-4"
-        style={{
-          // @ts-expect-error same as above
-          WebkitAppRegion: 'no-drag',
-        }}
-      >
+      <div className="flex h-full items-center gap-4" id="no-drag">
         <ModelSwitcher models={models} />
 
         {currentThread ? (

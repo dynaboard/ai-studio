@@ -16,6 +16,7 @@ import { useAvailableModels } from '@/providers/models/manager'
 import { type Model } from '@/providers/models/model-list'
 
 import { ChatMessage } from './chat-message'
+import { Header } from './header'
 
 export function ChatWindow({ models }: { models: Model[] }) {
   const chatManager = useChatManager()
@@ -56,8 +57,9 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const availableModels = useAvailableModels()
 
   return (
-    <div className="chat-window grid h-full grid-rows-[1fr,_min-content] p-4">
-      {/* <Header models={availableModels} currentThreadID={undefined} /> */}
+    // <div className="chat-window grid h-full grid-rows-[_min-content,1fr,_min-content] p-4">
+    <div className="chat-window h-full">
+      <Header models={availableModels} currentThreadID={undefined} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center">
           <span className="bg-muted text-muted-foreground inline-flex items-center rounded-lg px-3 py-1 text-sm font-medium">
@@ -66,8 +68,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
         </div>
       ) : (
         <div className="h-full overflow-hidden">
-          {/* <Header models={availableModels} currentThreadID={undefined} /> */}
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full p-4">
             {messages.map((message) => (
               <ChatMessage key={message.id} messageID={message.id} />
             ))}

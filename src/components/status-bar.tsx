@@ -9,7 +9,7 @@ export function StatusBar() {
   const usage = useSystemUsage()
 
   return (
-    <div className="fixed bottom-0 left-0 h-6 w-screen border-t border-t-border bg-background">
+    <div className="border-t-border bg-background fixed bottom-0 left-0 h-6 w-screen border-t">
       <div className="flex h-full items-center justify-between px-4">
         <span className="text-xs">
           RAM usage:{' '}

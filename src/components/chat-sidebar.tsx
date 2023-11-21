@@ -35,7 +35,7 @@ export function ThreadsSidebar() {
   ])
 
   return (
-    <div className="flex h-full flex-col gap-2 p-2">
+    <div className="threads-sidebar flex h-full flex-col gap-2 p-2">
       <div className="flex w-full items-center gap-2">
         <Button
           size="sm"
@@ -57,7 +57,7 @@ export function ThreadsSidebar() {
           }}
         >
           <LucidePlusCircle size={14} className="mr-2" />
-          <span>New Thread</span>
+          <span className="select-none">New Thread</span>
         </Button>
       </div>
       <div className="group flex-1" ref={ref}>

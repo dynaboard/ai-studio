@@ -28,7 +28,7 @@ export function ModelDownloader({ subtitle }: { subtitle?: string }) {
   const modelManager = useModelManager()
 
   return (
-    <div className="grid h-full w-full grid-cols-1">
+    <div className="model-downloader grid h-full w-full grid-cols-1">
       <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 min-h-min w-full border-b p-4 backdrop-blur">
         <h1 className="mb-1 mt-2 text-left text-xl font-bold leading-tight tracking-tighter md:block md:text-2xl lg:leading-[1.1]">
           Models
@@ -39,13 +39,13 @@ export function ModelDownloader({ subtitle }: { subtitle?: string }) {
             : `Explore the OS community's AI chat models. Download ready-to-use models to your machine. Start chatting in seconds.`}
         </span>
       </div>
-      <ScrollArea className="grid h-full w-full gap-4 overflow-auto">
+      <ScrollArea className="h-full w-full overflow-auto">
         <div className="mx-auto flex flex-1 flex-col gap-8 bg-slate-50 p-4 dark:bg-slate-900">
           {modelManager.allModels.map((model) => {
             return (
               <div
                 key={model.name}
-                className="grid grid-rows-[min-content,_min-content,_80px] gap-1"
+                className="grid grid-rows-[min-content,_min-content,_80px] gap-1 last:mb-6"
               >
                 <Label className="font-semibold leading-none tracking-tight">
                   {model.name}
