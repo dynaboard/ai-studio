@@ -158,7 +158,7 @@ export function ModelSwitcher({
             </Button>
 
             {disableModelPicker ? (
-              <InfoMarker>
+              <InfoMarker side="bottom">
                 <span className="break-words text-xs">
                   You&rsquo;re currently in a chat session. To change the model,
                   please start a new thread.
@@ -218,7 +218,7 @@ export function ModelSwitcher({
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="bg-secondary text-secondary-foreground mr-1 flex items-center justify-center whitespace-nowrap rounded-full px-2 py-1 text-xs leading-3">
+    <span className="mr-1 flex items-center justify-center whitespace-nowrap rounded-full bg-secondary px-2 py-1 text-xs leading-3 text-secondary-foreground">
       {children}
     </span>
   )
