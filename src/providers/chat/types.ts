@@ -3,4 +3,5 @@ export type Message = {
   message: string
   id: string
   state: 'pending' | 'sent'
+  date: string
 }

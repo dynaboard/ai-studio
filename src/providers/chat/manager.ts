@@ -101,6 +101,7 @@ export class ChatManager {
       role: 'user',
       message: message,
       state: 'sent',
+      date: new Date().toISOString(),
     }
 
     // You always message on a thread, so we are starting a new one if its not provided
@@ -122,6 +123,7 @@ export class ChatManager {
       role: 'assistant',
       message: '',
       state: 'pending',
+      date: new Date().toISOString(),
     }
 
     this.historyManager.addMessage({

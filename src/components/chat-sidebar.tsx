@@ -6,6 +6,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useValue } from 'signia-react'
 import useResizeObserver from 'use-resize-observer'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -98,68 +108,100 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const historyManager = useHistoryManager()
   const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
-
   const navigate = useNavigate()
 
-  return (
-    <div
-      ref={dragHandle}
-      style={style}
-      className={cn(
-        'group/node hover:bg-secondary h-full items-center justify-between gap-2 rounded leading-3 transition',
-        currentThreadID === node.data.id && 'bg-secondary',
-      )}
-      onDoubleClickCapture={(event) => {
-        event.preventDefault()
-        node.edit()
-      }}
-    >
-      {node.isEditing ? (
-        <form
-          target="_blank"
-          className="h-full w-full p-0.5"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const formData = new FormData(e.currentTarget)
-            node.submit(formData.get('title') as string)
-          }}
-        >
-          <Input
-            name="title"
-            className="h-full w-full px-[5px] py-0 leading-3"
-            autoFocus
-            placeholder={node.data.title}
-            onBlur={(e) => node.submit(e.currentTarget.value)}
-          />
-        </form>
-      ) : (
-        <Link
-          to={`/chats/${node.data.id}`}
-          className="grid h-full group-hover/node:grid-cols-[minmax(0,1fr),_24px]"
-        >
-          <div className="h-full overflow-hidden truncate pl-2">
-            <span className="text-sm leading-[30px]">{node.data.title}</span>
-          </div>
-          <div className="flex h-full items-center">
-            <Button
-              variant="iconButton"
-              className="hover:text-destructive hidden h-full w-0 p-0 group-hover/node:block group-hover/node:w-auto"
-              onClick={async (event) => {
-                event.preventDefault()
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
 
-                const firstThread = historyManager.threads.find(
-                  (t) => t.id !== node.data.id,
-                )
-                await chatManager.cleanupChatSession(node.data.id)
-                historyManager.deleteThread(node.data.id)
-                navigate(`/chats/${firstThread?.id ?? ''}`, { replace: true })
-              }}
-            >
-              <LucideTrash size={14} />
-            </Button>
-          </div>
-        </Link>
-      )}
-    </div>
+  const deleteThread = async (event: React.MouseEvent) => {
+    event.preventDefault()
+
+    const firstThread = historyManager.threads.find(
+      (t) => t.id !== node.data.id,
+    )
+    await chatManager.cleanupChatSession(node.data.id)
+    historyManager.deleteThread(node.data.id)
+    navigate(`/chats/${firstThread?.id ?? ''}`, {
+      replace: true,
+    })
+  }
+
+  return (
+    <>
+      <div
+        ref={dragHandle}
+        style={style}
+        className={cn(
+          'group/node hover:bg-secondary h-full items-center justify-between gap-2 rounded leading-3 transition',
+          currentThreadID === node.data.id && 'bg-secondary',
+        )}
+        onDoubleClickCapture={(event) => {
+          event.preventDefault()
+          node.edit()
+        }}
+      >
+        {node.isEditing ? (
+          <form
+            target="_blank"
+            className="h-full w-full p-0.5"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.currentTarget)
+              node.submit(formData.get('title') as string)
+            }}
+          >
+            <Input
+              name="title"
+              className="h-full w-full px-[5px] py-0 leading-3"
+              autoFocus
+              placeholder={node.data.title}
+              onBlur={(e) =>
+                e.currentTarget.value.trim().length > 0
+                  ? node.submit(e.currentTarget.value)
+                  : node.reset()
+              }
+              onKeyDown={(e) => e.key === 'Escape' && node.reset()}
+            />
+          </form>
+        ) : (
+          <Link
+            to={`/chats/${node.data.id}`}
+            className="grid h-full group-hover/node:grid-cols-[minmax(0,1fr),_24px]"
+          >
+            <div className="h-full overflow-hidden truncate pl-2">
+              <span className="text-sm leading-[30px]">{node.data.title}</span>
+            </div>
+            <div className="flex h-full items-center">
+              <Button
+                variant="iconButton"
+                className="hover:text-destructive hidden h-full w-0 p-0 group-hover/node:block group-hover/node:w-auto"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <LucideTrash size={14} />
+              </Button>
+            </div>
+          </Link>
+        )}
+      </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to delete this thread?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will also delete all messages
+              in this thread.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={deleteThread}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

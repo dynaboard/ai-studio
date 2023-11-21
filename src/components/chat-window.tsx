@@ -70,7 +70,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
         </div>
       )}
 
-      <div className="flex items-center">
+      <div className="flex items-center p-4">
         <form
           className="relative w-full"
           onSubmit={handleMessage}
