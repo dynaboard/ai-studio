@@ -22,7 +22,7 @@ export function Titlebar({
 
   return (
     // TODO: detect is full screen then pl to 0
-    <div className="titlebar sticky top-0 z-50 flex h-9 w-full items-center justify-between bg-zinc-800 pl-[76px]">
+    <div className="titlebar sticky top-0 z-50 flex h-9 w-full items-center justify-between border-b pl-[76px]">
       <div
         className={cn(
           'col-start-1 col-end-3 mt-[2px] flex items-center justify-end',
@@ -37,7 +37,7 @@ export function Titlebar({
       </div>
       <div
         className={cn(
-          'col-span-10 grid flex-1 place-items-center text-sm font-medium text-primary-foreground',
+          'col-span-10 grid flex-1 place-items-center text-sm font-medium',
         )}
         id="drag"
       >
