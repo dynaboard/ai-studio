@@ -31,11 +31,12 @@ export function App() {
 
   return (
     <div className="h-screen w-screen overflow-hidden">
-      <div className="grid grid-rows-[_36px,1fr,_24px]">
+      <div className="grid h-full grid-rows-[36px,auto,24px]">
         <Titlebar open={open} setOpen={setOpen} />
 
-        <div className="grid grid-cols-12">
+        <div className="grid min-h-full grid-cols-12">
           {open && <Sidebar />}
+
           <div
             className={
               open ? 'col-start-3 col-end-[-1]' : 'col-start-1 col-end-[-1]'

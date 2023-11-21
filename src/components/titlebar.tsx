@@ -21,22 +21,26 @@ export function Titlebar({
   const currentThreadTitle = currentThread?.title
 
   return (
-    <div className="titlebar sticky top-0 z-50 grid h-9 w-full grid-cols-12 border-b">
+    <div className="titlebar sticky top-0 z-50 grid h-9 w-full grid-cols-12 ">
       <div
         className={cn(
-          'bg-background col-start-1 col-end-3 flex items-center justify-end pr-2',
-          open ? 'border-r' : '',
+          // TODO: handle fullscreen positioning with the empty traffic lights
+          'col-start-1 col-end-3 flex items-center justify-end bg-gray-100 pr-3',
+          !open ? 'border-b' : '',
         )}
         id="drag"
       >
         <PanelLeft
-          className="text-muted-foreground h-4 w-4 cursor-pointer"
+          className="h-4 w-4 cursor-pointer text-muted-foreground"
           id="no-drag"
           onClick={() => setOpen(!open)}
         />
       </div>
       <div
-        className="col-span-10 grid place-items-center text-sm font-medium"
+        className={cn(
+          'col-span-10 grid place-items-center border-b bg-gray-100 text-sm font-medium ',
+          // !open ? '' : 'border-l',
+        )}
         id="drag"
       >
         {currentThreadTitle ?? toCapitalize(String(currentPageName))}

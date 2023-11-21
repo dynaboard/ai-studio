@@ -80,3 +80,11 @@
 #no-drag {
   -webkit-app-region: no-drag;
 }
+
+/* 
+See: https://github.com/brimdata/react-arborist/issues/126#issuecomment-1442548671
+Workaround for the focus visible of the treeitem from react-arborist
+*/
+[role='treeitem']:focus-visible {
+  outline: none;
+}
