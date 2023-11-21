@@ -68,14 +68,14 @@ export function ChatWindow({ models }: { models: Model[] }) {
           </span>
         </div>
       ) : (
-        <ScrollArea className="h-full p-4">
+        <ScrollArea className="h-full p-4 py-0">
           {messages.map((message) => (
             <ChatMessage key={message.id} messageID={message.id} />
           ))}
         </ScrollArea>
       )}
 
-      <div className="flex h-fit items-center p-4">
+      <div className="flex h-fit items-center p-4 pt-2">
         <form
           className="relative w-full"
           onSubmit={handleMessage}
