@@ -1,3 +1,4 @@
+import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
@@ -84,10 +85,12 @@ export class ChatManager {
     message,
     model,
     threadID,
+    promptOptions,
   }: {
     message: string
     threadID?: string
     model?: string
+    promptOptions?: LLamaChatPromptOptions
   }) {
     if (!model || !this.model) {
       console.error('No model selected')
@@ -146,6 +149,7 @@ export class ChatManager {
       message,
       modelPath,
       threadID,
+      promptOptions,
     })
 
     this.historyManager.editMessage({

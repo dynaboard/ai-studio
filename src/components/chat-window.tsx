@@ -59,6 +59,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
+    // TODO: pass promptOptions here
+
     void chatManager.sendMessage({
       message,
       model: currentModel,
@@ -83,7 +85,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
     // 36px - titlebar height
     // 24px - statusbar height
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
-      <Header models={availableModels} currentThreadID={undefined} />
+      <Header models={availableModels} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center">
           <span className="bg-muted text-muted-foreground inline-flex select-none items-center rounded-lg px-3 py-1 text-sm font-medium">
