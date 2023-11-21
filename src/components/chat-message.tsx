@@ -264,7 +264,7 @@ function MessageControlTooltip({
 }) {
   return (
     <Tooltip open={open} delayDuration={300}>
-      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent side="bottom">
         <span>{description}</span>
       </TooltipContent>

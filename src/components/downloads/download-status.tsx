@@ -10,11 +10,9 @@ import { useValue } from 'signia-react'
 
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import {
-  type ActiveDownload,
-  useModelManager,
-} from '@/providers/models/manager'
+import { useModelManager } from '@/providers/models/manager'
 import type { Model } from '@/providers/models/model-list'
+import { ActiveDownload } from '@/providers/models/types'
 
 export function DownloadStatus() {
   const modelManager = useModelManager()

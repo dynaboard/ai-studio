@@ -93,7 +93,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <ScrollArea
             className="h-full"
             ref={scrollAreaRef}
-            onWheelCapture={(e) => {
+            onWheelCapture={() => {
               const scrollArea = scrollAreaRef.current
               const viewport = scrollArea?.querySelector(
                 '[data-radix-scroll-area-viewport]',
