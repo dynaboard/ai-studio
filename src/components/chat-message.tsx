@@ -238,7 +238,7 @@ function MessageControls({
         </Button>
       </MessageControlTooltip>
       <MessageControlTooltip
-        open={isCopied}
+        open={isCopied ? true : undefined} // intentionally undefined
         description={isCopied ? 'Copied' : 'Copy'}
       >
         <Button
