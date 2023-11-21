@@ -1,5 +1,6 @@
 import {
   LucideBot,
+  LucideCopy,
   LucidePencil,
   LucideTrash2,
   LucideUser2,
@@ -11,6 +12,13 @@ import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 
 import { Button } from '@/components/ui/button'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { cn } from '@/lib/utils'
 import { useCurrentThreadID } from '@/providers/chat/manager'
@@ -25,6 +33,10 @@ export function ChatMessage({ messageID }: { messageID: string }) {
   const currentThreadID = useCurrentThreadID()
 
   const [editing, setEditing] = React.useState(false)
+
+  const { isCopied, copyToClipboard } = useCopyToClipboard({
+    timeout: 1000,
+  })
 
   const { formRef, onKeyDown } = useEnterSubmit({
     onKeyDown(event) {
@@ -148,40 +160,98 @@ export function ChatMessage({ messageID }: { messageID: string }) {
               Submit new message using Enter
             </span>
           ) : (
-            <>
-              <Button
-                variant="iconButton"
-                className="text-muted-foreground h-4 p-0"
-                onClick={() => {
-                  // we can avoid a useEffect
-                  ReactDOM.flushSync(() => {
-                    setEditing(true)
-                  })
+            <MessageControls
+              isCopied={isCopied}
+              onEdit={() => {
+                // we can avoid a useEffect
+                ReactDOM.flushSync(() => {
+                  setEditing(true)
+                })
 
-                  if (inputRef.current) {
-                    inputRef.current.value = message.message
-                    inputRef.current?.focus()
-                  }
-                }}
-              >
-                <LucidePencil size={14} />
-              </Button>
-              <Button
-                variant="iconButton"
-                className="hover:text-destructive text-muted-foreground h-4 p-0"
-                onClick={() =>
-                  historyManager.deleteMessage({
-                    threadID: currentThreadID,
-                    messageID,
-                  })
+                if (inputRef.current) {
+                  inputRef.current.value = message.message
+                  inputRef.current?.focus()
                 }
-              >
-                <LucideTrash2 size={14} />
-              </Button>
-            </>
+              }}
+              onDelete={() =>
+                historyManager.deleteMessage({
+                  threadID: currentThreadID,
+                  messageID,
+                })
+              }
+              onCopy={() => {
+                copyToClipboard(message.message)
+              }}
+            />
           )}
         </div>
       </div>
     </div>
+  )
+}
+
+function MessageControls({
+  isCopied,
+  onEdit,
+  onDelete,
+  onCopy,
+}: {
+  isCopied: boolean
+  onEdit: () => void
+  onDelete: () => void
+  onCopy: () => void
+}) {
+  return (
+    <TooltipProvider>
+      <MessageControlTooltip description="Edit">
+        <Button
+          variant="iconButton"
+          className="text-muted-foreground h-4 p-0"
+          onClick={onEdit}
+        >
+          <LucidePencil size={14} />
+        </Button>
+      </MessageControlTooltip>
+      <MessageControlTooltip description="Delete">
+        <Button
+          variant="iconButton"
+          className="hover:text-destructive text-muted-foreground h-4 p-0"
+          onClick={onDelete}
+        >
+          <LucideTrash2 size={14} />
+        </Button>
+      </MessageControlTooltip>
+      <MessageControlTooltip
+        open={isCopied}
+        description={isCopied ? 'Copied' : 'Copy'}
+      >
+        <Button
+          variant="iconButton"
+          className="text-muted-foreground h-4 p-0"
+          onClick={onCopy}
+        >
+          <LucideCopy size={14} />
+        </Button>
+      </MessageControlTooltip>
+    </TooltipProvider>
+  )
+}
+
+function MessageControlTooltip({
+  description,
+  children,
+  open,
+}: {
+  description: string
+  children: React.ReactNode
+  open?: boolean
+}) {
+  return (
+    <Tooltip open={open} delayDuration={300}>
+      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipContent side="bottom">
+        <span>{description}</span>
+      </TooltipContent>
+    </Tooltip>
   )
 }
