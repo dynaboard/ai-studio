@@ -12,15 +12,15 @@ export function ChatsIndex() {
 
   return (
     <ChatManagerProvider model={availableModels[0]?.files?.[0].name}>
-      <div className="grid h-full w-full grid-cols-12">
+      <div className="grid h-full w-full grid-cols-[175px,_minmax(0,_1fr)]">
         {availableModels.length > 0 ? (
           <>
-            <div className="col-span-2 overflow-hidden">
-              <div className="h-auto w-auto border-r">
+            <div className="h-full w-full overflow-hidden">
+              <div className="h-auto w-auto min-w-[150px] border-r">
                 <ThreadsSidebar />
               </div>
             </div>
-            <div className="col-span-10">
+            <div className="h-full w-full overflow-hidden">
               <Outlet />
             </div>
           </>

@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom'
 import Textarea from 'react-textarea-autosize'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
+import useResizeObserver from 'use-resize-observer'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -27,10 +28,22 @@ import { useHistoryManager, useMessage } from '@/providers/history/manager'
 import { CodeBlock } from './codeblock'
 import { MemoizedReactMarkdown } from './markdown'
 
-export function ChatMessage({ messageID }: { messageID: string }) {
+export function ChatMessage({
+  messageID,
+  onHeightChange,
+}: {
+  messageID: string
+  onHeightChange: () => void
+}) {
   const historyManager = useHistoryManager()
   const possibleMessage = useMessage(messageID)
   const currentThreadID = useCurrentThreadID()
+
+  const { ref } = useResizeObserver({
+    onResize() {
+      onHeightChange()
+    },
+  })
 
   const [editing, setEditing] = React.useState(false)
 
@@ -55,9 +68,12 @@ export function ChatMessage({ messageID }: { messageID: string }) {
   }
 
   return (
-    <div className="grid-cols group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4 hover:bg-secondary/75">
+    <div
+      ref={ref}
+      className="grid-cols hover:bg-secondary/75 group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4"
+    >
       <div className="mt-[3px]">
-        <span className="bg-secondary text-xs text-muted-foreground">
+        <span className="bg-secondary text-muted-foreground text-xs">
           {message.role === 'user' ? (
             <LucideUser2 size={18} />
           ) : (
@@ -89,7 +105,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
               <Textarea
                 name="message"
                 ref={inputRef}
-                className="mb-1 flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring mb-1 flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                 tabIndex={0}
                 onKeyDown={onKeyDown}
                 rows={1}
@@ -98,7 +114,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
             </form>
           ) : (
             <MemoizedReactMarkdown
-              className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
+              className="markdown prose prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900 max-w-none text-sm"
               remarkPlugins={[remarkGfm, remarkMath]}
               components={{
                 p({ children }) {
@@ -145,7 +161,7 @@ export function ChatMessage({ messageID }: { messageID: string }) {
             >
               {message.role === 'assistant' && message.state === 'pending'
                 ? 'Thinking...'
-                : message.message}
+                : message.message || ' '}
             </MemoizedReactMarkdown>
           )}
         </div>
@@ -156,84 +172,63 @@ export function ChatMessage({ messageID }: { messageID: string }) {
           )}
         >
           {editing ? (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               Submit new message using Enter
             </span>
           ) : (
-            <MessageControls
-              isCopied={isCopied}
-              onEdit={() => {
-                // we can avoid a useEffect
-                ReactDOM.flushSync(() => {
-                  setEditing(true)
-                })
+            <TooltipProvider>
+              <MessageControlTooltip description="Edit">
+                <Button
+                  variant="iconButton"
+                  className="text-muted-foreground h-4 p-0"
+                  onClick={() => {
+                    // we can avoid a useEffect
+                    ReactDOM.flushSync(() => {
+                      setEditing(true)
+                    })
 
-                if (inputRef.current) {
-                  inputRef.current.value = message.message
-                  inputRef.current?.focus()
-                }
-              }}
-              onDelete={() =>
-                historyManager.deleteMessage({
-                  threadID: currentThreadID,
-                  messageID,
-                })
-              }
-              onCopy={() => {
-                copyToClipboard(message.message)
-              }}
-            />
+                    if (inputRef.current) {
+                      inputRef.current.value = message.message
+                      inputRef.current?.focus()
+                    }
+                  }}
+                >
+                  <LucidePencil size={14} />
+                </Button>
+              </MessageControlTooltip>
+              <MessageControlTooltip description="Delete">
+                <Button
+                  variant="iconButton"
+                  className="text-muted-foreground hover:text-destructive h-4 p-0"
+                  onClick={() =>
+                    historyManager.deleteMessage({
+                      threadID: currentThreadID,
+                      messageID,
+                    })
+                  }
+                >
+                  <LucideTrash2 size={14} />
+                </Button>
+              </MessageControlTooltip>
+              <MessageControlTooltip
+                open={isCopied ? true : undefined} // intentionally undefined
+                description={isCopied ? 'Copied' : 'Copy'}
+              >
+                <Button
+                  variant="iconButton"
+                  className="text-muted-foreground h-4 p-0"
+                  onClick={() => {
+                    copyToClipboard(message.message)
+                  }}
+                >
+                  <LucideCopy size={14} />
+                </Button>
+              </MessageControlTooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>
     </div>
-  )
-}
-
-function MessageControls({
-  isCopied,
-  onEdit,
-  onDelete,
-  onCopy,
-}: {
-  isCopied: boolean
-  onEdit: () => void
-  onDelete: () => void
-  onCopy: () => void
-}) {
-  return (
-    <TooltipProvider>
-      <MessageControlTooltip description="Edit">
-        <Button
-          variant="iconButton"
-          className="h-4 p-0 text-muted-foreground"
-          onClick={onEdit}
-        >
-          <LucidePencil size={14} />
-        </Button>
-      </MessageControlTooltip>
-      <MessageControlTooltip description="Delete">
-        <Button
-          variant="iconButton"
-          className="h-4 p-0 text-muted-foreground hover:text-destructive"
-          onClick={onDelete}
-        >
-          <LucideTrash2 size={14} />
-        </Button>
-      </MessageControlTooltip>
-      <MessageControlTooltip
-        open={isCopied}
-        description={isCopied ? 'Copied' : 'Copy'}
-      >
-        <Button
-          variant="iconButton"
-          className="h-4 p-0 text-muted-foreground"
-          onClick={onCopy}
-        >
-          <LucideCopy size={14} />
-        </Button>
-      </MessageControlTooltip>
-    </TooltipProvider>
   )
 }
 
@@ -248,7 +243,7 @@ function MessageControlTooltip({
 }) {
   return (
     <Tooltip open={open} delayDuration={300}>
-      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent side="bottom">
         <span>{description}</span>
       </TooltipContent>

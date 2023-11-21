@@ -26,13 +26,30 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const { formRef, onKeyDown } = useEnterSubmit()
 
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null)
 
-  React.useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus()
-    }
-    chatManager.setModel(models[0].files[0].name)
-  }, [chatManager, models])
+  const [userScrolled, setUserScrolled] = React.useState(false)
+
+  const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
+
+  const messages = useThreadMessages(currentThreadID)
+
+  const scrollToBottom = React.useCallback(
+    (behavior?: ScrollBehavior) => {
+      const scrollHeight = scrollAreaRef.current?.querySelector(
+        '[data-radix-scroll-area-viewport]',
+      )?.scrollHeight
+      if (!userScrolled) {
+        scrollAreaRef.current
+          ?.querySelector('[data-radix-scroll-area-viewport]')
+          ?.scrollTo({
+            top: scrollHeight,
+            behavior: behavior ?? 'smooth',
+          })
+      }
+    },
+    [userScrolled],
+  )
 
   const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -50,9 +67,16 @@ export function ChatWindow({ models }: { models: Model[] }) {
     event.currentTarget.reset()
   }
 
-  const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
+  React.useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+    chatManager.setModel(models[0].files[0].name)
+  }, [chatManager, models])
 
-  const messages = useThreadMessages(currentThreadID)
+  React.useEffect(() => {
+    scrollToBottom('auto')
+  }, [messages, scrollToBottom])
 
   const availableModels = useAvailableModels()
 
@@ -63,16 +87,46 @@ export function ChatWindow({ models }: { models: Model[] }) {
       <Header models={availableModels} currentThreadID={undefined} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center">
-          <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+          <span className="bg-muted text-muted-foreground inline-flex select-none items-center rounded-lg px-3 py-1 text-sm font-medium">
             Say something to get started
           </span>
         </div>
       ) : (
-        <ScrollArea className="h-full py-0">
-          {messages.map((message) => (
-            <ChatMessage key={message.id} messageID={message.id} />
-          ))}
-        </ScrollArea>
+        <div className="h-full overflow-hidden py-0">
+          <ScrollArea
+            className="h-full"
+            ref={scrollAreaRef}
+            onWheelCapture={() => {
+              const scrollArea = scrollAreaRef.current
+              const viewport = scrollArea?.querySelector(
+                '[data-radix-scroll-area-viewport]',
+              )
+              if (!viewport || !scrollArea) {
+                return
+              }
+              const scrollTop = viewport.scrollTop
+              const scrollHeight = viewport.scrollHeight
+              const height = viewport.clientHeight
+              if (scrollHeight - scrollTop > height) {
+                setUserScrolled(true)
+              } else {
+                setUserScrolled(false)
+              }
+            }}
+          >
+            {messages.map((message) => (
+              <ChatMessage
+                key={message.id}
+                messageID={message.id}
+                onHeightChange={() => {
+                  if (message.id === messages[messages.length - 1].id) {
+                    scrollToBottom()
+                  }
+                }}
+              />
+            ))}
+          </ScrollArea>
+        </div>
       )}
 
       <div className="flex h-fit items-center p-4 pt-2">
@@ -84,7 +138,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <Textarea
             name="message"
             ref={inputRef}
-            className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
             rows={1}
