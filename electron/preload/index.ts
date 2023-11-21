@@ -2,6 +2,7 @@ import './models'
 import './usage'
 
 import { contextBridge, ipcRenderer } from 'electron'
+import { MessageListInput } from 'electron/main/message-list/base'
 import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 
 contextBridge.exposeInMainWorld('chats', {
@@ -24,6 +25,13 @@ contextBridge.exposeInMainWorld('chats', {
     return () => {
       ipcRenderer.off('token', handler)
     }
+  },
+  loadMessageList: ({ modelPath, threadID, messages }) => {
+    return ipcRenderer.invoke('chats:loadMessageList', {
+      modelPath,
+      threadID,
+      messages,
+    })
   },
 } satisfies ChatsAPI)
 
@@ -51,6 +59,16 @@ export interface ChatsAPI {
   }) => Promise<void>
 
   onToken: (callback: (token: string, messageID: string) => void) => () => void
+
+  loadMessageList: ({
+    modelPath,
+    threadID,
+    messages,
+  }: {
+    modelPath: string
+    threadID: string
+    messages: MessageListInput[]
+  }) => Promise<void>
 }
 
 declare global {

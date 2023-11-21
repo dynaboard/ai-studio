@@ -6,6 +6,7 @@ import {
 } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import path from 'path'
 
+import { MessageListInput } from '../message-list/base'
 import { BasicMessageList } from '../message-list/basic'
 
 export type ChatSession = {
@@ -66,6 +67,26 @@ The AI's task is to understand the context and utilize the previous conversation
     return session
   }
 
+  async loadMessageList({
+    threadID,
+    modelPath,
+    messages,
+  }: {
+    threadID: string
+    modelPath: string
+    messages: MessageListInput[]
+  }): Promise<void> {
+    const { messageList } = await this.initializeSession(modelPath, threadID)
+
+    messageList.clear()
+    messages.forEach(({ role, message }) => {
+      messageList.add({
+        role,
+        message,
+      })
+    })
+  }
+
   async sendMessage({
     message,
     threadID,
@@ -120,6 +141,14 @@ The AI's task is to understand the context and utilize the previous conversation
         if (session) {
           this.sessions.delete(key)
         }
+      },
+    )
+
+    ipcMain.handle(
+      'chats:loadMessageList',
+      async (_, { modelPath, threadID, messages }) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        return this.loadMessageList({ modelPath: fullPath, threadID, messages })
       },
     )
   }
