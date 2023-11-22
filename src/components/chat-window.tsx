@@ -11,7 +11,11 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentThreadID,
+<<<<<<< HEAD
   useCurrentTopP,
+=======
+  useMessageIsLoading,
+>>>>>>> b9d5d33 (add global loading state to show abort generation)
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
@@ -26,6 +30,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
   const currentThreadID = useCurrentThreadID()
+  const isLoading = useMessageIsLoading()
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -149,12 +154,14 @@ export function ChatWindow({ models }: { models: Model[] }) {
         </div>
       )}
 
-      <div className="mb-2 flex h-fit items-center justify-center">
-        <Button size="sm" onClick={handleAbort}>
-          <LucideStopCircle size={14} className="mr-2" />
-          <span className="select-none">Stop generating</span>
-        </Button>
-      </div>
+      {isLoading && (
+        <div className="mb-2 flex h-fit items-center justify-center">
+          <Button size="sm" onClick={handleAbort}>
+            <LucideStopCircle size={14} className="mr-2" />
+            <span className="select-none">Stop generating</span>
+          </Button>
+        </div>
+      )}
 
       <div className="flex h-fit items-center p-4 pt-2">
         <form

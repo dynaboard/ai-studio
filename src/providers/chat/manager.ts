@@ -13,6 +13,8 @@ type ModelState = {
   currentThreadID?: string
   currentTemperature?: SliderProps['value']
   currentTopP?: SliderProps['value']
+  loadingText: string
+  isLoading: boolean
 }
 
 export class ChatManager {
@@ -22,6 +24,8 @@ export class ChatManager {
     currentModel: undefined,
     currentTemperature: [1],
     currentTopP: [1],
+    loadingText: '',
+    isLoading: false,
   })
 
   private abortController = new AbortController()
@@ -98,6 +102,8 @@ export class ChatManager {
 
     const modelPath = model || this.model
 
+    this.setLoading(true)
+
     const newUserMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -162,6 +168,8 @@ export class ChatManager {
         messageID: assistantMessageID,
         contents: response,
       })
+
+      this.setLoading(false)
     }
 
     this.resetAbortController()
@@ -182,6 +190,8 @@ export class ChatManager {
       return
     }
 
+    this.setLoading(true)
+
     this.historyManager.editMessage({
       threadID,
       messageID,
@@ -200,12 +210,14 @@ export class ChatManager {
       messageID,
       contents: response,
     })
+
+    this.setLoading(false)
   }
 
   abortMessage() {
     if (this.abortController) {
       this.abortController.abort()
-      console.log('Message generation aborted')
+      this.setLoading(false)
     }
   }
 
@@ -242,6 +254,15 @@ export class ChatManager {
       return {
         ...state,
         currentTopP: topP,
+      }
+    })
+  }
+
+  setLoading(loading: boolean) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        isLoading: loading,
       }
     })
   }
@@ -392,4 +413,11 @@ export function useCurrentThreadID() {
     () => chatManager.state.currentThreadID,
     [chatManager],
   )
+}
+
+export function useMessageIsLoading() {
+  const chatManager = useChatManager()
+  return useValue('useMessageIsLoading', () => chatManager.state.isLoading, [
+    chatManager,
+  ])
 }
