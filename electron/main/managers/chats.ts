@@ -1,15 +1,26 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { LlamaContext } from 'node-llama-cpp'
-import {
-  LLamaChatPromptOptions,
-  LlamaChatSession,
-} from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
+import { type LlamaContext } from 'node-llama-cpp'
+import { LLamaChatPromptOptions, LlamaChatSession } from 'node-llama-cpp'
 import path from 'path'
 
+// we should probably store this in a shared location, tbh
+import { MODELS } from '../../../src/providers/models/model-list'
 import { MessageListInput } from '../message-list/base'
 import { BasicMessageList } from '../message-list/basic'
+import {
+  BasePromptWrapper,
+  LlamaPromptWrapper,
+  MistralPromptWrapper,
+  OpenFunctionsPromptWrapper,
+  PhindPromptWrapper,
+  SimplePromptWrapper,
+  ZephyrPromptWrapper,
+} from '../prompt-wrappers'
+
+const SYSTEM_PROMPT = `You are a helpful AI assistant.`
 
 export type ChatSession = {
+  modelName: string
   session: LlamaChatSession
   context: LlamaContext
   messageList: BasicMessageList
@@ -33,27 +44,26 @@ export class ElectronChatManager {
         LlamaContext,
         LlamaChatSession,
         LlamaModel,
-        GeneralChatPromptWrapper,
+        EmptyChatPromptWrapper,
       } = await import('node-llama-cpp')
+
+      const modelName = modelPath.split('/').pop() as string
+
       const model = new LlamaModel({ modelPath })
       const context = new LlamaContext({ model })
       const chatSession = {
+        modelName,
         session: new LlamaChatSession({
           context,
-          systemPrompt: `You are a helpful AI assistant that remembers previous conversation between yourself the "assistant" and a human the "user":
-### user:
-<previous user message>
-### assistant:
-<previous AI assistant message>
-
-### user:
-<new user prompt>
-
-The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`,
-          promptWrapper: new GeneralChatPromptWrapper({
-            instructionName: 'user',
-            responseName: 'assistant',
-          }),
+          systemPrompt: SYSTEM_PROMPT,
+          promptWrapper: new (class extends EmptyChatPromptWrapper {
+            wrapPrompt(prompt: string): string {
+              return prompt
+            }
+            getStopStrings(): string[] {
+              return ['</s>']
+            }
+          })(),
         }),
         context,
         messageList: new BasicMessageList({
@@ -105,13 +115,19 @@ The AI's task is to understand the context and utilize the previous conversation
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession(
+    const { messageList, session, modelName } = await this.initializeSession(
       modelPath,
       threadID,
     )
 
+    const promptWrapper = this.getPromptWrapper(modelName)
+    const prompt = promptWrapper.getPrompt({
+      systemPrompt: SYSTEM_PROMPT,
+      messages: messageList.messages,
+    })
+
     messageList.add({ role: 'user', message, id: messageID })
-    const response = await session.prompt(messageList.format(), {
+    const response = await session.prompt(prompt, {
       ...promptOptions,
       onToken: (chunks) => onToken(session.context.decode(chunks)),
     })
@@ -136,13 +152,20 @@ The AI's task is to understand the context and utilize the previous conversation
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession(
+    const { messageList, session, modelName } = await this.initializeSession(
       modelPath,
       threadID,
     )
 
     messageList.delete(messageID)
-    const response = await session.prompt(messageList.format(), {
+
+    const promptWrapper = this.getPromptWrapper(modelName)
+    const prompt = promptWrapper.getPrompt({
+      systemPrompt: SYSTEM_PROMPT,
+      messages: messageList.messages,
+    })
+
+    const response = await session.prompt(prompt, {
       ...promptOptions,
       onToken: (chunks) => onToken(session.context.decode(chunks)),
     })
@@ -218,5 +241,36 @@ The AI's task is to understand the context and utilize the previous conversation
         })
       },
     )
+  }
+
+  getPromptWrapper(modelName: string): BasePromptWrapper {
+    const templateName = this.getPromptTemplateName(modelName)
+    switch (templateName) {
+      case 'llama':
+        return new LlamaPromptWrapper()
+      case 'mistral':
+        return new MistralPromptWrapper()
+      case 'zephyr':
+        return new ZephyrPromptWrapper()
+      case 'phind':
+        return new PhindPromptWrapper()
+      case 'openfunctions':
+        return new OpenFunctionsPromptWrapper()
+      default:
+        return new SimplePromptWrapper()
+    }
+  }
+
+  getPromptTemplateName(modelName: string) {
+    const model = MODELS.find(
+      (m) => !!m.files.find((f) => f.name === modelName),
+    )
+    if (!model) {
+      throw new Error(
+        `Could not find model (for prompt template): ${modelName}`,
+      )
+    }
+
+    return model.promptTemplate
   }
 }

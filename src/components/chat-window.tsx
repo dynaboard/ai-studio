@@ -71,7 +71,6 @@ export function ChatWindow({ models }: { models: Model[] }) {
     if (inputRef.current) {
       inputRef.current.focus()
     }
-    chatManager.setModel(models[0].files[0].name)
   }, [chatManager, models])
 
   React.useEffect(() => {
