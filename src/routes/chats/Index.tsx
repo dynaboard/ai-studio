@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 
 import { ThreadsSidebar } from '@/components/chat-sidebar'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
+import { cn } from '@/lib/utils'
 import { ChatManagerProvider } from '@/providers'
 import { useAvailableModels } from '@/providers/models/manager'
 
@@ -10,10 +11,17 @@ export function ChatsIndex() {
 
   console.log('Local models & files', availableModels)
 
+  const haveModels = availableModels.length > 0
+
   return (
     <ChatManagerProvider model={availableModels[0]?.files?.[0].name}>
-      <div className="grid h-full w-full grid-cols-[175px,_minmax(0,_1fr)]">
-        {availableModels.length > 0 ? (
+      <div
+        className={cn(
+          'grid h-full w-full',
+          haveModels ? 'grid-cols-[175px,_minmax(0,_1fr)]' : 'grid-cols-1',
+        )}
+      >
+        {haveModels ? (
           <>
             <div className="h-full w-full overflow-hidden">
               <div className="h-auto w-auto min-w-[150px] border-r">
