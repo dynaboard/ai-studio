@@ -114,6 +114,15 @@ export class ChatManager {
       })
       threadID = thread.id
     } else {
+      // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
+      const isUnnamedThread =
+        this.historyManager.getThread(threadID)?.messages.length === 0 ||
+        this.historyManager.getThread(threadID)?.title === 'New Thread'
+
+      if (isUnnamedThread) {
+        this.historyManager.renameThread(threadID, message.substring(0, 100))
+      }
+
       this.historyManager.addMessage({ threadID, message: newUserMessage })
     }
 
