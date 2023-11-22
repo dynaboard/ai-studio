@@ -24,6 +24,8 @@ export class ChatManager {
     currentTopP: [1],
   })
 
+  private abortController = new AbortController()
+
   cleanupHandler: (() => void) | undefined
 
   constructor(
@@ -46,7 +48,7 @@ export class ChatManager {
 
   handleChatToken = (token: string, messageID: string) => {
     const threadID = this.state.currentThreadID
-    if (!threadID) {
+    if (!threadID || this.abortController?.signal.aborted) {
       return
     }
 
@@ -104,6 +106,10 @@ export class ChatManager {
       date: new Date().toISOString(),
     }
 
+    const promptOptions: LLamaChatPromptOptions = {
+      signal: this.abortController.signal,
+    }
+
     // You always message on a thread, so we are starting a new one if its not provided
     if (!threadID) {
       const thread = this.historyManager.addThread({
@@ -149,11 +155,16 @@ export class ChatManager {
       promptOptions,
     })
 
-    this.historyManager.editMessage({
-      threadID,
-      messageID: assistantMessageID,
-      contents: response,
-    })
+    // Check if the signal is aborted before editing the message
+    if (!this.abortController.signal.aborted) {
+      this.historyManager.editMessage({
+        threadID,
+        messageID: assistantMessageID,
+        contents: response,
+      })
+    }
+
+    this.resetAbortController()
   }
 
   async regenerateMessage({
@@ -189,6 +200,19 @@ export class ChatManager {
       messageID,
       contents: response,
     })
+  }
+
+  abortMessage() {
+    if (this.abortController) {
+      this.abortController.abort()
+      console.log('Message generation aborted')
+    }
+  }
+
+  resetAbortController() {
+    if (this.abortController.signal.aborted) {
+      this.abortController = new AbortController()
+    }
   }
 
   setModel(model: string) {

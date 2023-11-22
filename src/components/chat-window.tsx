@@ -1,5 +1,5 @@
-import { SendHorizonal } from 'lucide-react'
-import React from 'react'
+import { LucideStopCircle, SendHorizonal } from 'lucide-react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 
@@ -29,16 +29,16 @@ export function ChatWindow({ models }: { models: Model[] }) {
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
-  const [userScrolled, setUserScrolled] = React.useState(false)
+  const [userScrolled, setUserScrolled] = useState(false)
 
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
   const messages = useThreadMessages(currentThreadID)
 
-  const scrollToBottom = React.useCallback(
+  const scrollToBottom = useCallback(
     (behavior?: ScrollBehavior) => {
       const scrollHeight = scrollAreaRef.current?.querySelector(
         '[data-radix-scroll-area-viewport]',
@@ -55,33 +55,46 @@ export function ChatWindow({ models }: { models: Model[] }) {
     [userScrolled],
   )
 
-  const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const message = data.get('message') as string | undefined
-    if (!message) {
-      return
-    }
+  const handleMessage = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      const data = new FormData(event.currentTarget)
+      const message = data.get('message') as string | undefined
+      if (!message) {
+        return
+      }
 
-    void chatManager.sendMessage({
-      message,
-      model: currentModel,
-      threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
-      promptOptions: {
-        temperature: Number(currentTemperature),
-        topP: Number(currentTopP),
-      },
-    })
-    event.currentTarget.reset()
-  }
+      void chatManager.sendMessage({
+        message,
+        model: currentModel,
+        threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
+        promptOptions: {
+          temperature: Number(currentTemperature),
+          topP: Number(currentTopP),
+        },
+      })
+      event.currentTarget.reset()
+    },
+    [
+      chatManager,
+      currentModel,
+      currentThreadID,
+      currentTemperature,
+      currentTopP,
+    ],
+  )
 
-  React.useEffect(() => {
+  const handleAbort = useCallback(() => {
+    chatManager.abortMessage()
+  }, [chatManager])
+
+  useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()
     }
   }, [chatManager, models])
 
-  React.useEffect(() => {
+  useEffect(() => {
     scrollToBottom('auto')
   }, [messages, scrollToBottom])
 
@@ -136,6 +149,13 @@ export function ChatWindow({ models }: { models: Model[] }) {
         </div>
       )}
 
+      <div className="mb-2 flex h-fit items-center justify-center">
+        <Button size="sm" onClick={handleAbort}>
+          <LucideStopCircle size={14} className="mr-2" />
+          <span className="select-none">Stop generating</span>
+        </Button>
+      </div>
+
       <div className="flex h-fit items-center p-4 pt-2">
         <form
           className="relative w-full"
@@ -148,7 +168,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
             className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
-            rows={1}
+            rows={3}
             placeholder="Say something..."
             spellCheck={false}
             disabled={disabled}
