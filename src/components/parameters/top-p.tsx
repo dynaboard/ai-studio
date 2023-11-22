@@ -1,4 +1,3 @@
-import { SliderProps } from '@radix-ui/react-slider'
 import { LucideInfo } from 'lucide-react'
 import React from 'react'
 
@@ -9,13 +8,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
+import { useChatManager, useCurrentTopP } from '@/providers/chat/manager'
 
-interface TopPSelectorProps {
-  defaultValue: SliderProps['defaultValue']
-}
-
-export function TopPSelector({ defaultValue }: TopPSelectorProps) {
-  const [value, setValue] = React.useState(defaultValue)
+export function TopPSelector() {
+  const chatManager = useChatManager()
+  const currentTopP = useCurrentTopP()
 
   return (
     <div className="space-y-2">
@@ -44,16 +41,18 @@ export function TopPSelector({ defaultValue }: TopPSelectorProps) {
           </Popover>
         </div>
         <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-          {value}
+          {currentTopP}
         </span>
       </div>
       <div className="grid gap-4">
         <Slider
           id="top-p"
           max={1}
-          defaultValue={value}
+          defaultValue={currentTopP}
           step={0.1}
-          onValueChange={setValue}
+          onValueChange={(value) => {
+            chatManager.setTopP(value)
+          }}
           className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
           aria-label="Top P"
         />

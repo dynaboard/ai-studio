@@ -28,7 +28,7 @@ export function SystemPrompt() {
         <Popover>
           <PopoverTrigger>
             <LucideInfo className="h-3 w-3" />
-            <span className="sr-only">About styles</span>
+            <span className="sr-only">System Prompt</span>
           </PopoverTrigger>
           <PopoverContent
             className="space-y-3 rounded-[0.5rem] text-sm"
@@ -37,7 +37,7 @@ export function SystemPrompt() {
             alignOffset={-20}
           >
             <p>
-              The official system prompt is a good starting point for most use
+              The default system prompt is a good starting point for most use
               cases. You can customize it to fit your use case.
             </p>
           </PopoverContent>

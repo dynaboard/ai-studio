@@ -1,4 +1,3 @@
-import { SliderProps } from '@radix-ui/react-slider'
 import { LucideInfo } from 'lucide-react'
 import React from 'react'
 
@@ -9,15 +8,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
+import { useChatManager, useCurrentTemperature } from '@/providers/chat/manager'
 
-interface TemperatureSelectorProps {
-  defaultValue: SliderProps['defaultValue']
-}
-
-export function TemperatureSelector({
-  defaultValue,
-}: TemperatureSelectorProps) {
-  const [value, setValue] = React.useState(defaultValue)
+export function TemperatureSelector() {
+  const chatManager = useChatManager()
+  const currentTemperature = useCurrentTemperature()
 
   return (
     <div className="space-y-2">
@@ -51,16 +46,18 @@ export function TemperatureSelector({
           </Popover>
         </div>
         <span className="w-12 rounded-md border border-transparent px-2 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
-          {value}
+          {currentTemperature}
         </span>
       </div>
       <div className="grid gap-4">
         <Slider
           id="temperature"
           max={1}
-          defaultValue={value}
+          defaultValue={currentTemperature}
           step={0.1}
-          onValueChange={setValue}
+          onValueChange={(value) => {
+            chatManager.setTemperature(value)
+          }}
           className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
           aria-label="Temperature"
         />

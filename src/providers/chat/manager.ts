@@ -7,20 +7,20 @@ import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
 
 type ModelState = {
+  messages: Message[]
   currentModel?: string
   currentThreadID?: string
-  sendingMessage: boolean
-  messages: Message[]
-  loadingText: string
+  currentTemperature?: number[]
+  currentTopP?: number[]
 }
 
 export class ChatManager {
   private readonly _state = atom<ModelState>('ChatManager._state', {
-    sendingMessage: false,
     messages: [],
     currentThreadID: undefined,
     currentModel: undefined,
-    loadingText: '',
+    currentTemperature: [0.7],
+    currentTopP: [0.9],
   })
 
   cleanupHandler: (() => void) | undefined
@@ -75,10 +75,6 @@ export class ChatManager {
 
   get state() {
     return this._state.value
-  }
-
-  get loadingText() {
-    return this.state.loadingText
   }
 
   async sendMessage({
@@ -207,6 +203,24 @@ export class ChatManager {
     })
   }
 
+  setTemperature(temperature: number[]) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTemperature: temperature,
+      }
+    })
+  }
+
+  setTopP(topP: number[]) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTopP: topP,
+      }
+    })
+  }
+
   setCurrentThread(threadID?: string) {
     if (!threadID) {
       return
@@ -306,6 +320,22 @@ export function useCurrentModel() {
   const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
   return useThread(currentThreadID)?.modelID ?? chatManager.model
+}
+
+export function useCurrentTemperature() {
+  const chatManager = useChatManager()
+  return useValue(
+    'changeTemperature',
+    () => chatManager.state.currentTemperature,
+    [chatManager],
+  )
+}
+
+export function useCurrentTopP() {
+  const chatManager = useChatManager()
+  return useValue('changeTopP', () => chatManager.state.currentTopP, [
+    chatManager,
+  ])
 }
 
 export function useCurrentThreadID() {

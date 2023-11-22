@@ -25,7 +25,7 @@ export function Titlebar({
     <div className="titlebar sticky top-0 z-50 flex h-9 w-full items-center justify-between border-b pl-[76px]">
       <div
         className={cn(
-          'col-start-1 col-end-3 mt-[2px] flex items-center justify-end',
+          'col-start-1 col-end-3 mt-[3px] flex items-center justify-end',
         )}
         id="drag"
       >

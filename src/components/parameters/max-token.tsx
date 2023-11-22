@@ -35,7 +35,7 @@ export function MaxTokensSelector({ defaultValue }: MaxTokensSelectorProps) {
             >
               <p>
                 The maximum number of tokens to generate. Requests can use up to
-                2,048 or 4,000 tokens, shared between prompt and completion. The
+                2,048 or 4,096 tokens, shared between prompt and completion. The
                 exact limit varies by model.
               </p>
             </PopoverContent>
