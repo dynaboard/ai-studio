@@ -1,3 +1,4 @@
+import { SliderProps } from '@radix-ui/react-slider'
 import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
@@ -10,8 +11,8 @@ type ModelState = {
   messages: Message[]
   currentModel?: string
   currentThreadID?: string
-  currentTemperature?: number[]
-  currentTopP?: number[]
+  currentTemperature?: SliderProps['value']
+  currentTopP?: SliderProps['value']
 }
 
 export class ChatManager {
@@ -19,8 +20,8 @@ export class ChatManager {
     messages: [],
     currentThreadID: undefined,
     currentModel: undefined,
-    currentTemperature: [0.7],
-    currentTopP: [0.9],
+    currentTemperature: [1],
+    currentTopP: [1],
   })
 
   cleanupHandler: (() => void) | undefined
@@ -225,7 +226,19 @@ export class ChatManager {
     if (!threadID) {
       return
     }
+
     const messages = this.historyManager.getThread(threadID)?.messages ?? []
+    const thread = this.historyManager.getThread(threadID)
+
+    if (thread) {
+      this.resetParameters()
+
+      window.chats.loadMessageList({
+        modelPath: thread.modelID,
+        threadID: thread.id,
+        messages,
+      })
+    }
 
     this.loadMessageList(threadID)
 
@@ -290,6 +303,16 @@ export class ChatManager {
 
     const modelPath = thread.modelID
     await window.chats.cleanupSession({ modelPath, threadID: thread.id })
+  }
+
+  private resetParameters() {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTemperature: [1],
+        currentTopP: [1],
+      }
+    })
   }
 
   @computed
