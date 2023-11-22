@@ -22,6 +22,12 @@ export class BasicMessageList extends BaseMessageList {
     this.messageList.push(chatMessage)
   }
 
+  delete(messageID: string) {
+    this.messageList = this.messageList.filter(
+      (message) => message.id !== messageID,
+    )
+  }
+
   clear() {
     this.messageList = []
   }

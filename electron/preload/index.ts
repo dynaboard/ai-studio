@@ -9,6 +9,9 @@ contextBridge.exposeInMainWorld('chats', {
   sendMessage: (message) => {
     return ipcRenderer.invoke('chats:sendMessage', message)
   },
+  regenerateMessage: (message) => {
+    return ipcRenderer.invoke('chats:regenerateMessage', message)
+  },
   cleanupSession: ({ modelPath, threadID }) => {
     return ipcRenderer.invoke('chats:cleanupSession', { modelPath, threadID })
   },
@@ -39,11 +42,25 @@ export interface ChatsAPI {
   sendMessage: ({
     message,
     messageID,
+    assistantMessageID,
     threadID,
     promptOptions,
     modelPath,
   }: {
     message: string
+    messageID: string
+    assistantMessageID: string
+    threadID: string
+    promptOptions?: LLamaChatPromptOptions
+    modelPath: string
+  }) => Promise<string>
+
+  regenerateMessage: ({
+    messageID,
+    threadID,
+    promptOptions,
+    modelPath,
+  }: {
     messageID: string
     threadID: string
     promptOptions?: LLamaChatPromptOptions
