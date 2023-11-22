@@ -161,7 +161,6 @@ export class ChatManager {
       promptOptions,
     })
 
-    // Check if the signal is aborted before editing the message
     if (!this.abortController.signal.aborted) {
       this.historyManager.editMessage({
         threadID,
@@ -205,13 +204,17 @@ export class ChatManager {
       modelPath: thread.modelID,
     })
 
-    this.historyManager.editMessage({
-      threadID,
-      messageID,
-      contents: response,
-    })
+    if (!this.abortController.signal.aborted) {
+      this.historyManager.editMessage({
+        threadID,
+        messageID,
+        contents: response,
+      })
 
-    this.setLoading(false)
+      this.setLoading(false)
+    }
+
+    this.resetAbortController()
   }
 
   abortMessage() {
