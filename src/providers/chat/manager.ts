@@ -295,15 +295,15 @@ export class ChatManager {
     await this.loadMessageList(threadID)
   }
 
-  async cleanupChatSession(threadID: string) {
-    const thread = this.historyManager.getThread(threadID)
-    if (!thread) {
-      return
-    }
+  // async cleanupChatSession(threadID: string) {
+  //   const thread = this.historyManager.getThread(threadID)
+  //   if (!thread) {
+  //     return
+  //   }
 
-    const modelPath = thread.modelID
-    await window.chats.cleanupSession({ modelPath, threadID: thread.id })
-  }
+  //   const modelPath = thread.modelID
+  //   await window.chats.cleanupSession({ modelPath, threadID: thread.id })
+  // }
 
   private resetParameters() {
     this._state.update((state) => {

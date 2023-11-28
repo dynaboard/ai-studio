@@ -5,7 +5,7 @@ import path from 'path'
 
 // we should probably store this in a shared location, tbh
 import { MODELS } from '../../../src/providers/models/model-list'
-import { BaseMessageList, ChatMessage } from '../message-list/base'
+import { ChatMessage } from '../message-list/base'
 import { BasicMessageList } from '../message-list/basic'
 import {
   BasePromptWrapper,
@@ -36,64 +36,85 @@ const SYSTEM_PROMPT = `You are a helpful AI assistant that remembers previous co
 The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`
 
 export class ElectronChatManager {
-  private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
+  private lastSessionKey?: string | undefined
+  private chatSession?: ChatSession | undefined
+  // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
 
-  close() {
-    this.sessions.clear()
-  }
+  // close() {
+  //   this.sessions.clear()
+  // }
 
   // Assumes one model per thread for now.
-  private async initializeSession(modelPath: string, threadID: string) {
-    const key = `${modelPath}-${threadID}`
-    const session = this.sessions.get(key)
-    if (!session) {
-      const {
-        LlamaContext,
-        LlamaChatSession,
-        LlamaModel,
-        EmptyChatPromptWrapper,
-      } = await import('node-llama-cpp')
 
-      const modelName = modelPath.split('/').pop() as string
-      const promptWrapper = this.getPromptWrapper(modelName)
+  private getSessionKey(modelPath: string, threadID: string): string {
+    return `${modelPath}-${threadID}`
+  }
 
-      const model = new LlamaModel({
-        modelPath,
-        batchSize: 4096,
-        contextSize: 4096,
-      })
-      const context = new LlamaContext({
-        model,
-        batchSize: 4096,
-        contextSize: 4096,
-      })
-      const chatSession = {
-        modelName,
-        session: new LlamaChatSession({
-          context,
-          systemPrompt: SYSTEM_PROMPT,
-          promptWrapper: new (class extends EmptyChatPromptWrapper {
-            wrapPrompt(prompt: string): string {
-              return prompt
-            }
-            getStopStrings(): string[] {
-              return ['</s>']
-            }
-          })(),
-        }),
-        context,
-        messageList: new BasicMessageList({
-          messageList: [],
-          promptWrapper,
-        }),
-      }
+  private async initializeSession({
+    modelPath,
+    threadID,
+    alwaysInit,
+    messageList,
+  }: {
+    modelPath: string
+    threadID: string
+    alwaysInit?: boolean
+    messageList?: BasicMessageList
+  }) {
+    const key = this.getSessionKey(modelPath, threadID)
 
-      this.sessions.set(key, chatSession)
-      return chatSession
+    if (!alwaysInit && this.lastSessionKey === key && this.chatSession) {
+      return this.chatSession
     }
-    return session
+
+    const {
+      LlamaContext,
+      LlamaChatSession,
+      LlamaModel,
+      EmptyChatPromptWrapper,
+    } = await import('node-llama-cpp')
+
+    const modelName = modelPath.split('/').pop() as string
+    const promptWrapper = this.getPromptWrapper(modelName)
+
+    const model = new LlamaModel({
+      modelPath,
+      batchSize: 4096,
+      contextSize: 4096,
+    })
+    const context = new LlamaContext({
+      model,
+      batchSize: 4096,
+      contextSize: 4096,
+    })
+
+    const chatSession = {
+      modelName,
+      session: new LlamaChatSession({
+        context,
+        systemPrompt: SYSTEM_PROMPT,
+        promptWrapper: new (class extends EmptyChatPromptWrapper {
+          wrapPrompt(prompt: string): string {
+            return prompt
+          }
+          getStopStrings(): string[] {
+            return ['</s>']
+          }
+        })(),
+      }),
+      context,
+      messageList: new BasicMessageList({
+        messageList: [],
+        promptWrapper,
+      }),
+    }
+
+    this.lastSessionKey = key
+    this.chatSession = chatSession
+
+    return this.chatSession
   }
 
   async loadMessageList({
@@ -105,7 +126,10 @@ export class ElectronChatManager {
     modelPath: string
     messages: ChatMessage[]
   }): Promise<void> {
-    const { messageList } = await this.initializeSession(modelPath, threadID)
+    const { messageList } = await this.initializeSession({
+      modelPath,
+      threadID,
+    })
 
     messageList.clear()
     messages.forEach(({ role, message, id }) => {
@@ -117,25 +141,34 @@ export class ElectronChatManager {
     })
   }
 
-  private shiftMessageWindow(
-    messageList: BaseMessageList,
-    context: LlamaContext,
-  ): void {
-    if (messageList.length < 1)
-      throw new Error(
-        `message exceeded max token size: ${context.getContextSize()}`,
-      )
+  private async shiftMessageWindow(
+    modelPath: string,
+    threadID: string,
+    alwaysInit?: boolean,
+    newMessageList?: BasicMessageList,
+  ): Promise<void> {
+    const { context, messageList } = await this.initializeSession({
+      modelPath,
+      threadID,
+      alwaysInit,
+      messageList: newMessageList,
+    })
 
-    const maxTokenCount = context.getContextSize()
+    // if (messageList.length < 1) {
+    //   throw new Error(
+    //     `message exceeded max token size: ${context.getContextSize()}`,
+    //   )
+    // }
 
     // This is just an estimate, we can count the exact tokens once we have better control over tokenization and prompt wrappers
     const estimatedTokenCount =
       context.encode(messageList.format({ systemPrompt: SYSTEM_PROMPT }))
         .length + 64 // 64 is just a random buffer number
 
-    if (estimatedTokenCount > maxTokenCount) {
+    if (estimatedTokenCount > context.getContextSize()) {
+      console.log('**** Token count exceeded, reinitializing ****')
       messageList.dequeue()
-      this.shiftMessageWindow(messageList, context)
+      await this.shiftMessageWindow(modelPath, threadID, true, messageList)
     }
   }
 
@@ -156,13 +189,13 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session, context } = await this.initializeSession(
+    const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
-    )
+    })
 
     messageList.add({ role: 'user', message, id: messageID })
-    this.shiftMessageWindow(messageList, context)
+    this.shiftMessageWindow(modelPath, threadID)
     const response = await session.prompt(
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
@@ -175,6 +208,7 @@ export class ElectronChatManager {
       message: response,
       id: assistantMessageID,
     })
+    await this.shiftMessageWindow(modelPath, threadID, true, messageList)
     return response
   }
 
@@ -191,10 +225,10 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session, context } = await this.initializeSession(
+    const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
-    )
+    })
 
     messageList.delete(messageID)
 
@@ -206,12 +240,7 @@ export class ElectronChatManager {
       },
     )
     messageList.add({ role: 'assistant', message: response, id: messageID })
-    this.shiftMessageWindow(messageList, context)
-    // console.log({
-    //   responseContext: context.encode(
-    //     `${SYSTEM_PROMPT}\n${messageList.format()}`,
-    //   ).length,
-    // })
+    await this.shiftMessageWindow(modelPath, threadID)
     return response
   }
 
@@ -248,17 +277,17 @@ export class ElectronChatManager {
       },
     )
 
-    ipcMain.handle(
-      'chats:cleanupSession',
-      async (_, { modelPath, threadID }) => {
-        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        const key = `${fullPath}-${threadID}`
-        const session = this.sessions.get(key)
-        if (session) {
-          this.sessions.delete(key)
-        }
-      },
-    )
+    // ipcMain.handle(
+    //   'chats:cleanupSession',
+    //   async (_, { modelPath, threadID }) => {
+    //     const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+    //     const key = this.getSessionKey(fullPath, threadID)
+    //     const session = this.sessions.get(key)
+    //     if (session) {
+    //       this.sessions.delete(key)
+    //     }
+    //   },
+    // )
 
     ipcMain.handle(
       'chats:loadMessageList',

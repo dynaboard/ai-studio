@@ -108,7 +108,7 @@ const Cursor = React.memo(function Cursor({
 
 function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const historyManager = useHistoryManager()
-  const chatManager = useChatManager()
+  // const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
   const navigate = useNavigate()
 
@@ -120,7 +120,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
     const firstThread = historyManager.threads.find(
       (t) => t.id !== node.data.id,
     )
-    await chatManager.cleanupChatSession(node.data.id)
+    // await chatManager.cleanupChatSession(node.data.id)
     historyManager.deleteThread(node.data.id)
     navigate(`/chats/${firstThread?.id ?? ''}`, {
       replace: true,
