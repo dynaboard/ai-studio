@@ -14,28 +14,30 @@ export function ChatsIndex() {
   const haveModels = availableModels.length > 0
 
   return (
-    <ChatManagerProvider model={availableModels[0]?.files?.[0].name}>
-      <div
-        className={cn(
-          'grid h-full w-full',
-          haveModels ? 'grid-cols-[175px,_minmax(0,_1fr)]' : 'grid-cols-1',
-        )}
-      >
-        {haveModels ? (
-          <>
-            <div className="h-full w-full overflow-hidden">
-              <div className="h-auto w-auto min-w-[150px] border-r">
-                <ThreadsSidebar />
+    <>
+      <ChatManagerProvider model={availableModels[0]?.files?.[0].name}>
+        <div
+          className={cn(
+            'grid h-full w-full',
+            haveModels ? 'grid-cols-[175px,_minmax(0,_1fr)]' : 'grid-cols-1',
+          )}
+        >
+          {haveModels ? (
+            <>
+              <div className="h-full w-full overflow-hidden">
+                <div className="h-auto w-auto min-w-[150px] border-r">
+                  <ThreadsSidebar />
+                </div>
               </div>
-            </div>
-            <div className="h-full w-full overflow-hidden">
-              <Outlet />
-            </div>
-          </>
-        ) : (
-          <ModelDownloader subtitle="Download a model to get started." />
-        )}
-      </div>
-    </ChatManagerProvider>
+              <div className="h-full w-full overflow-hidden">
+                <Outlet />
+              </div>
+            </>
+          ) : (
+            <ModelDownloader subtitle="Download a model to get started." />
+          )}
+        </div>
+      </ChatManagerProvider>
+    </>
   )
 }

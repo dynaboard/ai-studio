@@ -19,9 +19,21 @@ export class TransformersManager {
   }
 
   async embed(fileContent: string) {
-    const embeddings = await window.transformers.embed(fileContent)
+    const embeddings = await window.transformers.embedDocument(fileContent)
     console.log('embeddings: ', embeddings)
     return embeddings
+  }
+
+  async embedDocument(filePath: string) {
+    return new Promise((resolve) => {
+      const cleanup = window.transformers.onEmbeddingsComplete((data) => {
+        console.log('Embeddings complete: ', data)
+        resolve(data)
+        cleanup()
+      })
+
+      window.transformers.embedDocument(filePath)
+    })
   }
 
   get state() {
