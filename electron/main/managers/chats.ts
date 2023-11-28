@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { type LlamaContext } from 'node-llama-cpp'
 import { LLamaChatPromptOptions, LlamaChatSession } from 'node-llama-cpp'
 import path from 'path'
 
@@ -16,22 +17,14 @@ import {
   ZephyrPromptWrapper,
 } from '../prompt-wrappers'
 
-// const SYSTEM_PROMPT = `You are a helpful AI assistant.`
+const SYSTEM_PROMPT = `You are a helpful AI assistant.`
 
 export type ChatSession = {
   modelName: string
   session: LlamaChatSession
+  context: LlamaContext
   messageList: BasicMessageList
 }
-
-// TODO: Make this user configurable
-const SYSTEM_PROMPT = `You are a helpful AI assistant that remembers previous conversation between yourself the "assistant" and a human the "user":
-### user:
-<previous user message>
-### assistant:
-<previous AI assistant message>
-
-The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`
 
 const DEFAULT_MAX_OUTPUT_TOKENS = 512
 const DEFAULT_CONTEXT_SIZE = 4096
@@ -106,10 +99,12 @@ export class ElectronChatManager {
         })(),
       }),
       context,
-      messageList: new BasicMessageList({
-        messageList: [],
-        promptWrapper,
-      }),
+      messageList:
+        messageList ||
+        new BasicMessageList({
+          messageList: [],
+          promptWrapper,
+        }),
     }
 
     this.lastSessionKey = key
@@ -213,6 +208,7 @@ export class ElectronChatManager {
       threadID,
       maxTokens: promptOptions?.maxTokens,
     })
+
     const response = await session.prompt(
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
