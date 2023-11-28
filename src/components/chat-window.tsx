@@ -87,7 +87,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
   )
 
   const handleAbort = useCallback(() => {
-    chatManager.abortMessage()
+    chatManager.abort()
+    
   }, [chatManager])
 
   useEffect(() => {

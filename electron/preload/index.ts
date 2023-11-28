@@ -15,6 +15,15 @@ contextBridge.exposeInMainWorld('chats', {
   cleanupSession: ({ modelPath, threadID }) => {
     return ipcRenderer.invoke('chats:cleanupSession', { modelPath, threadID })
   },
+  abortMessage: () => {
+    return ipcRenderer.invoke('chats:abortMessage')
+  },
+  resetAbortController: () => {
+    return ipcRenderer.invoke('chats:resetAbortController')
+  },
+  getAbortController: () => {
+    return ipcRenderer.invoke('chats:getAbortController')
+  },
   onToken: (callback) => {
     const handler = (
       _event: Electron.IpcRendererEvent,
@@ -74,6 +83,10 @@ export interface ChatsAPI {
     modelPath: string
     threadID: string
   }) => Promise<void>
+
+  abortMessage: () => Promise<void>
+  resetAbortController: () => Promise<void>
+  getAbortController: () => Promise<AbortController>
 
   onToken: (callback: (token: string, messageID: string) => void) => () => void
 

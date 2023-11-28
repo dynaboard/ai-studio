@@ -51,8 +51,13 @@ export class ChatManager {
   }
 
   handleChatToken = (token: string, messageID: string) => {
+    if (this.abortController?.signal.aborted) {
+      console.log('Token processing aborted. Skipping further processing.')
+      return
+    }
+
     const threadID = this.state.currentThreadID
-    if (!threadID || this.abortController?.signal.aborted) {
+    if (!threadID) {
       return
     }
 
@@ -60,6 +65,8 @@ export class ChatManager {
     if (!currentMessage) {
       return
     }
+
+    console.log('handleChatToken')
 
     this.historyManager.editMessage({
       threadID,
@@ -95,6 +102,16 @@ export class ChatManager {
     model?: string
     promptOptions?: LLamaChatPromptOptions
   }) {
+    // console.log('Sending message ', this.abortController)
+
+    // if (this.abortController?.signal.aborted) {
+    //   console.log(
+    //     'Token generation aborted. sendMessage',
+    //     this.abortController.signal,
+    //   )
+    //   return
+    // }
+
     if (!model || !this.model) {
       console.error('No model selected')
       return
@@ -148,19 +165,19 @@ export class ChatManager {
       message: newAssistantMessage,
     })
 
-    const response = await window.chats.sendMessage({
-      messageID: newUserMessage.id,
-      assistantMessageID,
-      message,
-      modelPath,
-      threadID,
-      promptOptions: {
-        ...promptOptions,
-        signal: this.abortController.signal,
-      },
-    })
-
     if (!this.abortController.signal.aborted) {
+      const response = await window.chats.sendMessage({
+        messageID: newUserMessage.id,
+        assistantMessageID,
+        message,
+        modelPath,
+        threadID,
+        promptOptions: {
+          ...promptOptions,
+          signal: this.abortController.signal,
+        },
+      })
+
       this.historyManager.editMessage({
         threadID,
         messageID: assistantMessageID,
@@ -170,6 +187,7 @@ export class ChatManager {
       this.setLoading(false)
     }
 
+    // Reset the abort controller for the next operation
     this.resetAbortController()
   }
 
@@ -182,6 +200,14 @@ export class ChatManager {
     messageID: string
     promptOptions?: LLamaChatPromptOptions
   }) {
+    // if (this.abortController?.signal.aborted) {
+    //   console.log(
+    //     'Token generation aborted. regenerateMessage ',
+    //     this.abortController.signal,
+    //   )
+    //   return
+    // }
+
     const thread = this.historyManager.getThread(threadID)
     if (!thread) {
       console.error(
@@ -209,30 +235,42 @@ export class ChatManager {
       modelPath: thread.modelID,
     })
 
-    if (!this.abortController.signal.aborted) {
-      this.historyManager.editMessage({
-        threadID,
-        messageID,
-        contents: response,
-      })
+    // if (!this.abortController.signal.aborted) {
+    this.historyManager.editMessage({
+      threadID,
+      messageID,
+      contents: response,
+    })
 
-      this.setLoading(false)
-    }
+    this.setLoading(false)
+    // }
 
-    this.resetAbortController()
+    // this.resetAbortController()
   }
 
-  abortMessage() {
-    if (this.abortController) {
-      this.abortController.abort()
-      this.setLoading(false)
-    }
+  abort() {
+    // if (this.abortController) {
+    //   console.log('Aborting message.')
+    //   this.abortController.abort()
+    //   window.chats.abortMessage()
+
+    //   this.setLoading(false)
+    //   this.resetAbortController()
+    //   window.chats.resetAbortController()
+    // }
+    console.log('Aborted')
+
+    window.chats.abortMessage()
+    this.setLoading(false)
+    window.chats.resetAbortController()
   }
 
   resetAbortController() {
-    if (this.abortController.signal.aborted) {
-      this.abortController = new AbortController()
-    }
+    // if (this.abortController.signal.aborted) {
+    //   console.log('Resetting AbortController.')
+    //   this.abortController = new AbortController()
+    // }
+    window.chats.resetAbortController()
   }
 
   setModel(model: string) {
@@ -348,6 +386,10 @@ export class ChatManager {
     await this.loadMessageList(threadID)
   }
 
+  async abortMessage() {
+    await window.chats.abortMessage()
+  }
+
   async cleanupChatSession(threadID: string) {
     const thread = this.historyManager.getThread(threadID)
     if (!thread) {
@@ -401,7 +443,7 @@ export function useCurrentModel() {
 export function useCurrentTemperature() {
   const chatManager = useChatManager()
   return useValue(
-    'changeTemperature',
+    'useCurrentTemperature',
     () => chatManager.state.currentTemperature,
     [chatManager],
   )
@@ -409,7 +451,7 @@ export function useCurrentTemperature() {
 
 export function useCurrentTopP() {
   const chatManager = useChatManager()
-  return useValue('changeTopP', () => chatManager.state.currentTopP, [
+  return useValue('useCurrentTopP', () => chatManager.state.currentTopP, [
     chatManager,
   ])
 }

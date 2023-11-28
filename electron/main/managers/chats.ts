@@ -26,8 +26,16 @@ export type ChatSession = {
   messageList: BasicMessageList
 }
 
+class AbortError extends Error {
+  constructor() {
+    super('Aborted')
+  }
+}
+
 export class ElectronChatManager {
   private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
+
+  private abortController = new AbortController()
 
   constructor(readonly window: BrowserWindow) {}
 
@@ -71,6 +79,7 @@ export class ElectronChatManager {
           messageList: [],
           promptWrapper,
         }),
+        abortController: new AbortController(),
       }
 
       this.sessions.set(key, chatSession)
@@ -127,9 +136,11 @@ export class ElectronChatManager {
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
         ...promptOptions,
+        signal: this.abortController.signal,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
     )
+
     messageList.add({
       role: 'assistant',
       message: response,
@@ -162,11 +173,24 @@ export class ElectronChatManager {
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
         ...promptOptions,
+        signal: this.abortController.signal,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
     )
     messageList.add({ role: 'assistant', message: response, id: messageID })
     return response
+  }
+
+  async abortMessage() {
+    this.abortController.abort()
+  }
+
+  async resetAbortController() {
+    this.abortController = new AbortController()
+  }
+
+  async getAbortController() {
+    return this.abortController
   }
 
   addClientEventHandlers() {
@@ -185,6 +209,7 @@ export class ElectronChatManager {
       ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
 
+        // try {
         return this.sendMessage({
           message,
           messageID,
@@ -199,8 +224,50 @@ export class ElectronChatManager {
             })
           },
         })
+        // } catch (error) {
+        //   if (error instanceof AbortError) {
+        //     console.error('AbortError occurred')
+        //     return
+        //   }
+        // }
       },
     )
+
+    ipcMain.handle(
+      'chats:regenerateMessage',
+      async (_, { messageID, threadID, promptOptions, modelPath }) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+
+        try {
+          return this.regenerateMessage({
+            messageID,
+            threadID,
+            promptOptions,
+            modelPath: fullPath,
+            onToken: (token) => {
+              this.window.webContents.send('token', { token, messageID })
+            },
+          })
+        } catch (error) {
+          if (error instanceof AbortError) {
+            console.error('AbortError occurred')
+            return
+          }
+        }
+      },
+    )
+
+    ipcMain.handle('chats:abortMessage', async () => {
+      this.abortMessage()
+    })
+
+    ipcMain.handle('chats:resetAbortController', async () => {
+      this.resetAbortController()
+    })
+
+    ipcMain.handle('chats:getAbortController', async () => {
+      return this.getAbortController()
+    })
 
     ipcMain.handle(
       'chats:cleanupSession',
@@ -219,22 +286,6 @@ export class ElectronChatManager {
       async (_, { modelPath, threadID, messages }) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
         return this.loadMessageList({ modelPath: fullPath, threadID, messages })
-      },
-    )
-
-    ipcMain.handle(
-      'chats:regenerateMessage',
-      async (_, { messageID, threadID, promptOptions, modelPath }) => {
-        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        return this.regenerateMessage({
-          messageID,
-          threadID,
-          promptOptions,
-          modelPath: fullPath,
-          onToken: (token) => {
-            this.window.webContents.send('token', { token, messageID })
-          },
-        })
       },
     )
   }
