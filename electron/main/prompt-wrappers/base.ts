@@ -1,8 +1,8 @@
-import { MessageListInput } from 'electron/main/message-list/base'
+import { ChatMessage } from 'electron/main/message-list/base'
 
 export type GetPromptOptions = {
   systemPrompt: string
-  messages: MessageListInput[]
+  messages: ChatMessage[]
 }
 
 export abstract class BasePromptWrapper {

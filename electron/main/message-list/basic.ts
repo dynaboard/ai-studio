@@ -1,24 +1,30 @@
-import { BaseMessageList, MessageListInput } from './base'
+import { BasePromptWrapper } from 'electron/main/prompt-wrappers'
+
+import { BaseMessageList, ChatMessage, FormatOptions } from './base'
 
 export type BasicMessageListInput = {
-  messageList: MessageListInput[]
+  messageList?: ChatMessage[]
+  promptWrapper: BasePromptWrapper
 }
 
 export class BasicMessageList extends BaseMessageList {
-  messages: MessageListInput[]
+  messages: ChatMessage[]
+  promptWrapper: BasePromptWrapper
 
-  constructor(input?: BasicMessageListInput) {
+  constructor(input: BasicMessageListInput) {
     super()
-    this.messages = input?.messageList || []
+    this.messages = input.messageList || []
+    this.promptWrapper = input.promptWrapper
   }
 
-  format(): string {
-    return this.messages
-      .map(({ role, message }) => `\n### ${role}:\n${message}`)
-      .join('\n')
+  format({ systemPrompt }: FormatOptions): string {
+    return this.promptWrapper.getPrompt({
+      messages: this.messages,
+      systemPrompt: systemPrompt,
+    })
   }
 
-  add(chatMessage: MessageListInput) {
+  add(chatMessage: ChatMessage) {
     this.messages.push(chatMessage)
   }
 

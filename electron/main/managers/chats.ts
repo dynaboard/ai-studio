@@ -5,7 +5,7 @@ import path from 'path'
 
 // we should probably store this in a shared location, tbh
 import { MODELS } from '../../../src/providers/models/model-list'
-import { MessageListInput } from '../message-list/base'
+import { ChatMessage } from '../message-list/base'
 import { BasicMessageList } from '../message-list/basic'
 import {
   BasePromptWrapper,
@@ -48,6 +48,7 @@ export class ElectronChatManager {
       } = await import('node-llama-cpp')
 
       const modelName = modelPath.split('/').pop() as string
+      const promptWrapper = this.getPromptWrapper(modelName)
 
       const model = new LlamaModel({ modelPath })
       const context = new LlamaContext({ model })
@@ -68,6 +69,7 @@ export class ElectronChatManager {
         context,
         messageList: new BasicMessageList({
           messageList: [],
+          promptWrapper,
         }),
       }
 
@@ -84,7 +86,7 @@ export class ElectronChatManager {
   }: {
     threadID: string
     modelPath: string
-    messages: MessageListInput[]
+    messages: ChatMessage[]
   }): Promise<void> {
     const { messageList } = await this.initializeSession(modelPath, threadID)
 
@@ -115,22 +117,19 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session, modelName } = await this.initializeSession(
+    const { messageList, session } = await this.initializeSession(
       modelPath,
       threadID,
     )
 
-    const promptWrapper = this.getPromptWrapper(modelName)
-    const prompt = promptWrapper.getPrompt({
-      systemPrompt: SYSTEM_PROMPT,
-      messages: messageList.messages,
-    })
-
     messageList.add({ role: 'user', message, id: messageID })
-    const response = await session.prompt(prompt, {
-      ...promptOptions,
-      onToken: (chunks) => onToken(session.context.decode(chunks)),
-    })
+    const response = await session.prompt(
+      messageList.format({ systemPrompt: SYSTEM_PROMPT }),
+      {
+        ...promptOptions,
+        onToken: (chunks) => onToken(session.context.decode(chunks)),
+      },
+    )
     messageList.add({
       role: 'assistant',
       message: response,
@@ -152,23 +151,20 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session, modelName } = await this.initializeSession(
+    const { messageList, session } = await this.initializeSession(
       modelPath,
       threadID,
     )
 
     messageList.delete(messageID)
 
-    const promptWrapper = this.getPromptWrapper(modelName)
-    const prompt = promptWrapper.getPrompt({
-      systemPrompt: SYSTEM_PROMPT,
-      messages: messageList.messages,
-    })
-
-    const response = await session.prompt(prompt, {
-      ...promptOptions,
-      onToken: (chunks) => onToken(session.context.decode(chunks)),
-    })
+    const response = await session.prompt(
+      messageList.format({ systemPrompt: SYSTEM_PROMPT }),
+      {
+        ...promptOptions,
+        onToken: (chunks) => onToken(session.context.decode(chunks)),
+      },
+    )
     messageList.add({ role: 'assistant', message: response, id: messageID })
     return response
   }
