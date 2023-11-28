@@ -2,7 +2,7 @@ import './models'
 import './usage'
 
 import { contextBridge, ipcRenderer } from 'electron'
-import { MessageListInput } from 'electron/main/message-list/base'
+import { ChatMessage } from 'electron/main/message-list/base'
 import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 
 contextBridge.exposeInMainWorld('chats', {
@@ -84,7 +84,7 @@ export interface ChatsAPI {
   }: {
     modelPath: string
     threadID: string
-    messages: MessageListInput[]
+    messages: ChatMessage[]
   }) => Promise<void>
 }
 

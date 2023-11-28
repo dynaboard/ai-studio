@@ -2,7 +2,14 @@ export type Model = {
   name: string
   description: string
   parameters: string
-  promptTemplate: 'none' | 'mistral' | 'llama' | 'zephyr'
+  promptTemplate:
+    | 'general'
+    | 'phind'
+    | 'llama'
+    | 'chatml'
+    | 'mistral'
+    | 'zephyr'
+    | 'openfunctions'
   files: ModelFile[]
 }
 
@@ -72,29 +79,29 @@ export const MODELS: Model[] = [
     name: 'Llama 2 7B Chat',
     description: 'Fine-tuned Llama 2 for better chat performance.',
     parameters: '7B',
-    promptTemplate: 'none',
+    promptTemplate: 'llama',
     files: [
       {
-        name: 'llama-2-7b.Q4_K_M.gguf',
+        name: 'llama-2-7b-chat.Q4_K_M.gguf',
         format: 'gguf',
-        repository: 'https://huggingface.co/TheBloke/Llama-2-7B-GGUF',
-        url: 'https://huggingface.co/TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q4_K_M.gguf?download=true',
+        repository: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF',
+        url: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf?download=true',
         quantization: '4-bit',
         sizeBytes: 4081004224,
       },
       {
-        name: 'llama-2-7b.Q5_K_M.gguf',
+        name: 'llama-2-7b-chat.Q5_K_M.gguf',
         format: 'gguf',
-        repository: 'https://huggingface.co/TheBloke/Llama-2-7B-GGUF',
-        url: 'https://huggingface.co/TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q5_K_M.gguf?download=true',
+        repository: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF',
+        url: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q5_K_M.gguf?download=true',
         quantization: '5-bit',
         sizeBytes: 4783156928,
       },
       {
-        name: 'llama-2-7b.Q8_0.gguf',
+        name: 'llama-2-7b-chat.Q8_0.gguf',
         format: 'gguf',
-        repository: 'https://huggingface.co/TheBloke/Llama-2-7B-GGUF',
-        url: 'https://huggingface.co/TheBloke/Llama-2-7B-GGUF/resolve/main/llama-2-7b.Q8_0.gguf?download=true',
+        repository: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF',
+        url: 'https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q8_0.gguf?download=true',
         quantization: '8-bit',
         sizeBytes: 7161089728,
       },
@@ -177,7 +184,7 @@ export const MODELS: Model[] = [
     description:
       'Fine-tuned on additional code samples by the Phind team for better output. Larger model that runs slower.',
     parameters: '34B',
-    promptTemplate: 'llama',
+    promptTemplate: 'phind',
     files: [
       {
         name: 'phind-codellama-34b-v2.Q4_K_M.gguf',
@@ -213,25 +220,34 @@ export const MODELS: Model[] = [
     description:
       'Fine-tuned to formulate executable API calls given natural language instructions.',
     parameters: '7B',
-    promptTemplate: 'llama',
+    promptTemplate: 'openfunctions',
     files: [
       {
-        name: 'gorilla-llm_gorilla-openfunctions-v1.Q4_K_M.gguf',
+        name: 'gorilla-openfunctions-v1.Q4_K_M.gguf',
         format: 'gguf',
         repository:
-          'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf',
-        url: 'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf/resolve/main/gorilla-llm_gorilla-openfunctions-v1.Q4_K_M.gguf?download=true',
+          'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF',
+        url: 'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF/resolve/main/gorilla-openfunctions-v1.Q4_K_M.gguf?download=true',
         quantization: '4-bit',
-        sizeBytes: 4081004288,
+        sizeBytes: 4081004352,
       },
       {
-        name: 'gorilla-llm_gorilla-openfunctions-v1.Q6_K.gguf',
+        name: 'gorilla-openfunctions-v1.Q5_K_M.gguf',
         format: 'gguf',
         repository:
-          'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf',
-        url: 'https://huggingface.co/PsiPi/gorilla-llm_gorilla-openfunctions-v1-gguf/resolve/main/gorilla-llm_gorilla-openfunctions-v1.Q6_K.gguf?download=true',
-        quantization: '6-bit',
-        sizeBytes: 5529194240,
+          'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF',
+        url: 'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF/resolve/main/gorilla-openfunctions-v1.Q5_K_M.gguf?download=true',
+        quantization: '5-bit',
+        sizeBytes: 4783157056,
+      },
+      {
+        name: 'gorilla-openfunctions-v1.Q8_0.gguf',
+        format: 'gguf',
+        repository:
+          'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF',
+        url: 'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF/resolve/main/gorilla-openfunctions-v1.Q8_0.gguf?download=true',
+        quantization: '8-bit',
+        sizeBytes: 7161089856,
       },
     ],
   },

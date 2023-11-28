@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type MessageListInput = {
+export type ChatMessage = {
   role: 'user' | 'assistant' | 'system'
   id: string
   // TODO: Currently store messages as string, but maybe use rich text implementation
@@ -7,8 +7,12 @@ export type MessageListInput = {
   message: string
 }
 
+export type FormatOptions = {
+  systemPrompt: string
+}
+
 export abstract class BaseMessageList {
-  abstract format(): string
-  abstract add(value: MessageListInput): void
+  abstract format(opts: FormatOptions): string
+  abstract add(value: ChatMessage): void
   abstract clear(): void
 }
