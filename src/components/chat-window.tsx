@@ -103,7 +103,18 @@ export function ChatWindow({ models }: { models: Model[] }) {
     [],
   )
 
-  console.log('selectedFile: ', selectedFile)
+  const handleEmbedFile = useCallback(() => {
+    if (!selectedFile) {
+      return
+    }
+
+    window.transformers.embed(selectedFile.name).then((result) => {
+      console.log('file to embed: ', result)
+      return result
+    })
+  }, [selectedFile])
+
+  // console.log('selectedFile: ', selectedFile)
 
   React.useEffect(() => {
     if (inputRef.current) {
@@ -135,11 +146,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
                 Uploaded file ({selectedFile.name} &sdot;{' '}
                 {prettyBytes(selectedFile.size)})
               </span>
-              <Button
-                size="sm"
-                // TODO: embed file
-                // onClick={() => setSelectedFile(null)}
-              >
+              <Button size="sm" onClick={handleEmbedFile}>
                 Embed
               </Button>
               <Button
