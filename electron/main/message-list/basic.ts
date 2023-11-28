@@ -24,12 +24,20 @@ export class BasicMessageList extends BaseMessageList {
     })
   }
 
+  get length() {
+    return this.messages.length
+  }
+
   add(chatMessage: ChatMessage) {
     this.messages.push(chatMessage)
   }
 
   delete(messageID: string) {
     this.messages = this.messages.filter((message) => message.id !== messageID)
+  }
+
+  dequeue(): ChatMessage | undefined {
+    return this.messages.shift()
   }
 
   clear() {

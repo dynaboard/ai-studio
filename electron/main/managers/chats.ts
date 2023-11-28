@@ -5,7 +5,7 @@ import path from 'path'
 
 // we should probably store this in a shared location, tbh
 import { MODELS } from '../../../src/providers/models/model-list'
-import { ChatMessage } from '../message-list/base'
+import { BaseMessageList, ChatMessage } from '../message-list/base'
 import { BasicMessageList } from '../message-list/basic'
 import {
   BasePromptWrapper,
@@ -17,7 +17,7 @@ import {
   ZephyrPromptWrapper,
 } from '../prompt-wrappers'
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant.`
+// const SYSTEM_PROMPT = `You are a helpful AI assistant.`
 
 export type ChatSession = {
   modelName: string
@@ -25,6 +25,15 @@ export type ChatSession = {
   context: LlamaContext
   messageList: BasicMessageList
 }
+
+// TODO: Make this user configurable
+const SYSTEM_PROMPT = `You are a helpful AI assistant that remembers previous conversation between yourself the "assistant" and a human the "user":
+### user:
+<previous user message>
+### assistant:
+<previous AI assistant message>
+
+The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`
 
 export class ElectronChatManager {
   private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
@@ -50,8 +59,16 @@ export class ElectronChatManager {
       const modelName = modelPath.split('/').pop() as string
       const promptWrapper = this.getPromptWrapper(modelName)
 
-      const model = new LlamaModel({ modelPath })
-      const context = new LlamaContext({ model })
+      const model = new LlamaModel({
+        modelPath,
+        batchSize: 4096,
+        contextSize: 4096,
+      })
+      const context = new LlamaContext({
+        model,
+        batchSize: 4096,
+        contextSize: 4096,
+      })
       const chatSession = {
         modelName,
         session: new LlamaChatSession({
@@ -100,6 +117,28 @@ export class ElectronChatManager {
     })
   }
 
+  private shiftMessageWindow(
+    messageList: BaseMessageList,
+    context: LlamaContext,
+  ): void {
+    if (messageList.length < 1)
+      throw new Error(
+        `message exceeded max token size: ${context.getContextSize()}`,
+      )
+
+    const maxTokenCount = context.getContextSize()
+
+    // This is just an estimate, we can count the exact tokens once we have better control over tokenization and prompt wrappers
+    const estimatedTokenCount =
+      context.encode(messageList.format({ systemPrompt: SYSTEM_PROMPT }))
+        .length + 64 // 64 is just a random buffer number
+
+    if (estimatedTokenCount > maxTokenCount) {
+      messageList.dequeue()
+      this.shiftMessageWindow(messageList, context)
+    }
+  }
+
   async sendMessage({
     message,
     messageID,
@@ -117,12 +156,13 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession(
+    const { messageList, session, context } = await this.initializeSession(
       modelPath,
       threadID,
     )
 
     messageList.add({ role: 'user', message, id: messageID })
+    this.shiftMessageWindow(messageList, context)
     const response = await session.prompt(
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
@@ -151,7 +191,7 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession(
+    const { messageList, session, context } = await this.initializeSession(
       modelPath,
       threadID,
     )
@@ -166,6 +206,12 @@ export class ElectronChatManager {
       },
     )
     messageList.add({ role: 'assistant', message: response, id: messageID })
+    this.shiftMessageWindow(messageList, context)
+    // console.log({
+    //   responseContext: context.encode(
+    //     `${SYSTEM_PROMPT}\n${messageList.format()}`,
+    //   ).length,
+    // })
     return response
   }
 
