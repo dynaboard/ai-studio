@@ -9,16 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-const defaultSystemPrompt = `You are a helpful AI assistant that remembers previous conversation between yourself the "assistant" and a human the "user":
-### user:
-<previous user message>
-### assistant:
-<previous AI assistant message>
-
-### user:
-<new user prompt>
-
-The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`
+const SYSTEM_PROMPT = `You are a helpful AI assistant.`
 
 export function SystemPrompt() {
   return (
@@ -48,7 +39,7 @@ export function SystemPrompt() {
           name="message"
           className="mb-1 flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
           tabIndex={0}
-          defaultValue={defaultSystemPrompt}
+          defaultValue={SYSTEM_PROMPT}
           rows={1}
           spellCheck={false}
           readOnly
