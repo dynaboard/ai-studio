@@ -93,12 +93,9 @@ export function ChatWindow({ models }: { models: Model[] }) {
         return
       }
 
-      // TODO: store to local /files if we want to
+      // TODO: store to local /files if we want to, then we can show Documents that we can talk to
 
       setSelectedFile(file)
-
-      // TODO: select, upload, parse PDF
-      // TODO: store embeddings in the db
     },
     [],
   )
@@ -108,13 +105,12 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
-    window.transformers.embed(selectedFile.name).then((result) => {
-      console.log('file to embed: ', result)
-      return result
+    // TODO: parse PDF content instead of file name
+    window.transformers.embed(selectedFile.name).then((embeddings) => {
+      console.log('embeddings of file content: ', embeddings)
+      return embeddings
     })
   }, [selectedFile])
-
-  // console.log('selectedFile: ', selectedFile)
 
   React.useEffect(() => {
     if (inputRef.current) {
