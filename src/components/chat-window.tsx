@@ -11,11 +11,8 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentThreadID,
-<<<<<<< HEAD
   useCurrentTopP,
-=======
   useMessageIsLoading,
->>>>>>> b9d5d33 (add global loading state to show abort generation)
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
