@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { type LlamaContext } from 'node-llama-cpp'
 import { LLamaChatPromptOptions, LlamaChatSession } from 'node-llama-cpp'
 import path from 'path'
 
@@ -22,7 +21,6 @@ import {
 export type ChatSession = {
   modelName: string
   session: LlamaChatSession
-  context: LlamaContext
   messageList: BasicMessageList
 }
 
@@ -35,19 +33,22 @@ const SYSTEM_PROMPT = `You are a helpful AI assistant that remembers previous co
 
 The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.`
 
+const DEFAULT_MAX_OUTPUT_TOKENS = 512
+const DEFAULT_CONTEXT_SIZE = 4096
+
 export class ElectronChatManager {
-  private lastSessionKey?: string | undefined
-  private chatSession?: ChatSession | undefined
+  private lastSessionKey?: string | null
+  private chatSession?: ChatSession | null
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
 
-  // close() {
-  //   this.sessions.clear()
-  // }
+  close() {
+    this.lastSessionKey = null
+    this.chatSession = null
+  }
 
   // Assumes one model per thread for now.
-
   private getSessionKey(modelPath: string, threadID: string): string {
     return `${modelPath}-${threadID}`
   }
@@ -81,13 +82,13 @@ export class ElectronChatManager {
 
     const model = new LlamaModel({
       modelPath,
-      batchSize: 4096,
-      contextSize: 4096,
+      batchSize: DEFAULT_CONTEXT_SIZE,
+      contextSize: DEFAULT_CONTEXT_SIZE,
     })
     const context = new LlamaContext({
       model,
-      batchSize: 4096,
-      contextSize: 4096,
+      batchSize: DEFAULT_CONTEXT_SIZE,
+      contextSize: DEFAULT_CONTEXT_SIZE,
     })
 
     const chatSession = {
@@ -141,12 +142,19 @@ export class ElectronChatManager {
     })
   }
 
-  private async shiftMessageWindow(
-    modelPath: string,
-    threadID: string,
-    alwaysInit?: boolean,
-    newMessageList?: BasicMessageList,
-  ): Promise<void> {
+  private async shiftMessageWindow({
+    modelPath,
+    threadID,
+    alwaysInit,
+    newMessageList,
+    maxTokens = DEFAULT_MAX_OUTPUT_TOKENS,
+  }: {
+    modelPath: string
+    threadID: string
+    alwaysInit?: boolean
+    newMessageList?: BasicMessageList
+    maxTokens?: number
+  }): Promise<void> {
     const { context, messageList } = await this.initializeSession({
       modelPath,
       threadID,
@@ -154,21 +162,26 @@ export class ElectronChatManager {
       messageList: newMessageList,
     })
 
-    // if (messageList.length < 1) {
-    //   throw new Error(
-    //     `message exceeded max token size: ${context.getContextSize()}`,
-    //   )
-    // }
+    if (messageList.length < 1) {
+      throw new Error(
+        `message exceeded max token size: ${context.getContextSize()}`,
+      )
+    }
 
     // This is just an estimate, we can count the exact tokens once we have better control over tokenization and prompt wrappers
     const estimatedTokenCount =
       context.encode(messageList.format({ systemPrompt: SYSTEM_PROMPT }))
-        .length + 64 // 64 is just a random buffer number
+        .length + 16 // 16 is just a random buffer number
 
-    if (estimatedTokenCount > context.getContextSize()) {
-      console.log('**** Token count exceeded, reinitializing ****')
+    if (estimatedTokenCount > context.getContextSize() - maxTokens) {
       messageList.dequeue()
-      await this.shiftMessageWindow(modelPath, threadID, true, messageList)
+      await this.shiftMessageWindow({
+        modelPath,
+        threadID,
+        alwaysInit: true,
+        newMessageList: messageList,
+        maxTokens,
+      })
     }
   }
 
@@ -195,10 +208,15 @@ export class ElectronChatManager {
     })
 
     messageList.add({ role: 'user', message, id: messageID })
-    this.shiftMessageWindow(modelPath, threadID)
+    await this.shiftMessageWindow({
+      modelPath,
+      threadID,
+      maxTokens: promptOptions?.maxTokens,
+    })
     const response = await session.prompt(
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
+        maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
         ...promptOptions,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
@@ -208,7 +226,13 @@ export class ElectronChatManager {
       message: response,
       id: assistantMessageID,
     })
-    await this.shiftMessageWindow(modelPath, threadID, true, messageList)
+    await this.shiftMessageWindow({
+      modelPath,
+      threadID,
+      alwaysInit: true,
+      newMessageList: messageList,
+      maxTokens: promptOptions?.maxTokens,
+    })
     return response
   }
 
@@ -240,7 +264,11 @@ export class ElectronChatManager {
       },
     )
     messageList.add({ role: 'assistant', message: response, id: messageID })
-    await this.shiftMessageWindow(modelPath, threadID)
+    await this.shiftMessageWindow({
+      modelPath,
+      threadID,
+      maxTokens: promptOptions?.maxTokens,
+    })
     return response
   }
 
