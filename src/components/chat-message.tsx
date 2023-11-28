@@ -82,7 +82,7 @@ export function ChatMessage({
           )}
         </span>
       </div>
-      <div className=" grid grid-rows-[min-content,_16px]">
+      <div className="grid grid-rows-[min-content,_16px]">
         <div className="flex flex-col">
           {editing ? (
             <form

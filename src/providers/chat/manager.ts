@@ -1,3 +1,5 @@
+import { SliderProps } from '@radix-ui/react-slider'
+import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
@@ -6,20 +8,20 @@ import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
 
 type ModelState = {
+  messages: Message[]
   currentModel?: string
   currentThreadID?: string
-  sendingMessage: boolean
-  messages: Message[]
-  loadingText: string
+  currentTemperature?: SliderProps['value']
+  currentTopP?: SliderProps['value']
 }
 
 export class ChatManager {
   private readonly _state = atom<ModelState>('ChatManager._state', {
-    sendingMessage: false,
     messages: [],
     currentThreadID: undefined,
     currentModel: undefined,
-    loadingText: '',
+    currentTemperature: [1],
+    currentTopP: [1],
   })
 
   cleanupHandler: (() => void) | undefined
@@ -76,18 +78,16 @@ export class ChatManager {
     return this._state.value
   }
 
-  get loadingText() {
-    return this.state.loadingText
-  }
-
   async sendMessage({
     message,
     model,
     threadID,
+    promptOptions,
   }: {
     message: string
     threadID?: string
     model?: string
+    promptOptions?: LLamaChatPromptOptions
   }) {
     if (!model || !this.model) {
       console.error('No model selected')
@@ -146,6 +146,7 @@ export class ChatManager {
       message,
       modelPath,
       threadID,
+      promptOptions,
     })
 
     this.historyManager.editMessage({
@@ -203,11 +204,41 @@ export class ChatManager {
     })
   }
 
+  setTemperature(temperature: number[]) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTemperature: temperature,
+      }
+    })
+  }
+
+  setTopP(topP: number[]) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTopP: topP,
+      }
+    })
+  }
+
   setCurrentThread(threadID?: string) {
     if (!threadID) {
       return
     }
+
     const messages = this.historyManager.getThread(threadID)?.messages ?? []
+    const thread = this.historyManager.getThread(threadID)
+
+    if (thread) {
+      this.resetParameters()
+
+      window.chats.loadMessageList({
+        modelPath: thread.modelID,
+        threadID: thread.id,
+        messages,
+      })
+    }
 
     this.loadMessageList(threadID)
 
@@ -274,6 +305,16 @@ export class ChatManager {
     await window.chats.cleanupSession({ modelPath, threadID: thread.id })
   }
 
+  private resetParameters() {
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTemperature: [1],
+        currentTopP: [1],
+      }
+    })
+  }
+
   @computed
   get messages() {
     return this.state.messages
@@ -302,6 +343,22 @@ export function useCurrentModel() {
   const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
   return useThread(currentThreadID)?.modelID ?? chatManager.model
+}
+
+export function useCurrentTemperature() {
+  const chatManager = useChatManager()
+  return useValue(
+    'changeTemperature',
+    () => chatManager.state.currentTemperature,
+    [chatManager],
+  )
+}
+
+export function useCurrentTopP() {
+  const chatManager = useChatManager()
+  return useValue('changeTopP', () => chatManager.state.currentTopP, [
+    chatManager,
+  ])
 }
 
 export function useCurrentThreadID() {

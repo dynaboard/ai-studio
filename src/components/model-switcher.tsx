@@ -145,7 +145,7 @@ export function ModelSwitcher({
               role="combobox"
               aria-expanded={open}
               aria-label="Select a model"
-              className={cn('flex w-[275px] justify-between', className)}
+              className={cn('flex h-8 w-[275px] justify-between', className)}
               disabled={disableModelPicker}
             >
               <p className="flex-1 truncate text-left">

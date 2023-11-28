@@ -9,7 +9,9 @@ import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import {
   useChatManager,
   useCurrentModel,
+  useCurrentTemperature,
   useCurrentThreadID,
+  useCurrentTopP,
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
@@ -21,6 +23,8 @@ import { Header } from './header'
 export function ChatWindow({ models }: { models: Model[] }) {
   const chatManager = useChatManager()
   const currentModel = useCurrentModel()
+  const currentTemperature = useCurrentTemperature()
+  const currentTopP = useCurrentTopP()
   const currentThreadID = useCurrentThreadID()
 
   const { formRef, onKeyDown } = useEnterSubmit()
@@ -63,6 +67,10 @@ export function ChatWindow({ models }: { models: Model[] }) {
       message,
       model: currentModel,
       threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
+      promptOptions: {
+        temperature: Number(currentTemperature),
+        topP: Number(currentTopP),
+      },
     })
     event.currentTarget.reset()
   }
@@ -83,10 +91,10 @@ export function ChatWindow({ models }: { models: Model[] }) {
     // 36px - titlebar height
     // 24px - statusbar height
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
-      <Header models={availableModels} currentThreadID={undefined} />
+      <Header models={availableModels} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center">
-          <span className="bg-muted text-muted-foreground inline-flex select-none items-center rounded-lg px-3 py-1 text-sm font-medium">
+          <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
             Say something to get started
           </span>
         </div>
@@ -137,7 +145,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           <Textarea
             name="message"
             ref={inputRef}
-            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
             rows={1}

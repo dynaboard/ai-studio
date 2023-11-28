@@ -1,32 +1,15 @@
-import { useThread } from '@/providers/history/manager'
 import { type Model } from '@/providers/models/model-list'
 
+import { ParametersConfig } from './configuration'
 import { ModelSwitcher } from './model-switcher'
 
-export function Header({
-  models,
-  currentThreadID,
-}: {
-  models: Model[]
-  currentThreadID?: string
-}) {
-  const currentThread = useThread(currentThreadID)
-
+export function Header({ models }: { models: Model[] }) {
   return (
-    <div
-      className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex h-16 w-full items-center gap-4 border-b px-4 backdrop-blur"
-      id="drag"
-    >
-      <div className="flex h-full items-center gap-4" id="no-drag">
+    <div className="sticky top-0 flex h-16 w-full items-center gap-4 border-b bg-background/95 p-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-full w-full items-center justify-between gap-4">
         <ModelSwitcher models={models} />
 
-        {currentThread ? (
-          <div>
-            <span className="text-muted-foreground text-sm font-medium">
-              {currentThread.title}
-            </span>
-          </div>
-        ) : null}
+        <ParametersConfig />
       </div>
     </div>
   )
