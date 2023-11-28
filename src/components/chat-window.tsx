@@ -83,6 +83,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
         return
       }
 
+      // TODO: store to local /files if we want to
+
       setSelectedFile(file)
 
       // TODO: select, upload, parse PDF
