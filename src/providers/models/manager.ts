@@ -12,6 +12,8 @@ type ModelManagerState = {
   downloads: Map<string, ActiveDownload>
 }
 
+export const DEFAULT_MODEL = 'mistral-7b-instruct-v0.1.Q4_K_M.gguf'
+
 export class ModelManager {
   private readonly _state = atom<ModelManagerState>('ModelManager._state', {
     isStatusVisible: false,
@@ -21,7 +23,9 @@ export class ModelManager {
 
   cleanupHandlers: (() => void)[] = []
 
-  onDownloadProgress = (
+  completionHandlers: (() => void)[] = []
+
+  private _onDownloadProgress = (
     _event: unknown,
     progress: { filename: string; receivedBytes: number; totalBytes: number },
   ) => {
@@ -45,7 +49,7 @@ export class ModelManager {
     })
   }
 
-  onDownloadComplete = (
+  private _onDownloadComplete = (
     _event: unknown,
     progress: {
       filename: string
@@ -62,15 +66,16 @@ export class ModelManager {
         downloads,
       }
     })
+    this.completionHandlers.forEach((handler) => handler())
     void this.loadAvailableModels()
   }
 
   initialize() {
     const cleanupDownloadProgress = window.models.onDownloadProgress(
-      this.onDownloadProgress,
+      this._onDownloadProgress,
     )
     const cleanupDownloadComplete = window.models.onDownloadComplete(
-      this.onDownloadComplete,
+      this._onDownloadComplete,
     )
 
     this.cleanupHandlers.push(cleanupDownloadProgress)
@@ -127,12 +132,21 @@ export class ModelManager {
   }
 
   async isModelDownloaded(filename: string) {
-    return !!(await window.models.getFilePath(filename))
+    return window.models.isModelDownloaded(filename)
   }
 
   async deleteModelFile(fileName: string) {
     await window.models.deleteModelFile(fileName)
     await this.loadAvailableModels()
+  }
+
+  onDownloadComplete(handler: () => void) {
+    this.completionHandlers.push(handler)
+    return () => {
+      this.completionHandlers = this.completionHandlers.filter(
+        (h) => h !== handler,
+      )
+    }
   }
 
   async loadAvailableModels() {

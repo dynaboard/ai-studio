@@ -39,6 +39,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
 
   // TODO: move this to transformersManager
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
+  const [runningEmbeddings, setRunningEmbeddings] = React.useState(false)
 
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
@@ -107,8 +108,9 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
-    const parsed = await transformersManager.parse(selectedFile.path)
-    await transformersManager.embed(parsed)
+    setRunningEmbeddings(true)
+    await transformersManager.embedDocument(selectedFile.path)
+    setRunningEmbeddings(false)
   }, [selectedFile, transformersManager])
 
   React.useEffect(() => {
@@ -141,8 +143,12 @@ export function ChatWindow({ models }: { models: Model[] }) {
                 Selected PDF ({selectedFile.name} &sdot;{' '}
                 {prettyBytes(selectedFile.size)})
               </span>
-              <Button size="sm" onClick={handleEmbedFile}>
-                Embed
+              <Button
+                size="sm"
+                onClick={handleEmbedFile}
+                disabled={runningEmbeddings}
+              >
+                {runningEmbeddings ? 'Processing...' : 'Embed'}
               </Button>
               <Button
                 size="sm"

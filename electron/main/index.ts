@@ -3,6 +3,7 @@ import { release } from 'node:os'
 import { join } from 'node:path'
 
 import { ElectronChatManager } from './managers/chats'
+import { ElectronEmbeddingsManager } from './managers/embeddings'
 import { ElectronModelManager } from './managers/models'
 import { TransformersManager } from './managers/transformers'
 import { SystemUsageManager } from './managers/usage'
@@ -44,6 +45,7 @@ let win: BrowserWindow | null = null
 let modelManager: ElectronModelManager | null = null
 let chatManager: ElectronChatManager | null = null
 let transfomersManager: TransformersManager | null = null
+const embeddingsManager = new ElectronEmbeddingsManager()
 
 const usageManager = new SystemUsageManager()
 usageManager.addClientEventHandlers()
@@ -57,6 +59,8 @@ async function createWindow() {
   if (modelManager) {
     modelManager.close()
   }
+
+  embeddingsManager.initialize()
 
   win = new BrowserWindow({
     title: 'Main window',
@@ -76,7 +80,7 @@ async function createWindow() {
 
   modelManager = new ElectronModelManager(win)
   chatManager = new ElectronChatManager(win)
-  transfomersManager = new TransformersManager()
+  transfomersManager = new TransformersManager(win, embeddingsManager)
 
   if (url) {
     // electron-vite-vue#298
