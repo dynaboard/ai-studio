@@ -176,9 +176,11 @@ export class ChatManager {
   async regenerateMessage({
     threadID,
     messageID,
+    promptOptions,
   }: {
     threadID: string
     messageID: string
+    promptOptions?: LLamaChatPromptOptions
   }) {
     const thread = this.historyManager.getThread(threadID)
     if (!thread) {
@@ -200,6 +202,10 @@ export class ChatManager {
     const response = await window.chats.regenerateMessage({
       messageID,
       threadID,
+      promptOptions: {
+        ...promptOptions,
+        signal: this.abortController.signal,
+      },
       modelPath: thread.modelID,
     })
 
