@@ -1,3 +1,4 @@
+import { Tensor } from '@xenova/transformers'
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('transformers', {
@@ -5,7 +6,7 @@ contextBridge.exposeInMainWorld('transformers', {
 } satisfies TransfomersAPI)
 
 export interface TransfomersAPI {
-  embed: (fileContent: string) => Promise<string>
+  embed: (fileContent: string) => Promise<Tensor>
 }
 
 declare global {
