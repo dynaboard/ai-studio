@@ -75,6 +75,18 @@ export function ChatWindow({ models }: { models: Model[] }) {
     event.currentTarget.reset()
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    console.log('file: ', file)
+
+    // TODO: send file to somewhere
+    // TODO: then embeddings
+  }
+
   React.useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()
@@ -93,10 +105,24 @@ export function ChatWindow({ models }: { models: Model[] }) {
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
       <Header models={availableModels} />
       {messages.length === 0 ? (
-        <div className="flex h-full flex-col items-center justify-center">
+        <div className="flex h-full flex-col items-center justify-center gap-2">
           <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
             Say something to get started
           </span>
+          <div>
+            <label
+              htmlFor="file"
+              className="inline-flex cursor-pointer select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground"
+            >
+              Upload a file
+            </label>
+            <input
+              id="file"
+              type="file"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
         </div>
       ) : (
         <div className="h-full overflow-hidden py-0">
