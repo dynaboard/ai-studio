@@ -1,4 +1,5 @@
 import { SendHorizonal } from 'lucide-react'
+import prettyBytes from 'pretty-bytes'
 import React, { useCallback } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -56,25 +57,34 @@ export function ChatWindow({ models }: { models: Model[] }) {
     [userScrolled],
   )
 
-  const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const message = data.get('message') as string | undefined
-    if (!message) {
-      return
-    }
+  const handleMessage = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      const data = new FormData(event.currentTarget)
+      const message = data.get('message') as string | undefined
+      if (!message) {
+        return
+      }
 
-    void chatManager.sendMessage({
-      message,
-      model: currentModel,
-      threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
-      promptOptions: {
-        temperature: Number(currentTemperature),
-        topP: Number(currentTopP),
-      },
-    })
-    event.currentTarget.reset()
-  }
+      void chatManager.sendMessage({
+        message,
+        model: currentModel,
+        threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
+        promptOptions: {
+          temperature: Number(currentTemperature),
+          topP: Number(currentTopP),
+        },
+      })
+      event.currentTarget.reset()
+    },
+    [
+      chatManager,
+      currentModel,
+      currentTemperature,
+      currentTopP,
+      currentThreadID,
+    ],
+  )
 
   const handleFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -122,7 +132,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
           {selectedFile ? (
             <div className="flex flex-col gap-2">
               <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                Uploaded file ({selectedFile.name})
+                Uploaded file ({selectedFile.name} &sdot;{' '}
+                {prettyBytes(selectedFile.size)})
               </span>
               <Button
                 size="sm"
