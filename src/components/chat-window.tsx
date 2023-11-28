@@ -1,5 +1,5 @@
 import { SendHorizonal } from 'lucide-react'
-import React from 'react'
+import React, { useCallback } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 
@@ -33,6 +33,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
 
   const [userScrolled, setUserScrolled] = React.useState(false)
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
 
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
@@ -75,17 +76,22 @@ export function ChatWindow({ models }: { models: Model[] }) {
     event.currentTarget.reset()
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) {
-      return
-    }
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (!file) {
+        return
+      }
 
-    console.log('file: ', file)
+      setSelectedFile(file)
 
-    // TODO: send file to somewhere
-    // TODO: then embeddings
-  }
+      // TODO: select, upload, parse PDF
+      // TODO: store embeddings in the db
+    },
+    [],
+  )
+
+  console.log('selectedFile: ', selectedFile)
 
   React.useEffect(() => {
     if (inputRef.current) {
@@ -106,23 +112,47 @@ export function ChatWindow({ models }: { models: Model[] }) {
       <Header models={availableModels} />
       {messages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-2">
-          <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-            Say something to get started
-          </span>
-          <div>
-            <label
-              htmlFor="file"
-              className="inline-flex cursor-pointer select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground"
-            >
-              Upload a file
-            </label>
-            <input
-              id="file"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
+          {!selectedFile && (
+            <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              Say something to get started
+            </span>
+          )}
+          {selectedFile ? (
+            <div className="flex flex-col gap-2">
+              <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                Uploaded file ({selectedFile.name})
+              </span>
+              <Button
+                size="sm"
+                // TODO: embed file
+                // onClick={() => setSelectedFile(null)}
+              >
+                Embed
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedFile(null)}
+              >
+                Clear
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <label
+                htmlFor="file-upload"
+                className="inline-flex cursor-pointer select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground"
+              >
+                Upload a file
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <div className="h-full overflow-hidden py-0">
