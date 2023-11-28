@@ -112,10 +112,6 @@ export class ChatManager {
       date: new Date().toISOString(),
     }
 
-    const promptOptions: LLamaChatPromptOptions = {
-      signal: this.abortController.signal,
-    }
-
     // You always message on a thread, so we are starting a new one if its not provided
     if (!threadID) {
       const thread = this.historyManager.addThread({
@@ -158,7 +154,10 @@ export class ChatManager {
       message,
       modelPath,
       threadID,
-      promptOptions,
+      promptOptions: {
+        ...promptOptions,
+        signal: this.abortController.signal,
+      },
     })
 
     if (!this.abortController.signal.aborted) {
