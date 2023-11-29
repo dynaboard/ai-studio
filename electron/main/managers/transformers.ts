@@ -4,6 +4,13 @@ import fs, { existsSync } from 'node:fs'
 import path from 'node:path'
 import pdfParse from 'pdf-parse'
 
+function formatContentAsString(str: string) {
+  return str
+    .split('\n')
+    .map((line) => line.trim())
+    .join(' ')
+}
+
 export class TransformersManager {
   modelPath = './.cache'
   modelName = 'Xenova/bge-large-en-v1.5'
@@ -16,7 +23,7 @@ export class TransformersManager {
     try {
       const dataBuffer = await fs.promises.readFile(filePath)
       const data = await pdfParse(dataBuffer)
-      return data.text
+      return formatContentAsString(data.text)
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn('Error parsing PDF:', error)
