@@ -33,6 +33,7 @@ export class ElectronChatManager {
   private lastSessionKey?: string | null
   private chatSession?: ChatSession | null
   private abortController: AbortController = new AbortController()
+  private ephemeralTokens: string[] = []
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
@@ -209,6 +210,9 @@ export class ElectronChatManager {
       })
 
       messageList.add({ role: 'user', message, id: messageID })
+
+      this.ephemeralTokens = []
+
       await this.shiftMessageWindow({
         systemPrompt,
         modelPath,
@@ -222,14 +226,20 @@ export class ElectronChatManager {
           maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
           ...promptOptions,
           signal: this.abortController.signal,
-          onToken: (chunks) => onToken(session.context.decode(chunks)),
+          onToken: (chunks) => {
+            const token = session.context.decode(chunks)
+            this.ephemeralTokens.push(token) // Store the token
+            onToken(token)
+          },
         },
       )
+
       messageList.add({
         role: 'assistant',
         message: response,
         id: assistantMessageID,
       })
+
       await this.shiftMessageWindow({
         systemPrompt,
         modelPath,
@@ -238,9 +248,11 @@ export class ElectronChatManager {
         newMessageList: messageList,
         maxTokens: promptOptions?.maxTokens,
       })
+
       return response
     } catch {
-      console.error('Error sending message in electron')
+      console.log('ephemeral tokens: ', this.ephemeralTokens.join(' '))
+      console.error('Error sending message in ElectronChatManager')
       this.resetAbortController()
       return
     }
@@ -286,7 +298,7 @@ export class ElectronChatManager {
       })
       return response
     } catch {
-      console.error('Error regenerating message in electron')
+      console.error('Error regenerating message in ElectronChatManager')
       this.resetAbortController()
       return
     }

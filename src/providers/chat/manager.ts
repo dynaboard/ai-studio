@@ -14,7 +14,7 @@ type ModelState = {
   currentTemperature?: SliderProps['value']
   currentTopP?: SliderProps['value']
   currentSystemPrompt?: string
-  isLoading: boolean
+  isGenerating: boolean
 }
 
 export class ChatManager {
@@ -24,7 +24,7 @@ export class ChatManager {
     currentModel: undefined,
     currentTemperature: [1],
     currentTopP: [1],
-    isLoading: false,
+    isGenerating: false,
   })
 
   cleanupHandler: (() => void) | undefined
@@ -61,11 +61,17 @@ export class ChatManager {
   handleChatToken = (token: string, messageID: string) => {
     const threadID = this.state.currentThreadID
     if (!threadID) {
+      // eslint-disable-next-line no-console
+      console.error('No thread selected')
       return
     }
 
+    console.log('handleChatToken: ', token)
+
     const currentMessage = this.historyManager.state.messages.get(messageID)
     if (!currentMessage) {
+      // eslint-disable-next-line no-console
+      console.error('No current message found')
       return
     }
 
@@ -103,10 +109,83 @@ export class ChatManager {
     model?: string
     promptOptions?: LLamaChatPromptOptions
   }) {
-    let currentSystemPrompt = 'You are a helpful AI assistant.'
-    if (!model || !this.model) {
-      console.error('No model selected')
-      return
+    try {
+      this.setGenerating(true)
+
+      const currentSystemPrompt = 'You are a helpful AI assistant.'
+      if (!model || !this.model) {
+        console.error('No model selected')
+        return
+      }
+
+      const modelPath = model || this.model
+
+      const newUserMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        message: message,
+        state: 'sent',
+        date: new Date().toISOString(),
+      }
+
+      // You always message on a thread, so we are starting a new one if its not provided
+      if (!threadID) {
+        const thread = this.historyManager.addThread({
+          systemPrompt: currentSystemPrompt,
+          createdAt: new Date(),
+          modelID: modelPath,
+          title: message.substring(0, 36),
+          messages: [newUserMessage],
+          topP: promptOptions?.topP ?? 1,
+          temperature: promptOptions?.temperature ?? 1,
+        })
+        threadID = thread.id
+      } else {
+        // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
+        const isUnnamedThread =
+          this.historyManager.getThread(threadID)?.messages.length === 0 ||
+          this.historyManager.getThread(threadID)?.title === 'New Thread'
+
+        if (isUnnamedThread) {
+          this.historyManager.renameThread(threadID, message.substring(0, 100))
+        }
+
+        this.historyManager.addMessage({ threadID, message: newUserMessage })
+      }
+
+      const assistantMessageID = crypto.randomUUID()
+      const newAssistantMessage: Message = {
+        id: assistantMessageID,
+        role: 'assistant',
+        message: '',
+        state: 'pending',
+        date: new Date().toISOString(),
+      }
+
+      this.historyManager.addMessage({
+        threadID,
+        message: newAssistantMessage,
+      })
+
+      const response = await window.chats.sendMessage({
+        messageID: newUserMessage.id,
+        assistantMessageID,
+        message,
+        modelPath,
+        threadID,
+        promptOptions,
+      })
+
+      this.historyManager.editMessage({
+        threadID,
+        messageID: assistantMessageID,
+        contents: response,
+      })
+    } catch {
+      // eslint-disable-next-line no-console
+      console.error('Error sending message in ChatManager')
+    } finally {
+      this.setGenerating(false)
     }
 
     const modelPath = model || this.model
@@ -184,7 +263,7 @@ export class ChatManager {
     messageID: string
   }) {
     try {
-      this.setLoading(true)
+      this.setGenerating(true)
 
       const thread = this.historyManager.getThread(threadID)
       if (!thread) {
@@ -217,7 +296,7 @@ export class ChatManager {
       // eslint-disable-next-line no-console
       console.error('Error regenerating message in ChatManager')
     } finally {
-      this.setLoading(false)
+      this.setGenerating(false)
     }
   }
 
@@ -311,11 +390,11 @@ export class ChatManager {
     })
   }
 
-  setLoading(loading: boolean) {
+  setGenerating(loading: boolean) {
     this._state.update((state) => {
       return {
         ...state,
-        isLoading: loading,
+        isGenerating: loading,
       }
     })
   }
@@ -438,9 +517,11 @@ export function useCurrentSystemPrompt() {
   )
 }
 
-export function useIsMessageLoading() {
+export function useIsMessageGenerating() {
   const chatManager = useChatManager()
-  return useValue('useIsMessageLoading', () => chatManager.state.isLoading, [
-    chatManager,
-  ])
+  return useValue(
+    'useIsMessageGenerating',
+    () => chatManager.state.isGenerating,
+    [chatManager],
+  )
 }

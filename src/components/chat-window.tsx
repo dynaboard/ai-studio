@@ -14,7 +14,7 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentTopP,
-  useIsMessageLoading,
+  useIsMessageGenerating,
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
@@ -31,7 +31,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const transformersManager = useTransformersManager()
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
-  const isLoading = useIsMessageLoading()
+  const isGenerating = useIsMessageGenerating()
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -235,7 +235,7 @@ export function ChatWindow({ id }: { id?: string }) {
         </div>
       )}
 
-      {isLoading && (
+      {isGenerating && (
         <div className="mb-2 flex h-fit items-center justify-center">
           <Button size="sm" onClick={handleAbort}>
             <LucideStopCircle size={14} className="mr-2" />
