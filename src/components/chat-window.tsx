@@ -1,4 +1,4 @@
-import { SendHorizonal } from 'lucide-react'
+import { LucideStopCircle, SendHorizonal } from 'lucide-react'
 import prettyBytes from 'pretty-bytes'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
@@ -14,6 +14,7 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentTopP,
+  useIsMessageLoading,
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
@@ -30,6 +31,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const transformersManager = useTransformersManager()
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
+  const isLoading = useIsMessageLoading()
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -115,6 +117,10 @@ export function ChatWindow({ id }: { id?: string }) {
       fileInputRef.current.click()
     }
   }, [])
+
+  const handleAbort = useCallback(() => {
+    chatManager.abortMessage()
+  }, [chatManager])
 
   useEffect(() => {
     if (textAreaInputRef.current) {
@@ -226,6 +232,15 @@ export function ChatWindow({ id }: { id?: string }) {
               />
             ))}
           </ScrollArea>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="mb-2 flex h-fit items-center justify-center">
+          <Button size="sm" onClick={handleAbort}>
+            <LucideStopCircle size={14} className="mr-2" />
+            <span className="select-none">Stop generating</span>
+          </Button>
         </div>
       )}
 

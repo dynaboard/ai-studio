@@ -32,6 +32,7 @@ const DEFAULT_CONTEXT_SIZE = 4096
 export class ElectronChatManager {
   private lastSessionKey?: string | null
   private chatSession?: ChatSession | null
+  private abortController: AbortController = new AbortController()
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
@@ -201,41 +202,48 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession({
-      modelPath,
-      threadID,
-    })
+    try {
+      const { messageList, session } = await this.initializeSession({
+        modelPath,
+        threadID,
+      })
 
-    messageList.add({ role: 'user', message, id: messageID })
-    await this.shiftMessageWindow({
-      systemPrompt,
-      modelPath,
-      threadID,
-      maxTokens: promptOptions?.maxTokens,
-    })
+      messageList.add({ role: 'user', message, id: messageID })
+      await this.shiftMessageWindow({
+        systemPrompt,
+        modelPath,
+        threadID,
+        maxTokens: promptOptions?.maxTokens,
+      })
 
-    const response = await session.prompt(
-      messageList.format({ systemPrompt }),
-      {
-        maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
-        ...promptOptions,
-        onToken: (chunks) => onToken(session.context.decode(chunks)),
-      },
-    )
-    messageList.add({
-      role: 'assistant',
-      message: response,
-      id: assistantMessageID,
-    })
-    await this.shiftMessageWindow({
-      systemPrompt,
-      modelPath,
-      threadID,
-      alwaysInit: true,
-      newMessageList: messageList,
-      maxTokens: promptOptions?.maxTokens,
-    })
-    return response
+      const response = await session.prompt(
+        messageList.format({ systemPrompt: SYSTEM_PROMPT }),
+        {
+          maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
+          ...promptOptions,
+          signal: this.abortController.signal,
+          onToken: (chunks) => onToken(session.context.decode(chunks)),
+        },
+      )
+      messageList.add({
+        role: 'assistant',
+        message: response,
+        id: assistantMessageID,
+      })
+      await this.shiftMessageWindow({
+        systemPrompt,
+        modelPath,
+        threadID,
+        alwaysInit: true,
+        newMessageList: messageList,
+        maxTokens: promptOptions?.maxTokens,
+      })
+      return response
+    } catch {
+      console.error('Error sending message in electron')
+      this.resetAbortController()
+      return
+    }
   }
 
   async regenerateMessage({
@@ -253,28 +261,45 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession({
-      modelPath,
-      threadID,
-    })
+    try {
+      const { messageList, session } = await this.initializeSession({
+        modelPath,
+        threadID,
+      })
 
-    messageList.delete(messageID)
+      messageList.delete(messageID)
 
-    const response = await session.prompt(
-      messageList.format({ systemPrompt: SYSTEM_PROMPT }),
-      {
-        ...promptOptions,
-        onToken: (chunks) => onToken(session.context.decode(chunks)),
-      },
-    )
-    messageList.add({ role: 'assistant', message: response, id: messageID })
-    await this.shiftMessageWindow({
-      systemPrompt,
-      modelPath,
-      threadID,
-      maxTokens: promptOptions?.maxTokens,
-    })
-    return response
+      const response = await session.prompt(
+        messageList.format({ systemPrompt: SYSTEM_PROMPT }),
+        {
+          ...promptOptions,
+          signal: this.abortController.signal,
+          onToken: (chunks) => onToken(session.context.decode(chunks)),
+        },
+      )
+      messageList.add({ role: 'assistant', message: response, id: messageID })
+      await this.shiftMessageWindow({
+        systemPrompt,
+        modelPath,
+        threadID,
+        maxTokens: promptOptions?.maxTokens,
+      })
+      return response
+    } catch {
+      console.error('Error regenerating message in electron')
+      this.resetAbortController()
+      return
+    }
+  }
+
+  async abortMessage() {
+    this.abortController.abort()
+  }
+
+  resetAbortController() {
+    if (this.abortController.signal.aborted) {
+      this.abortController = new AbortController()
+    }
   }
 
   addClientEventHandlers() {
@@ -293,7 +318,6 @@ export class ElectronChatManager {
         },
       ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-
         return this.sendMessage({
           systemPrompt,
           message,
@@ -311,6 +335,30 @@ export class ElectronChatManager {
         })
       },
     )
+
+    ipcMain.handle(
+      'chats:regenerateMessage',
+      async (
+        _,
+        { systemPrompt, messageID, threadID, promptOptions, modelPath },
+      ) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        return this.regenerateMessage({
+          systemPrompt,
+          messageID,
+          threadID,
+          promptOptions,
+          modelPath: fullPath,
+          onToken: (token) => {
+            this.window.webContents.send('token', { token, messageID })
+          },
+        })
+      },
+    )
+
+    ipcMain.handle('chats:abortMessage', async () => {
+      this.abortMessage()
+    })
 
     // ipcMain.handle(
     //   'chats:cleanupSession',

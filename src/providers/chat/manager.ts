@@ -14,6 +14,7 @@ type ModelState = {
   currentTemperature?: SliderProps['value']
   currentTopP?: SliderProps['value']
   currentSystemPrompt?: string
+  isLoading: boolean
 }
 
 export class ChatManager {
@@ -23,6 +24,7 @@ export class ChatManager {
     currentModel: undefined,
     currentTemperature: [1],
     currentTopP: [1],
+    isLoading: false,
   })
 
   cleanupHandler: (() => void) | undefined
@@ -181,33 +183,46 @@ export class ChatManager {
     threadID: string
     messageID: string
   }) {
-    const thread = this.historyManager.getThread(threadID)
-    if (!thread) {
-      console.error(
-        'Cannot regenerate a message without a valid thread (this should be an impossible state).',
-      )
-      return
+    try {
+      this.setLoading(true)
+
+      const thread = this.historyManager.getThread(threadID)
+      if (!thread) {
+        console.error(
+          'Cannot regenerate a message without a valid thread (this should be an impossible state).',
+        )
+        return
+      }
+
+      this.historyManager.editMessage({
+        threadID,
+        messageID,
+        contents: '',
+        state: 'pending',
+      })
+
+      const response = await window.chats.regenerateMessage({
+        systemPrompt: thread.systemPrompt,
+        messageID,
+        threadID,
+        modelPath: thread.modelID,
+      })
+
+      this.historyManager.editMessage({
+        threadID,
+        messageID,
+        contents: response,
+      })
+    } catch {
+      // eslint-disable-next-line no-console
+      console.error('Error regenerating message in ChatManager')
+    } finally {
+      this.setLoading(false)
     }
+  }
 
-    this.historyManager.editMessage({
-      threadID,
-      messageID,
-      contents: '',
-      state: 'pending',
-    })
-
-    const response = await window.chats.regenerateMessage({
-      systemPrompt: thread.systemPrompt,
-      messageID,
-      threadID,
-      modelPath: thread.modelID,
-    })
-
-    this.historyManager.editMessage({
-      threadID,
-      messageID,
-      contents: response,
-    })
+  async abortMessage() {
+    await window.chats.abortMessage()
   }
 
   setModel(model: string) {
@@ -292,6 +307,15 @@ export class ChatManager {
         currentSystemPrompt: systemPrompt,
         currentTopP: topP,
         currentTemperature: temperature,
+      }
+    })
+  }
+
+  setLoading(loading: boolean) {
+    this._state.update((state) => {
+      return {
+        ...state,
+        isLoading: loading,
       }
     })
   }
@@ -412,4 +436,11 @@ export function useCurrentSystemPrompt() {
     () => chatManager.state.currentSystemPrompt,
     [chatManager],
   )
+}
+
+export function useIsMessageLoading() {
+  const chatManager = useChatManager()
+  return useValue('useIsMessageLoading', () => chatManager.state.isLoading, [
+    chatManager,
+  ])
 }
