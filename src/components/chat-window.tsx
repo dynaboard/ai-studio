@@ -14,6 +14,7 @@ import {
   useCurrentThreadID,
   useCurrentTopP,
 } from '@/providers/chat/manager'
+import { useDocumentManager } from '@/providers/document'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
 import { type Model } from '@/providers/models/model-list'
@@ -27,6 +28,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
   const currentThreadID = useCurrentThreadID()
+  const documentManager = useDocumentManager()
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -93,8 +95,6 @@ export function ChatWindow({ models }: { models: Model[] }) {
         return
       }
 
-      // TODO: store to local /files if we want to, then we can show Documents that we can talk to
-
       setSelectedFile(file)
     },
     [],
@@ -105,12 +105,18 @@ export function ChatWindow({ models }: { models: Model[] }) {
       return
     }
 
+    if (selectedFile) {
+      documentManager.load(selectedFile)
+    }
+
     // TODO: parse PDF content instead of file name
     window.transformers.embed(selectedFile.name).then((embeddings) => {
       console.log('embeddings of file content: ', embeddings)
       return embeddings
     })
-  }, [selectedFile])
+  }, [selectedFile, documentManager])
+
+  console.log('selectedFile: ', selectedFile)
 
   React.useEffect(() => {
     if (inputRef.current) {
@@ -166,6 +172,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}
+                multiple={false}
               />
             </div>
           )}
