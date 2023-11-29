@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld('chats', {
 
 export interface ChatsAPI {
   sendMessage: ({
+    systemPrompt,
     message,
     messageID,
     assistantMessageID,
@@ -47,6 +48,7 @@ export interface ChatsAPI {
     promptOptions,
     modelPath,
   }: {
+    systemPrompt: string
     message: string
     messageID: string
     assistantMessageID: string
@@ -56,11 +58,13 @@ export interface ChatsAPI {
   }) => Promise<string>
 
   regenerateMessage: ({
+    systemPrompt,
     messageID,
     threadID,
     promptOptions,
     modelPath,
   }: {
+    systemPrompt: string
     messageID: string
     threadID: string
     promptOptions?: LLamaChatPromptOptions

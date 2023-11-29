@@ -391,26 +391,6 @@ export class ElectronChatManager {
         return this.loadMessageList({ modelPath: fullPath, threadID, messages })
       },
     )
-
-    ipcMain.handle(
-      'chats:regenerateMessage',
-      async (
-        _,
-        { systemPrompt, messageID, threadID, promptOptions, modelPath },
-      ) => {
-        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        return this.regenerateMessage({
-          systemPrompt,
-          messageID,
-          threadID,
-          promptOptions,
-          modelPath: fullPath,
-          onToken: (token) => {
-            this.window.webContents.send('token', { token, messageID })
-          },
-        })
-      },
-    )
   }
 
   getPromptWrapper(modelName: string): BasePromptWrapper {

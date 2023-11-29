@@ -112,7 +112,7 @@ export class ChatManager {
     try {
       this.setGenerating(true)
 
-      const currentSystemPrompt = 'You are a helpful AI assistant.'
+      let currentSystemPrompt = 'You are a helpful AI assistant.'
       if (!model || !this.model) {
         console.error('No model selected')
         return
@@ -141,10 +141,11 @@ export class ChatManager {
         })
         threadID = thread.id
       } else {
+        const thread = this.historyManager.getThread(threadID)
+        if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
         // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
         const isUnnamedThread =
-          this.historyManager.getThread(threadID)?.messages.length === 0 ||
-          this.historyManager.getThread(threadID)?.title === 'New Thread'
+          thread?.messages.length === 0 || thread?.title === 'New Thread'
 
         if (isUnnamedThread) {
           this.historyManager.renameThread(threadID, message.substring(0, 100))
@@ -168,6 +169,7 @@ export class ChatManager {
       })
 
       const response = await window.chats.sendMessage({
+        systemPrompt: currentSystemPrompt,
         messageID: newUserMessage.id,
         assistantMessageID,
         message,
@@ -187,72 +189,6 @@ export class ChatManager {
     } finally {
       this.setGenerating(false)
     }
-
-    const modelPath = model || this.model
-
-    const newUserMessage: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      message: message,
-      state: 'sent',
-      date: new Date().toISOString(),
-    }
-
-    // You always message on a thread, so we are starting a new one if its not provided
-    if (!threadID) {
-      const thread = this.historyManager.addThread({
-        systemPrompt: currentSystemPrompt,
-        createdAt: new Date(),
-        modelID: modelPath,
-        title: message.substring(0, 36),
-        messages: [newUserMessage],
-        topP: promptOptions?.topP ?? 1,
-        temperature: promptOptions?.temperature ?? 1,
-      })
-      threadID = thread.id
-    } else {
-      const thread = this.historyManager.getThread(threadID)
-      if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
-      // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
-      const isUnnamedThread =
-        thread?.messages.length === 0 || thread?.title === 'New Thread'
-
-      if (isUnnamedThread) {
-        this.historyManager.renameThread(threadID, message.substring(0, 100))
-      }
-
-      this.historyManager.addMessage({ threadID, message: newUserMessage })
-    }
-
-    const assistantMessageID = crypto.randomUUID()
-    const newAssistantMessage: Message = {
-      id: assistantMessageID,
-      role: 'assistant',
-      message: '',
-      state: 'pending',
-      date: new Date().toISOString(),
-    }
-
-    this.historyManager.addMessage({
-      threadID,
-      message: newAssistantMessage,
-    })
-
-    const response = await window.chats.sendMessage({
-      systemPrompt: currentSystemPrompt,
-      messageID: newUserMessage.id,
-      assistantMessageID,
-      message,
-      modelPath,
-      threadID,
-      promptOptions,
-    })
-
-    this.historyManager.editMessage({
-      threadID,
-      messageID: assistantMessageID,
-      contents: response,
-    })
   }
 
   async regenerateMessage({
