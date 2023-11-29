@@ -138,7 +138,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           {selectedFile ? (
             <div className="flex flex-col gap-2">
               <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                File uploaded ({selectedFile.name} &sdot;{' '}
+                Selected PDF ({selectedFile.name} &sdot;{' '}
                 {prettyBytes(selectedFile.size)})
               </span>
               <Button size="sm" onClick={handleEmbedFile}>
@@ -155,13 +155,13 @@ export function ChatWindow({ models }: { models: Model[] }) {
           ) : (
             <div>
               <label
-                htmlFor="file-upload"
+                htmlFor="file-browse"
                 className="inline-flex cursor-pointer select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground"
               >
-                Upload a file
+                Browse for a PDF
               </label>
               <input
-                id="file-upload"
+                id="file-browse"
                 type="file"
                 className="hidden"
                 onChange={handleFileChange}
