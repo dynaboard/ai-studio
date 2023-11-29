@@ -42,6 +42,7 @@
     "lucide-react": "^0.292.0",
     "node-llama-cpp": "^2.8.0",
     "openai": "^4.17.0",
+    "pdf-parse": "^1.1.1",
     "postcss": "^8.4.31",
     "pretty-bytes": "^6.1.1",
     "react": "^18.2.0",
@@ -67,6 +68,7 @@
   "devDependencies": {
     "@types/lodash": "^4.14.202",
     "@types/node": "^20.9.0",
+    "@types/pdf-parse": "^1.1.4",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@types/react-syntax-highlighter": "^15.5.10",
