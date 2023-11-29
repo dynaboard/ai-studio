@@ -138,12 +138,14 @@ export class ElectronChatManager {
   }
 
   private async shiftMessageWindow({
+    systemPrompt,
     modelPath,
     threadID,
     alwaysInit,
     newMessageList,
     maxTokens = DEFAULT_MAX_OUTPUT_TOKENS,
   }: {
+    systemPrompt: string
     modelPath: string
     threadID: string
     alwaysInit?: boolean
@@ -163,14 +165,14 @@ export class ElectronChatManager {
       )
     }
 
-    // This is just an estimate, we can count the exact tokens once we have better control over tokenization and prompt wrappers
     const estimatedTokenCount =
-      context.encode(messageList.format({ systemPrompt: SYSTEM_PROMPT }))
+      context.encode(messageList.format({ systemPrompt: systemPrompt }))
         .length + 16 // 16 is just a random buffer number
 
     if (estimatedTokenCount > context.getContextSize() - maxTokens) {
       messageList.dequeue()
       await this.shiftMessageWindow({
+        systemPrompt,
         modelPath,
         threadID,
         alwaysInit: true,
@@ -181,6 +183,7 @@ export class ElectronChatManager {
   }
 
   async sendMessage({
+    systemPrompt,
     message,
     messageID,
     assistantMessageID,
@@ -189,6 +192,7 @@ export class ElectronChatManager {
     modelPath,
     onToken,
   }: {
+    systemPrompt: string
     message: string
     messageID: string
     assistantMessageID: string
@@ -204,13 +208,14 @@ export class ElectronChatManager {
 
     messageList.add({ role: 'user', message, id: messageID })
     await this.shiftMessageWindow({
+      systemPrompt,
       modelPath,
       threadID,
       maxTokens: promptOptions?.maxTokens,
     })
 
     const response = await session.prompt(
-      messageList.format({ systemPrompt: SYSTEM_PROMPT }),
+      messageList.format({ systemPrompt }),
       {
         maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
         ...promptOptions,
@@ -223,6 +228,7 @@ export class ElectronChatManager {
       id: assistantMessageID,
     })
     await this.shiftMessageWindow({
+      systemPrompt,
       modelPath,
       threadID,
       alwaysInit: true,
@@ -233,12 +239,14 @@ export class ElectronChatManager {
   }
 
   async regenerateMessage({
+    systemPrompt,
     messageID,
     threadID,
     promptOptions,
     modelPath,
     onToken,
   }: {
+    systemPrompt: string
     messageID: string
     threadID: string
     promptOptions?: LLamaChatPromptOptions
@@ -261,6 +269,7 @@ export class ElectronChatManager {
     )
     messageList.add({ role: 'assistant', message: response, id: messageID })
     await this.shiftMessageWindow({
+      systemPrompt,
       modelPath,
       threadID,
       maxTokens: promptOptions?.maxTokens,
@@ -274,6 +283,7 @@ export class ElectronChatManager {
       async (
         _,
         {
+          systemPrompt,
           message,
           threadID,
           messageID,
@@ -285,6 +295,7 @@ export class ElectronChatManager {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
 
         return this.sendMessage({
+          systemPrompt,
           message,
           messageID,
           assistantMessageID,
@@ -323,9 +334,13 @@ export class ElectronChatManager {
 
     ipcMain.handle(
       'chats:regenerateMessage',
-      async (_, { messageID, threadID, promptOptions, modelPath }) => {
+      async (
+        _,
+        { systemPrompt, messageID, threadID, promptOptions, modelPath },
+      ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
         return this.regenerateMessage({
+          systemPrompt,
           messageID,
           threadID,
           promptOptions,

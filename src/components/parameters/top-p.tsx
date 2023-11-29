@@ -51,7 +51,7 @@ export function TopPSelector() {
           defaultValue={currentTopP}
           step={0.1}
           onValueChange={(value) => {
-            chatManager.setTopP(value)
+            chatManager.setTopP(value[0])
           }}
           className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
           aria-label="Top P"

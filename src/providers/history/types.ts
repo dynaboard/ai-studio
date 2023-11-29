@@ -6,4 +6,7 @@ export type Thread = {
   modelID: string
   createdAt: Date
   messages: Message[]
+  topP: number
+  temperature: number
+  systemPrompt: string
 }
