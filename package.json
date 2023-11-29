@@ -1,5 +1,10 @@
 {
   "name": "dynaboard-ai-studio",
+  "author": {
+    "name": "Dynaboard",
+    "email": "ai-studio@dynaboard.com"
+  },
+  "description": "Dynaboard AI Studio",
   "version": "1.0.0",
   "main": "dist-electron/main/index.js",
   "private": true,

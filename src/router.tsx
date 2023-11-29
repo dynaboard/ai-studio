@@ -1,12 +1,12 @@
 import { Suspense } from 'react'
-import { createBrowserRouter, redirect } from 'react-router-dom'
+import { createHashRouter, redirect } from 'react-router-dom'
 
 import App from '@/App'
 import { ChatThread } from '@/routes/chats/ChatThread'
 import { ChatsIndex } from '@/routes/chats/Index'
 import { ModelsPage } from '@/routes/Models'
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: (
