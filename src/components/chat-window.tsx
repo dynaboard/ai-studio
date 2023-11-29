@@ -138,7 +138,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
           {selectedFile ? (
             <div className="flex flex-col gap-2">
               <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                Uploaded file ({selectedFile.name} &sdot;{' '}
+                File uploaded ({selectedFile.name} &sdot;{' '}
                 {prettyBytes(selectedFile.size)})
               </span>
               <Button size="sm" onClick={handleEmbedFile}>
