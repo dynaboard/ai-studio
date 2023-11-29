@@ -26,57 +26,91 @@ export type ChatSession = {
   messageList: BasicMessageList
 }
 
+const DEFAULT_MAX_OUTPUT_TOKENS = 512
+const DEFAULT_CONTEXT_SIZE = 4096
+
 export class ElectronChatManager {
-  private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
+  private lastSessionKey?: string | null
+  private chatSession?: ChatSession | null
+  // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
 
   close() {
-    this.sessions.clear()
+    this.lastSessionKey = null
+    this.chatSession = null
   }
 
   // Assumes one model per thread for now.
-  private async initializeSession(modelPath: string, threadID: string) {
-    const key = `${modelPath}-${threadID}`
-    const session = this.sessions.get(key)
-    if (!session) {
-      const {
-        LlamaContext,
-        LlamaChatSession,
-        LlamaModel,
-        EmptyChatPromptWrapper,
-      } = await import('node-llama-cpp')
+  private getSessionKey(modelPath: string, threadID: string): string {
+    return `${modelPath}-${threadID}`
+  }
 
-      const modelName = modelPath.split('/').pop() as string
-      const promptWrapper = this.getPromptWrapper(modelName)
+  private async initializeSession({
+    modelPath,
+    threadID,
+    alwaysInit,
+    messageList,
+  }: {
+    modelPath: string
+    threadID: string
+    alwaysInit?: boolean
+    messageList?: BasicMessageList
+  }) {
+    const key = this.getSessionKey(modelPath, threadID)
 
-      const model = new LlamaModel({ modelPath })
-      const context = new LlamaContext({ model })
-      const chatSession = {
-        modelName,
-        session: new LlamaChatSession({
-          context,
-          systemPrompt: SYSTEM_PROMPT,
-          promptWrapper: new (class extends EmptyChatPromptWrapper {
-            wrapPrompt(prompt: string): string {
-              return prompt
-            }
-            getStopStrings(): string[] {
-              return ['</s>']
-            }
-          })(),
-        }),
+    if (!alwaysInit && this.lastSessionKey === key && this.chatSession) {
+      return this.chatSession
+    }
+
+    const {
+      LlamaContext,
+      LlamaChatSession,
+      LlamaModel,
+      EmptyChatPromptWrapper,
+    } = await import('node-llama-cpp')
+
+    const modelName = modelPath.split('/').pop() as string
+    const promptWrapper = this.getPromptWrapper(modelName)
+
+    const model = new LlamaModel({
+      modelPath,
+      batchSize: DEFAULT_CONTEXT_SIZE,
+      contextSize: DEFAULT_CONTEXT_SIZE,
+    })
+    const context = new LlamaContext({
+      model,
+      batchSize: DEFAULT_CONTEXT_SIZE,
+      contextSize: DEFAULT_CONTEXT_SIZE,
+    })
+
+    const chatSession = {
+      modelName,
+      session: new LlamaChatSession({
         context,
-        messageList: new BasicMessageList({
+        systemPrompt: SYSTEM_PROMPT,
+        promptWrapper: new (class extends EmptyChatPromptWrapper {
+          wrapPrompt(prompt: string): string {
+            return prompt
+          }
+          getStopStrings(): string[] {
+            return ['</s>']
+          }
+        })(),
+      }),
+      context,
+      messageList:
+        messageList ||
+        new BasicMessageList({
           messageList: [],
           promptWrapper,
         }),
-      }
-
-      this.sessions.set(key, chatSession)
-      return chatSession
     }
-    return session
+
+    this.lastSessionKey = key
+    this.chatSession = chatSession
+
+    return this.chatSession
   }
 
   async loadMessageList({
@@ -88,7 +122,10 @@ export class ElectronChatManager {
     modelPath: string
     messages: ChatMessage[]
   }): Promise<void> {
-    const { messageList } = await this.initializeSession(modelPath, threadID)
+    const { messageList } = await this.initializeSession({
+      modelPath,
+      threadID,
+    })
 
     messageList.clear()
     messages.forEach(({ role, message, id }) => {
@@ -98,6 +135,49 @@ export class ElectronChatManager {
         message,
       })
     })
+  }
+
+  private async shiftMessageWindow({
+    modelPath,
+    threadID,
+    alwaysInit,
+    newMessageList,
+    maxTokens = DEFAULT_MAX_OUTPUT_TOKENS,
+  }: {
+    modelPath: string
+    threadID: string
+    alwaysInit?: boolean
+    newMessageList?: BasicMessageList
+    maxTokens?: number
+  }): Promise<void> {
+    const { context, messageList } = await this.initializeSession({
+      modelPath,
+      threadID,
+      alwaysInit,
+      messageList: newMessageList,
+    })
+
+    if (messageList.length < 1) {
+      throw new Error(
+        `message exceeded max token size: ${context.getContextSize()}`,
+      )
+    }
+
+    // This is just an estimate, we can count the exact tokens once we have better control over tokenization and prompt wrappers
+    const estimatedTokenCount =
+      context.encode(messageList.format({ systemPrompt: SYSTEM_PROMPT }))
+        .length + 16 // 16 is just a random buffer number
+
+    if (estimatedTokenCount > context.getContextSize() - maxTokens) {
+      messageList.dequeue()
+      await this.shiftMessageWindow({
+        modelPath,
+        threadID,
+        alwaysInit: true,
+        newMessageList: messageList,
+        maxTokens,
+      })
+    }
   }
 
   async sendMessage({
@@ -117,15 +197,22 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession(
+    const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
-    )
+    })
 
     messageList.add({ role: 'user', message, id: messageID })
+    await this.shiftMessageWindow({
+      modelPath,
+      threadID,
+      maxTokens: promptOptions?.maxTokens,
+    })
+
     const response = await session.prompt(
       messageList.format({ systemPrompt: SYSTEM_PROMPT }),
       {
+        maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
         ...promptOptions,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
@@ -134,6 +221,13 @@ export class ElectronChatManager {
       role: 'assistant',
       message: response,
       id: assistantMessageID,
+    })
+    await this.shiftMessageWindow({
+      modelPath,
+      threadID,
+      alwaysInit: true,
+      newMessageList: messageList,
+      maxTokens: promptOptions?.maxTokens,
     })
     return response
   }
@@ -151,10 +245,10 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
-    const { messageList, session } = await this.initializeSession(
+    const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
-    )
+    })
 
     messageList.delete(messageID)
 
@@ -166,6 +260,11 @@ export class ElectronChatManager {
       },
     )
     messageList.add({ role: 'assistant', message: response, id: messageID })
+    await this.shiftMessageWindow({
+      modelPath,
+      threadID,
+      maxTokens: promptOptions?.maxTokens,
+    })
     return response
   }
 
@@ -202,17 +301,17 @@ export class ElectronChatManager {
       },
     )
 
-    ipcMain.handle(
-      'chats:cleanupSession',
-      async (_, { modelPath, threadID }) => {
-        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        const key = `${fullPath}-${threadID}`
-        const session = this.sessions.get(key)
-        if (session) {
-          this.sessions.delete(key)
-        }
-      },
-    )
+    // ipcMain.handle(
+    //   'chats:cleanupSession',
+    //   async (_, { modelPath, threadID }) => {
+    //     const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+    //     const key = this.getSessionKey(fullPath, threadID)
+    //     const session = this.sessions.get(key)
+    //     if (session) {
+    //       this.sessions.delete(key)
+    //     }
+    //   },
+    // )
 
     ipcMain.handle(
       'chats:loadMessageList',
