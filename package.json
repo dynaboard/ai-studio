@@ -1,5 +1,5 @@
 {
-  "name": "ai-assistant",
+  "name": "dynaboard-ai-studio",
   "version": "1.0.0",
   "main": "dist-electron/main/index.js",
   "private": true,
@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
-    "open-local-models": "open ~/Library/Application\\ Support/ai-assistant/models",
+    "open-local-models": "open ~/Library/Application\\ Support/dynaboard-ai-studio/models",
     "preview": "vite preview",
     "ui": "shadcn-ui"
   },
