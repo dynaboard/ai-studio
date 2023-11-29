@@ -1,14 +1,13 @@
-import { Tensor } from '@xenova/transformers'
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('transformers', {
-  embed: (fileContent) => ipcRenderer.invoke('transformers:embed', fileContent),
   parse: (filePath) => ipcRenderer.invoke('transformers:parse', filePath),
+  embed: (fileContent) => ipcRenderer.invoke('transformers:embed', fileContent),
 } satisfies TransfomersAPI)
 
 export interface TransfomersAPI {
-  embed: (fileContent: string) => Promise<Tensor>
   parse: (filePath: string) => Promise<string>
+  embed: (fileContent: string) => Promise<unknown[]>
 }
 
 declare global {

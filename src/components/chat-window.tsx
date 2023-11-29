@@ -14,10 +14,10 @@ import {
   useCurrentThreadID,
   useCurrentTopP,
 } from '@/providers/chat/manager'
-import { useDocumentManager } from '@/providers/document'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
 import { type Model } from '@/providers/models/model-list'
+import { useTransformersManager } from '@/providers/transformers'
 
 import { ChatMessage } from './chat-message'
 import { Header } from './header'
@@ -28,7 +28,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
   const currentThreadID = useCurrentThreadID()
-  const documentManager = useDocumentManager()
+  const transformersManager = useTransformersManager()
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -36,6 +36,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
 
   const [userScrolled, setUserScrolled] = React.useState(false)
+
+  // TODO: move this to transformersManager
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
 
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
@@ -100,23 +102,14 @@ export function ChatWindow({ models }: { models: Model[] }) {
     [],
   )
 
-  const handleEmbedFile = useCallback(() => {
+  const handleEmbedFile = useCallback(async () => {
     if (!selectedFile) {
       return
     }
 
-    if (selectedFile) {
-      documentManager.load(selectedFile)
-    }
-
-    // TODO: parse PDF content instead of file name
-    window.transformers.embed(selectedFile.name).then((embeddings) => {
-      console.log('embeddings of file content: ', embeddings)
-      return embeddings
-    })
-  }, [selectedFile, documentManager])
-
-  console.log('selectedFile: ', selectedFile)
+    const parsed = await transformersManager.parse(selectedFile.path)
+    await transformersManager.embed(parsed)
+  }, [selectedFile, transformersManager])
 
   React.useEffect(() => {
     if (inputRef.current) {
