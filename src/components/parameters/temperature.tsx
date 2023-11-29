@@ -56,7 +56,7 @@ export function TemperatureSelector() {
           defaultValue={currentTemperature}
           step={0.1}
           onValueChange={(value) => {
-            chatManager.setTemperature(value)
+            chatManager.setTemperature(value[0])
           }}
           className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
           aria-label="Temperature"

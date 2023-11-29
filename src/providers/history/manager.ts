@@ -171,6 +171,69 @@ export class HistoryManager {
     })
   }
 
+  changeSystemPrompt(threadID: string, systemPrompt: string) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID) {
+          return {
+            ...thread,
+            systemPrompt,
+          }
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
+  changeTemperature(threadID: string, temperature: number) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID) {
+          return {
+            ...thread,
+            temperature,
+          }
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
+  changeTopP(threadID: string, topP: number) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID) {
+          return {
+            ...thread,
+            topP,
+          }
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
   addMessage({ threadID, message }: { threadID: string; message: Message }) {
     this._state.update((state) => {
       const threads = state.threads.map((thread) => {

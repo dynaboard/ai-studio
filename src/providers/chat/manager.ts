@@ -13,6 +13,7 @@ type ModelState = {
   currentThreadID?: string
   currentTemperature?: SliderProps['value']
   currentTopP?: SliderProps['value']
+  currentSystemPrompt?: string
 }
 
 export class ChatManager {
@@ -32,8 +33,16 @@ export class ChatManager {
     threadID?: string,
   ) {
     let messages: Message[] = []
+    let systemPrompt: string | undefined
+    let temperature: number = 1
+    let topP: number = 1
+
     if (threadID) {
-      messages = historyManager.getThread(threadID)?.messages || []
+      const thread = historyManager.getThread(threadID)
+      messages = thread?.messages || []
+      systemPrompt = thread?.systemPrompt
+      if (thread?.temperature) temperature = thread?.temperature
+      if (thread?.topP) topP = thread?.topP
     }
 
     this._state.update((state) => ({
@@ -41,6 +50,9 @@ export class ChatManager {
       messages,
       currentThreadID: threadID,
       currentModel: model,
+      currentSystemPrompt: systemPrompt,
+      currentTopP: [topP],
+      currentTemperature: [temperature],
     }))
   }
 
@@ -89,6 +101,7 @@ export class ChatManager {
     model?: string
     promptOptions?: LLamaChatPromptOptions
   }) {
+    let currentSystemPrompt = 'You are a helpful AI assistant.'
     if (!model || !this.model) {
       console.error('No model selected')
       return
@@ -107,17 +120,21 @@ export class ChatManager {
     // You always message on a thread, so we are starting a new one if its not provided
     if (!threadID) {
       const thread = this.historyManager.addThread({
+        systemPrompt: currentSystemPrompt,
         createdAt: new Date(),
         modelID: modelPath,
         title: message.substring(0, 36),
         messages: [newUserMessage],
+        topP: promptOptions?.topP ?? 1,
+        temperature: promptOptions?.temperature ?? 1,
       })
       threadID = thread.id
     } else {
+      const thread = this.historyManager.getThread(threadID)
+      if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
       // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
       const isUnnamedThread =
-        this.historyManager.getThread(threadID)?.messages.length === 0 ||
-        this.historyManager.getThread(threadID)?.title === 'New Thread'
+        thread?.messages.length === 0 || thread?.title === 'New Thread'
 
       if (isUnnamedThread) {
         this.historyManager.renameThread(threadID, message.substring(0, 100))
@@ -141,6 +158,7 @@ export class ChatManager {
     })
 
     const response = await window.chats.sendMessage({
+      systemPrompt: currentSystemPrompt,
       messageID: newUserMessage.id,
       assistantMessageID,
       message,
@@ -179,6 +197,7 @@ export class ChatManager {
     })
 
     const response = await window.chats.regenerateMessage({
+      systemPrompt: thread.systemPrompt,
       messageID,
       threadID,
       modelPath: thread.modelID,
@@ -204,20 +223,41 @@ export class ChatManager {
     })
   }
 
-  setTemperature(temperature: number[]) {
+  setSystemPrompt(systemPrompt: string) {
+    const currentThreadID = this.state.currentThreadID
+    if (currentThreadID) {
+      this.historyManager.changeSystemPrompt(currentThreadID, systemPrompt)
+    }
     this._state.update((state) => {
       return {
         ...state,
-        currentTemperature: temperature,
+        currentSystemPrompt: systemPrompt,
       }
     })
   }
 
-  setTopP(topP: number[]) {
+  setTemperature(temperature: number) {
+    const currentThreadID = this.state.currentThreadID
+    if (currentThreadID) {
+      this.historyManager.changeTemperature(currentThreadID, temperature)
+    }
     this._state.update((state) => {
       return {
         ...state,
-        currentTopP: topP,
+        currentTemperature: [temperature],
+      }
+    })
+  }
+
+  setTopP(topP: number) {
+    const currentThreadID = this.state.currentThreadID
+    if (currentThreadID) {
+      this.historyManager.changeTopP(currentThreadID, topP)
+    }
+    this._state.update((state) => {
+      return {
+        ...state,
+        currentTopP: [topP],
       }
     })
   }
@@ -227,12 +267,14 @@ export class ChatManager {
       return
     }
 
-    const messages = this.historyManager.getThread(threadID)?.messages ?? []
     const thread = this.historyManager.getThread(threadID)
+    const messages = thread?.messages ?? []
+    const systemPrompt =
+      thread?.systemPrompt ?? 'You are a helpful AI assistant.'
+    const topP = [thread?.topP ?? 1]
+    const temperature = [thread?.temperature ?? 1]
 
     if (thread) {
-      this.resetParameters()
-
       window.chats.loadMessageList({
         modelPath: thread.modelID,
         threadID: thread.id,
@@ -247,6 +289,9 @@ export class ChatManager {
         ...state,
         messages,
         currentThreadID: threadID,
+        currentSystemPrompt: systemPrompt,
+        currentTopP: topP,
+        currentTemperature: temperature,
       }
     })
   }
@@ -305,16 +350,6 @@ export class ChatManager {
   //   await window.chats.cleanupSession({ modelPath, threadID: thread.id })
   // }
 
-  private resetParameters() {
-    this._state.update((state) => {
-      return {
-        ...state,
-        currentTemperature: [1],
-        currentTopP: [1],
-      }
-    })
-  }
-
   @computed
   get messages() {
     return this.state.messages
@@ -366,6 +401,15 @@ export function useCurrentThreadID() {
   return useValue(
     'useCurrentThreadID',
     () => chatManager.state.currentThreadID,
+    [chatManager],
+  )
+}
+
+export function useCurrentSystemPrompt() {
+  const chatManager = useChatManager()
+  return useValue(
+    'useCurrentSystemPrompt',
+    () => chatManager.state.currentSystemPrompt,
     [chatManager],
   )
 }
