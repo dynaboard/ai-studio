@@ -1,37 +1,55 @@
+import { Tensor } from '@xenova/transformers'
 import { ipcMain } from 'electron'
-import { existsSync } from 'node:fs'
+import fs, { existsSync } from 'node:fs'
 import path from 'node:path'
+import pdfParse from 'pdf-parse'
 
 export class TransformersManager {
   modelPath = './.cache'
   modelName = 'Xenova/bge-large-en-v1.5'
 
-  // TODO: omar to add local model initialization
   needsInitialization(modelName: string) {
     return !existsSync(path.join(this.modelPath, modelName))
   }
 
-  // TODO: parse PDF using pdf-parse
+  async parse(filePath: string) {
+    try {
+      const dataBuffer = await fs.promises.readFile(filePath)
+      const data = await pdfParse(dataBuffer)
+      return data.text
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('Error parsing PDF:', error)
+      return
+    }
+  }
 
   async embed(fileContent: string) {
-    const { pipeline } = await import('@xenova/transformers')
-    const pipe = await pipeline('feature-extraction', this.modelName, {
-      cache_dir: this.modelPath,
-    })
+    try {
+      const { pipeline } = await import('@xenova/transformers')
+      const pipe = await pipeline('feature-extraction', this.modelName, {
+        cache_dir: this.modelPath,
+      })
 
-    const embeddings = await pipe(fileContent, {
-      pooling: 'mean',
-      normalize: true,
-    })
+      const embeddings: Tensor = await pipe(fileContent, {
+        pooling: 'mean',
+        normalize: true,
+      })
 
-    return await embeddings
+      return embeddings.tolist()
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('Error during embedding:', error)
+      return
+    }
   }
 
   addClientEventHandlers() {
+    ipcMain.handle('transformers:parse', (_, filePath) => {
+      return this.parse(filePath)
+    })
     ipcMain.handle('transformers:embed', (_, fileContent) => {
       return this.embed(fileContent)
     })
-
-    // TODO: transformers:parse
   }
 }
