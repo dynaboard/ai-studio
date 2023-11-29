@@ -11,6 +11,8 @@ export class TransformersManager {
     return !existsSync(path.join(this.modelPath, modelName))
   }
 
+  // TODO: parse PDF using pdf-parse
+
   async embed(fileContent: string) {
     const { pipeline } = await import('@xenova/transformers')
     const pipe = await pipeline('feature-extraction', this.modelName, {
@@ -29,5 +31,7 @@ export class TransformersManager {
     ipcMain.handle('transformers:embed', (_, fileContent) => {
       return this.embed(fileContent)
     })
+
+    // TODO: transformers:parse
   }
 }
