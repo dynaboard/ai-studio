@@ -4,14 +4,19 @@ import { ThreadsSidebar } from '@/components/chat-sidebar'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
 import { cn } from '@/lib/utils'
 import { ChatManagerProvider } from '@/providers'
+import { useCurrentThreadID } from '@/providers/chat/manager'
+import { useThreads } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
 
 export function ChatsIndex() {
   const availableModels = useAvailableModels()
+  const currentThreadID = useCurrentThreadID()
+  const threads = useThreads()
 
   console.log('Local models & files', availableModels)
 
   const haveModels = availableModels.length > 0
+  const haveThreads = threads.length > 0
 
   return (
     <>
@@ -31,6 +36,16 @@ export function ChatsIndex() {
               </div>
               <div className="h-full w-full overflow-hidden">
                 <Outlet />
+
+                {!currentThreadID && (
+                  <div className="flex h-full flex-col items-center justify-center">
+                    <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                      {haveThreads
+                        ? 'Select a thread or start a new thread'
+                        : 'Start a new thread'}
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           ) : (
