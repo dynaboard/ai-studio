@@ -70,6 +70,30 @@ export default defineConfig(({ command }) => {
             },
           },
         },
+        {
+          entry: 'electron/main/workers/embeddings.ts',
+          onstart(options) {
+            if (process.env.VSCODE_DEBUG) {
+              console.log(
+                /* For `.vscode/.debug.script.mjs` */ '[startup] Embeddings Worker',
+              )
+            } else {
+              options.startup()
+            }
+          },
+          vite: {
+            build: {
+              target: 'es2022',
+              sourcemap,
+              outDir: 'dist-electron/main',
+              rollupOptions: {
+                external: Object.keys(
+                  'dependencies' in pkg ? pkg.dependencies : {},
+                ),
+              },
+            },
+          },
+        },
       ]),
       // Use Node.js API in the Renderer-process
       renderer(),

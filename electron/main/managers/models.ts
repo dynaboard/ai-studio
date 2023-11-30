@@ -5,6 +5,7 @@ import {
   type Event,
   ipcMain,
 } from 'electron'
+import { existsSync } from 'fs'
 import { access, constants, unlink } from 'fs/promises'
 
 import { ModelChannel, ModelEvent } from '../../preload/events'
@@ -70,6 +71,14 @@ export class ElectronModelManager {
     this.downloads.clear()
   }
 
+  haveLocalModel(filename: string) {
+    return existsSync(`${app.getPath('userData')}/models/${filename}`)
+  }
+
+  haveDefaultModel() {
+    return this.haveLocalModel('mistral-7b-instruct-v0.1.Q4_K_M.gguf')
+  }
+
   addClientEventHandlers() {
     ipcMain.handle(ModelChannel.CancelDownload, (_, filename) => {
       const downloadItem = this.downloads.get(filename)
@@ -110,6 +119,10 @@ export class ElectronModelManager {
 
     ipcMain.handle(ModelChannel.DeleteModelFile, async (_, filename) => {
       await this.deleteModelFile(filename)
+    })
+
+    ipcMain.handle(ModelChannel.IsModelDownloaded, async (_, filename) => {
+      return this.haveLocalModel(filename)
     })
   }
 }

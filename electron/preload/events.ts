@@ -9,6 +9,7 @@ export enum ModelChannel {
   CancelDownload = 'models:cancelDownload',
   GetFilePath = 'models:getFilePath',
   DeleteModelFile = 'models:deleteModelFile',
+  IsModelDownloaded = 'models:isModelDownloaded',
 }
 
 export enum UsageChannel {

@@ -1,5 +1,6 @@
 import { SendHorizonal } from 'lucide-react'
-import React from 'react'
+import prettyBytes from 'pretty-bytes'
+import React, { useCallback } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 
@@ -16,6 +17,7 @@ import {
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
 import { type Model } from '@/providers/models/model-list'
+import { useTransformersManager } from '@/providers/transformers'
 
 import { ChatMessage } from './chat-message'
 import { Header } from './header'
@@ -26,6 +28,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
   const currentThreadID = useCurrentThreadID()
+  const transformersManager = useTransformersManager()
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -33,6 +36,10 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
 
   const [userScrolled, setUserScrolled] = React.useState(false)
+
+  // TODO: move this to transformersManager
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
+  const [runningEmbeddings, setRunningEmbeddings] = React.useState(false)
 
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
@@ -55,25 +62,56 @@ export function ChatWindow({ models }: { models: Model[] }) {
     [userScrolled],
   )
 
-  const handleMessage = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const data = new FormData(event.currentTarget)
-    const message = data.get('message') as string | undefined
-    if (!message) {
+  const handleMessage = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      const data = new FormData(event.currentTarget)
+      const message = data.get('message') as string | undefined
+      if (!message) {
+        return
+      }
+
+      void chatManager.sendMessage({
+        message,
+        model: currentModel,
+        threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
+        promptOptions: {
+          temperature: Number(currentTemperature),
+          topP: Number(currentTopP),
+        },
+      })
+      event.currentTarget.reset()
+    },
+    [
+      chatManager,
+      currentModel,
+      currentTemperature,
+      currentTopP,
+      currentThreadID,
+    ],
+  )
+
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0]
+      if (!file) {
+        return
+      }
+
+      setSelectedFile(file)
+    },
+    [],
+  )
+
+  const handleEmbedFile = useCallback(async () => {
+    if (!selectedFile) {
       return
     }
 
-    void chatManager.sendMessage({
-      message,
-      model: currentModel,
-      threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
-      promptOptions: {
-        temperature: Number(currentTemperature),
-        topP: Number(currentTopP),
-      },
-    })
-    event.currentTarget.reset()
-  }
+    setRunningEmbeddings(true)
+    await transformersManager.embedDocument(selectedFile.path)
+    setRunningEmbeddings(false)
+  }, [selectedFile, transformersManager])
 
   React.useEffect(() => {
     if (inputRef.current) {
@@ -93,10 +131,50 @@ export function ChatWindow({ models }: { models: Model[] }) {
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
       <Header models={availableModels} />
       {messages.length === 0 ? (
-        <div className="flex h-full flex-col items-center justify-center">
-          <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-            Say something to get started
-          </span>
+        <div className="flex h-full flex-col items-center justify-center gap-2">
+          {!selectedFile && (
+            <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              Say something to get started
+            </span>
+          )}
+          {selectedFile ? (
+            <div className="flex flex-col gap-2">
+              <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                Selected PDF ({selectedFile.name} &sdot;{' '}
+                {prettyBytes(selectedFile.size)})
+              </span>
+              <Button
+                size="sm"
+                onClick={handleEmbedFile}
+                disabled={runningEmbeddings}
+              >
+                {runningEmbeddings ? 'Processing...' : 'Embed'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedFile(null)}
+              >
+                Clear
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <label
+                htmlFor="file-browse"
+                className="inline-flex cursor-pointer select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground"
+              >
+                Browse for a PDF
+              </label>
+              <input
+                id="file-browse"
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                multiple={false}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <div className="h-full overflow-hidden py-0">

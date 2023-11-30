@@ -25,6 +25,9 @@ contextBridge.exposeInMainWorld('models', {
   pauseDownload(filename) {
     return ipcRenderer.invoke(ModelChannel.PauseDownload, filename)
   },
+  isModelDownloaded(filename) {
+    return ipcRenderer.invoke(ModelChannel.IsModelDownloaded, filename)
+  },
 
   deleteModelFile(filename) {
     return ipcRenderer.invoke(ModelChannel.DeleteModelFile, filename)
@@ -57,6 +60,7 @@ export interface ModelsAPI {
   cancelDownload: (filename: string) => Promise<void>
   deleteModelFile: (filename: string) => Promise<void>
   getFilePath: (filename: string) => Promise<string | null>
+  isModelDownloaded: (filename: string) => Promise<boolean>
 }
 
 declare global {
