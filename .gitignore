@@ -33,4 +33,8 @@ yarn.lock
 /playwright-report/
 /playwright/.cache/
 
+<<<<<<< Updated upstream
 .cache/
+=======
+certs/
+>>>>>>> Stashed changes
