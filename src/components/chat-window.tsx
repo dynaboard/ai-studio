@@ -48,13 +48,6 @@ export function ChatWindow() {
     setSelectedFile(files[0])
   }, [])
 
-  const handleFileInputClick = useCallback(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-      fileInputRef.current.click()
-    }
-  }, [])
-
   const handleFilesChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files ?? [])
@@ -64,18 +57,6 @@ export function ChatWindow() {
     },
     [handleFiles],
   )
-
-  // const handleFileChange = useCallback(
-  //   (event: React.ChangeEvent<HTMLInputElement>) => {
-  //     const file = event.target.files?.[0]
-  //     if (!file) {
-  //       return
-  //     }
-
-  //     setSelectedFile(file)
-  //   },
-  //   [],
-  // )
 
   const { draggedOver, setTargetElement } = useDragAndDrop({
     fileTypes: ['application/pdf'],
@@ -138,6 +119,13 @@ export function ChatWindow() {
     setRunningEmbeddings(false)
   }, [selectedFile, transformersManager])
 
+  const handleFileInputClick = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+      fileInputRef.current.click()
+    }
+  }, [])
+
   useEffect(() => {
     if (textAreaInputRef.current) {
       textAreaInputRef.current.focus()
@@ -165,13 +153,20 @@ export function ChatWindow() {
         >
           {!selectedFile && (
             <>
-              <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                Say something or&nbsp;
-                <span onClick={handleFileInputClick} className="cursor-copy">
-                  drop a PDF
+              {draggedOver ? (
+                <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                  Drop the PDF here
                 </span>
-                &nbsp;to get started
-              </span>
+              ) : (
+                <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                  Say something or&nbsp;
+                  <span onClick={handleFileInputClick} className="cursor-copy">
+                    drop a PDF
+                  </span>
+                  &nbsp;to get started
+                </span>
+              )}
+
               <input
                 ref={fileInputRef}
                 className="hidden"
@@ -189,9 +184,7 @@ export function ChatWindow() {
                 className="mb-4 font-medium text-muted-foreground"
                 onClick={handleFileInputClick}
               >
-                {selectedFile
-                  ? `${selectedFile.name} ⋅ ${prettyBytes(selectedFile.size)}`
-                  : 'Drop a PDF'}
+                {selectedFile.name} ⋅ {prettyBytes(selectedFile.size)}
               </span>
               <Button
                 size="sm"
