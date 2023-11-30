@@ -38,14 +38,12 @@ export function App() {
   return (
     <>
       {needsLocalModels ? (
-        <div className="fixed  z-[100] flex h-screen w-screen items-center justify-center bg-background/60 backdrop-blur-lg">
-          <div className="h-[75vh] max-h-[600px] w-[75vh] max-w-[500px] rounded-md border bg-background shadow-md">
-            <Setup
-              onComplete={() => {
-                setNeedsLocalModels(false)
-              }}
-            />
-          </div>
+        <div className="fixed z-[100] flex h-screen w-screen items-center justify-center bg-background/60 p-2 backdrop-blur-lg">
+          <Setup
+            onComplete={() => {
+              setNeedsLocalModels(false)
+            }}
+          />
         </div>
       ) : null}
       <div className="h-screen w-screen overflow-hidden">
