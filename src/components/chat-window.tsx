@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useDragAndDrop } from '@/lib/hooks/use-drag-and-drop'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
+import { cn } from '@/lib/utils'
 import {
   useChatManager,
   useCurrentModel,
@@ -17,19 +18,20 @@ import {
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
-import { type Model } from '@/providers/models/model-list'
 import { useTransformersManager } from '@/providers/transformers'
 
 import { ChatMessage } from './chat-message'
 import { Header } from './header'
 
-export function ChatWindow({ models }: { models: Model[] }) {
+export function ChatWindow() {
   const chatManager = useChatManager()
   const currentModel = useCurrentModel()
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
   const currentThreadID = useCurrentThreadID()
   const transformersManager = useTransformersManager()
+  const messages = useThreadMessages(currentThreadID)
+  const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -41,12 +43,8 @@ export function ChatWindow({ models }: { models: Model[] }) {
   const textAreaInputRef = React.useRef<HTMLTextAreaElement>(null)
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
 
-  const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
-
-  const messages = useThreadMessages(currentThreadID)
-
   const handleFiles = useCallback(async (files: File[]) => {
-    // Handle single file for now
+    // Only process a single file for now
     setSelectedFile(files[0])
   }, [])
 
@@ -67,17 +65,17 @@ export function ChatWindow({ models }: { models: Model[] }) {
     [handleFiles],
   )
 
-  const handleFileChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0]
-      if (!file) {
-        return
-      }
+  // const handleFileChange = useCallback(
+  //   (event: React.ChangeEvent<HTMLInputElement>) => {
+  //     const file = event.target.files?.[0]
+  //     if (!file) {
+  //       return
+  //     }
 
-      setSelectedFile(file)
-    },
-    [],
-  )
+  //     setSelectedFile(file)
+  //   },
+  //   [],
+  // )
 
   const { draggedOver, setTargetElement } = useDragAndDrop({
     fileTypes: ['application/pdf'],
@@ -144,7 +142,7 @@ export function ChatWindow({ models }: { models: Model[] }) {
     if (textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
-  }, [chatManager, models])
+  }, [])
 
   useEffect(() => {
     scrollToBottom('auto')
@@ -158,11 +156,32 @@ export function ChatWindow({ models }: { models: Model[] }) {
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
       <Header models={availableModels} />
       {messages.length === 0 ? (
-        <div className="flex h-full flex-col items-center justify-center gap-2">
+        <div
+          ref={setTargetElement}
+          className={cn(
+            'flex h-screen flex-col items-center justify-center gap-2',
+            draggedOver ? 'm-4 cursor-copy rounded border-2 border-dashed' : '',
+          )}
+        >
           {!selectedFile && (
-            <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-              Say something or drop a PDF to get started
-            </span>
+            <>
+              <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                Say something or&nbsp;
+                <span onClick={handleFileInputClick} className="cursor-copy">
+                  drop a PDF
+                </span>
+                &nbsp;to get started
+              </span>
+              <input
+                ref={fileInputRef}
+                className="hidden"
+                title="drop a pdf"
+                type="file"
+                onChange={handleFilesChange}
+                accept="application/pdf"
+                multiple={false}
+              />
+            </>
           )}
           {selectedFile && (
             <div className="flex flex-col gap-2">
@@ -188,40 +207,6 @@ export function ChatWindow({ models }: { models: Model[] }) {
               >
                 Clear
               </Button>
-            </div>
-          )}
-          {!selectedFile && (
-            <div
-              className="flex h-80 w-80 cursor-pointer items-center justify-center rounded-full border-2 border-dashed bg-transparent"
-              ref={setTargetElement}
-            >
-              <input
-                ref={fileInputRef}
-                className="hidden"
-                title="drop a pdf"
-                type="file"
-                onChange={handleFilesChange}
-                accept=".pdf"
-                multiple={false}
-              />
-
-              {draggedOver ? (
-                <span
-                  className="font-medium text-muted-foreground"
-                  onClick={handleFileInputClick}
-                >
-                  Drop, drop, drop
-                </span>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <span
-                    className="mb-4 font-medium text-muted-foreground"
-                    onClick={handleFileInputClick}
-                  >
-                    Drop a PDF
-                  </span>
-                </div>
-              )}
             </div>
           )}
         </div>
