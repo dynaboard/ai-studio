@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useValue } from 'signia-react'
 
+import LogoLight from '@/assets/logo-light.svg'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { useModelManager } from '@/providers/models/manager'
@@ -26,8 +27,12 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
   return (
     <div className="h-[75vh] max-h-[600px] w-[75vh] max-w-[500px] rounded-md border bg-background shadow-md">
       <div className="flex h-full w-full flex-col justify-between gap-4 pt-8">
-        <div className="mx-auto">
-          D Logo <span className="text-xs">(imagination)</span>
+        <div className="mx-auto px-8">
+          <img
+            src={LogoLight}
+            className="w-full max-w-[300px]"
+            alt="Dynaboard AI Studio Logo"
+          />
         </div>
 
         <div className="flex flex-1 flex-col gap-2 overflow-auto p-6">
