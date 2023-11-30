@@ -16,6 +16,7 @@ import {
   SimplePromptWrapper,
   ZephyrPromptWrapper,
 } from '../prompt-wrappers'
+import { EmbeddingsManager } from './embeddings'
 
 const SYSTEM_PROMPT = `You are a helpful AI assistant.`
 
@@ -34,7 +35,10 @@ export class ElectronChatManager {
   private chatSession?: ChatSession | null
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
-  constructor(readonly window: BrowserWindow) {}
+  constructor(
+    readonly window: BrowserWindow,
+    readonly embeddingsManager: EmbeddingsManager,
+  ) {}
 
   close() {
     this.lastSessionKey = null
@@ -190,6 +194,7 @@ export class ElectronChatManager {
     threadID,
     promptOptions,
     modelPath,
+    selectedFile,
     onToken,
   }: {
     systemPrompt: string
@@ -199,12 +204,15 @@ export class ElectronChatManager {
     threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
+    selectedFile?: string
     onToken: (token: string) => void
   }) {
     const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
     })
+
+    let messageEnd = 0
 
     messageList.add({ role: 'user', message, id: messageID })
     await this.shiftMessageWindow({
@@ -214,14 +222,30 @@ export class ElectronChatManager {
       maxTokens: promptOptions?.maxTokens,
     })
 
+    // If we are chatting with a file, let's get the context and use a custom prompt
+    if (selectedFile) {
+      systemPrompt = await this.generateSystemPromptForFile({
+        selectedFile,
+        message,
+        systemPrompt,
+      })
+    }
+
     const response = await session.prompt(
       messageList.format({ systemPrompt }),
       {
+        topK: 20,
+        topP: 0.3,
+        temperature: 0.5,
         maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
         ...promptOptions,
-        onToken: (chunks) => onToken(session.context.decode(chunks)),
+        onToken: (chunks) => {
+          if (!messageEnd) messageEnd = performance.now()
+          onToken(session.context.decode(chunks))
+        },
       },
     )
+
     messageList.add({
       role: 'assistant',
       message: response,
@@ -244,6 +268,7 @@ export class ElectronChatManager {
     threadID,
     promptOptions,
     modelPath,
+    selectedFile,
     onToken,
   }: {
     systemPrompt: string
@@ -251,6 +276,7 @@ export class ElectronChatManager {
     threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
+    selectedFile?: string
     onToken: (token: string) => void
   }) {
     const { messageList, session } = await this.initializeSession({
@@ -260,9 +286,24 @@ export class ElectronChatManager {
 
     messageList.delete(messageID)
 
+    // If we are chatting with a file, let's get the context and use a custom prompt
+    if (selectedFile) {
+      // Last user message
+      const message =
+        messageList.messages[messageList.messages.length - 1].message
+      systemPrompt = await this.generateSystemPromptForFile({
+        selectedFile,
+        message,
+        systemPrompt,
+      })
+    }
+
     const response = await session.prompt(
-      messageList.format({ systemPrompt: SYSTEM_PROMPT }),
+      messageList.format({ systemPrompt }),
       {
+        topK: 20,
+        topP: 0.3,
+        temperature: 0.5,
         ...promptOptions,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
@@ -290,6 +331,7 @@ export class ElectronChatManager {
           assistantMessageID,
           promptOptions,
           modelPath,
+          selectedFile,
         },
       ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
@@ -302,6 +344,7 @@ export class ElectronChatManager {
           threadID,
           promptOptions,
           modelPath: fullPath,
+          selectedFile,
           onToken: (token) => {
             this.window.webContents.send('token', {
               token,
@@ -311,18 +354,6 @@ export class ElectronChatManager {
         })
       },
     )
-
-    // ipcMain.handle(
-    //   'chats:cleanupSession',
-    //   async (_, { modelPath, threadID }) => {
-    //     const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-    //     const key = this.getSessionKey(fullPath, threadID)
-    //     const session = this.sessions.get(key)
-    //     if (session) {
-    //       this.sessions.delete(key)
-    //     }
-    //   },
-    // )
 
     ipcMain.handle(
       'chats:loadMessageList',
@@ -336,7 +367,14 @@ export class ElectronChatManager {
       'chats:regenerateMessage',
       async (
         _,
-        { systemPrompt, messageID, threadID, promptOptions, modelPath },
+        {
+          systemPrompt,
+          messageID,
+          threadID,
+          promptOptions,
+          modelPath,
+          selectedFile,
+        },
       ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
         return this.regenerateMessage({
@@ -345,6 +383,7 @@ export class ElectronChatManager {
           threadID,
           promptOptions,
           modelPath: fullPath,
+          selectedFile,
           onToken: (token) => {
             this.window.webContents.send('token', { token, messageID })
           },
@@ -353,7 +392,41 @@ export class ElectronChatManager {
     )
   }
 
-  getPromptWrapper(modelName: string): BasePromptWrapper {
+  private async generateSystemPromptForFile({
+    selectedFile,
+    message,
+    systemPrompt,
+  }: {
+    selectedFile: string
+    message: string
+    systemPrompt: string
+  }) {
+    console.log('Answering the prompt using file context:', selectedFile)
+    const results = await this.embeddingsManager.search({
+      filePath: selectedFile,
+      query: message,
+      topK: 8,
+    })
+
+    if (results) {
+      let contents = `FILE PATH: ${selectedFile}\n\n`
+      results.forEach((result) => {
+        contents += `PAGE: ${result.item.metadata.page}\nCONTENTS: ${result.item.metadata.contents}\n\n-----------------\n\n`
+      })
+      systemPrompt = `The following pieces of context are from a FILE the user provided. Use them to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer. Always include the PAGE of the CONTENTS used for the answer.
+
+File Context:
+${contents}
+
+Question: ${message}
+Helpful Answer:
+`
+    }
+
+    return systemPrompt
+  }
+
+  private getPromptWrapper(modelName: string): BasePromptWrapper {
     const templateName = this.getPromptTemplateName(modelName)
     switch (templateName) {
       case 'llama':
@@ -371,7 +444,7 @@ export class ElectronChatManager {
     }
   }
 
-  getPromptTemplateName(modelName: string) {
+  private getPromptTemplateName(modelName: string) {
     const model = MODELS.find(
       (m) => !!m.files.find((f) => f.name === modelName),
     )

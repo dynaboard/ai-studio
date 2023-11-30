@@ -18,6 +18,12 @@ export class ElectronVectorStoreManager {
     }
   }
 
+  async doesIndexExist(filePath: string) {
+    const storagePath = this.filePathToStoragePath(filePath)
+    const index = new LocalIndex(storagePath)
+    return index.isIndexCreated()
+  }
+
   async insertFileEmbeddings({
     originalFilePath,
     data,

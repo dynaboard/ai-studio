@@ -9,4 +9,5 @@ export type Thread = {
   topP: number
   temperature: number
   systemPrompt: string
+  filePath?: string
 }

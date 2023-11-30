@@ -234,6 +234,27 @@ export class HistoryManager {
     })
   }
 
+  changeThreadFilePath(threadID: string, filePath: string) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID) {
+          return {
+            ...thread,
+            filePath,
+          }
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
   addMessage({ threadID, message }: { threadID: string; message: Message }) {
     this._state.update((state) => {
       const threads = state.threads.map((thread) => {
@@ -379,6 +400,11 @@ export function useThread(threadID?: string) {
 export function useThreadMessages(threadID?: string) {
   const thread = useThread(threadID)
   return useValue('threadMessages', () => thread?.messages ?? [], [thread])
+}
+
+export function useThreadFilePath(threadID?: string) {
+  const thread = useThread(threadID)
+  return useValue('threadFilePath', () => thread?.filePath ?? '', [thread])
 }
 
 export function useMessage(messageID: string) {

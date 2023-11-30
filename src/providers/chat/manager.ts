@@ -1,4 +1,3 @@
-import { SliderProps } from '@radix-ui/react-slider'
 import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
@@ -11,18 +10,21 @@ type ModelState = {
   messages: Message[]
   currentModel?: string
   currentThreadID?: string
-  currentTemperature?: SliderProps['value']
-  currentTopP?: SliderProps['value']
+  currentTemperature?: number
+  currentTopP?: number
   currentSystemPrompt?: string
 }
+
+export const DEFAULT_TEMP = 0.5
+export const DEFAULT_TOP_P = 0.3
 
 export class ChatManager {
   private readonly _state = atom<ModelState>('ChatManager._state', {
     messages: [],
     currentThreadID: undefined,
     currentModel: undefined,
-    currentTemperature: [1],
-    currentTopP: [1],
+    currentTemperature: 0.5,
+    currentTopP: 0.3,
   })
 
   cleanupHandler: (() => void) | undefined
@@ -34,8 +36,8 @@ export class ChatManager {
   ) {
     let messages: Message[] = []
     let systemPrompt: string | undefined
-    let temperature: number = 1
-    let topP: number = 1
+    let temperature: number = DEFAULT_TEMP
+    let topP: number = DEFAULT_TOP_P
 
     if (threadID) {
       const thread = historyManager.getThread(threadID)
@@ -51,8 +53,8 @@ export class ChatManager {
       currentThreadID: threadID,
       currentModel: model,
       currentSystemPrompt: systemPrompt,
-      currentTopP: [topP],
-      currentTemperature: [temperature],
+      currentTopP: topP,
+      currentTemperature: temperature,
     }))
   }
 
@@ -95,11 +97,13 @@ export class ChatManager {
     model,
     threadID,
     promptOptions,
+    selectedFile,
   }: {
     message: string
     threadID?: string
     model?: string
     promptOptions?: LLamaChatPromptOptions
+    selectedFile?: string
   }) {
     let currentSystemPrompt = 'You are a helpful AI assistant.'
     if (!model || !this.model) {
@@ -125,8 +129,8 @@ export class ChatManager {
         modelID: modelPath,
         title: message.substring(0, 36),
         messages: [newUserMessage],
-        topP: promptOptions?.topP ?? 1,
-        temperature: promptOptions?.temperature ?? 1,
+        topP: promptOptions?.topP ?? DEFAULT_TOP_P,
+        temperature: promptOptions?.temperature ?? DEFAULT_TEMP,
       })
       threadID = thread.id
     } else {
@@ -165,6 +169,7 @@ export class ChatManager {
       modelPath,
       threadID,
       promptOptions,
+      selectedFile,
     })
 
     this.historyManager.editMessage({
@@ -244,7 +249,7 @@ export class ChatManager {
     this._state.update((state) => {
       return {
         ...state,
-        currentTemperature: [temperature],
+        currentTemperature: temperature,
       }
     })
   }
@@ -257,7 +262,7 @@ export class ChatManager {
     this._state.update((state) => {
       return {
         ...state,
-        currentTopP: [topP],
+        currentTopP: topP,
       }
     })
   }
@@ -271,8 +276,8 @@ export class ChatManager {
     const messages = thread?.messages ?? []
     const systemPrompt =
       thread?.systemPrompt ?? 'You are a helpful AI assistant.'
-    const topP = [thread?.topP ?? 1]
-    const temperature = [thread?.temperature ?? 1]
+    const topP = thread?.topP ?? DEFAULT_TOP_P
+    const temperature = thread?.temperature ?? DEFAULT_TEMP
 
     if (thread) {
       window.chats.loadMessageList({

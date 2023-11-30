@@ -78,9 +78,9 @@ async function createWindow() {
     titleBarStyle: 'hiddenInset',
   })
 
-  modelManager = new ElectronModelManager(win)
-  chatManager = new ElectronChatManager(win)
   embeddingsManager = new EmbeddingsManager(win, vectorStoreManager)
+  modelManager = new ElectronModelManager(win)
+  chatManager = new ElectronChatManager(win, embeddingsManager)
 
   if (url) {
     // electron-vite-vue#298

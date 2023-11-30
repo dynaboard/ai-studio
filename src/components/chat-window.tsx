@@ -1,6 +1,6 @@
 import { SendHorizonal } from 'lucide-react'
 import prettyBytes from 'pretty-bytes'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 
@@ -15,7 +15,10 @@ import {
   useCurrentTemperature,
   useCurrentTopP,
 } from '@/providers/chat/manager'
-import { useThreadMessages } from '@/providers/history/manager'
+import {
+  useThreadFilePath,
+  useThreadMessages,
+} from '@/providers/history/manager'
 import { useAvailableModels } from '@/providers/models/manager'
 import { useTransformersManager } from '@/providers/transformers'
 
@@ -24,12 +27,17 @@ import { Header } from './header'
 
 export function ChatWindow({ id }: { id?: string }) {
   const chatManager = useChatManager()
+  const transformersManager = useTransformersManager()
+
+  const availableModels = useAvailableModels()
   const currentModel = useCurrentModel()
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
-  const transformersManager = useTransformersManager()
+
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
+
+  const currentThreadFilePath = useThreadFilePath(id)
 
   const { formRef, onKeyDown } = useEnterSubmit()
 
@@ -41,18 +49,21 @@ export function ChatWindow({ id }: { id?: string }) {
   const textAreaInputRef = React.useRef<HTMLTextAreaElement>(null)
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
 
-  const handleFiles = useCallback(async (files: File[]) => {
-    // Only process a single file for now
-    const file = files[0]
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      // Only process a single file for now
+      const file = files[0]
 
-    setSelectedFile(file)
+      setSelectedFile(file)
 
-    setRunningEmbeddings(true)
-    await transformersManager.embedDocument(file.path)
-    setRunningEmbeddings(false)
+      setRunningEmbeddings(true)
+      await transformersManager.embedDocument(file.path)
+      setRunningEmbeddings(false)
 
-    // TODO: handle lingering selectedFile state
-  }, [])
+      // TODO: handle lingering selectedFile state
+    },
+    [transformersManager],
+  )
 
   const handleFilesChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +110,7 @@ export function ChatWindow({ id }: { id?: string }) {
         message,
         model: currentModel,
         threadID: id ?? undefined, // we will create a new thread ad-hoc if necessary
+        selectedFile: currentThreadFilePath ?? selectedFile?.path,
         promptOptions: {
           temperature: Number(currentTemperature),
           topP: Number(currentTopP),
@@ -106,7 +118,15 @@ export function ChatWindow({ id }: { id?: string }) {
       })
       event.currentTarget.reset()
     },
-    [chatManager, currentModel, currentTemperature, currentTopP, id],
+    [
+      chatManager,
+      currentModel,
+      currentTemperature,
+      currentThreadFilePath,
+      currentTopP,
+      id,
+      selectedFile,
+    ],
   )
 
   const handleFileInputClick = useCallback(() => {
@@ -115,6 +135,16 @@ export function ChatWindow({ id }: { id?: string }) {
       fileInputRef.current.click()
     }
   }, [])
+
+  const fileName = useMemo(() => {
+    if (currentThreadFilePath) {
+      return currentThreadFilePath.split('/').pop()
+    }
+    if (selectedFile) {
+      return selectedFile.name
+    }
+    return undefined
+  }, [currentThreadFilePath, selectedFile])
 
   useEffect(() => {
     if (textAreaInputRef.current) {
@@ -132,8 +162,6 @@ export function ChatWindow({ id }: { id?: string }) {
       setSelectedFile(null)
     }
   }, [id])
-
-  const availableModels = useAvailableModels()
 
   return (
     // 36px - titlebar height
@@ -192,7 +220,18 @@ export function ChatWindow({ id }: { id?: string }) {
           )}
         </div>
       ) : (
-        <div className="h-full overflow-hidden py-0">
+        <div
+          className={cn(
+            'grid h-full overflow-hidden py-0',
+            fileName ? 'grid-rows-[32px,_1fr]' : 'grid-rows-1',
+          )}
+        >
+          {fileName ? (
+            <div className="flex h-full w-full items-center border-b px-2 text-xs">
+              <span>Current file:</span>&nbsp;
+              <span className="font-bold">{fileName}</span>
+            </div>
+          ) : null}
           <ScrollArea
             className="h-full"
             ref={scrollAreaRef}
