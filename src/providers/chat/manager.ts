@@ -66,8 +66,6 @@ export class ChatManager {
       return
     }
 
-    console.log('handleChatToken: ', token)
-
     const currentMessage = this.historyManager.state.messages.get(messageID)
     if (!currentMessage) {
       // eslint-disable-next-line no-console
@@ -141,9 +139,9 @@ export class ChatManager {
         })
         threadID = thread.id
       } else {
+        // Rename the thread if it is unnamed
         const thread = this.historyManager.getThread(threadID)
         if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
-        // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
         const isUnnamedThread =
           thread?.messages.length === 0 || thread?.title === 'New Thread'
 

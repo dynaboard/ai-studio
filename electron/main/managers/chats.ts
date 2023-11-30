@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { type LlamaContext } from 'node-llama-cpp'
+import { type LlamaContext, Token } from 'node-llama-cpp'
 import { LLamaChatPromptOptions, LlamaChatSession } from 'node-llama-cpp'
 import path from 'path'
 
@@ -33,7 +33,6 @@ export class ElectronChatManager {
   private lastSessionKey?: string | null
   private chatSession?: ChatSession | null
   private abortController: AbortController = new AbortController()
-  private ephemeralTokens: string[] = []
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(readonly window: BrowserWindow) {}
@@ -203,6 +202,8 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
+    let responseTokens: string = ''
+
     try {
       const { messageList, session } = await this.initializeSession({
         modelPath,
@@ -211,8 +212,6 @@ export class ElectronChatManager {
 
       messageList.add({ role: 'user', message, id: messageID })
 
-      this.ephemeralTokens = []
-
       await this.shiftMessageWindow({
         systemPrompt,
         modelPath,
@@ -220,23 +219,23 @@ export class ElectronChatManager {
         maxTokens: promptOptions?.maxTokens,
       })
 
-      const response = await session.prompt(
+      await session.prompt(
         messageList.format({ systemPrompt: SYSTEM_PROMPT }),
         {
-          maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
           ...promptOptions,
+          maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
           signal: this.abortController.signal,
-          onToken: (chunks) => {
+          onToken: (chunks: Token[]) => {
             const token = session.context.decode(chunks)
-            this.ephemeralTokens.push(token) // Store the token
             onToken(token)
+            responseTokens += token
           },
         },
       )
 
       messageList.add({
         role: 'assistant',
-        message: response,
+        message: responseTokens,
         id: assistantMessageID,
       })
 
@@ -248,14 +247,18 @@ export class ElectronChatManager {
         newMessageList: messageList,
         maxTokens: promptOptions?.maxTokens,
       })
-
-      return response
-    } catch {
-      console.log('ephemeral tokens: ', this.ephemeralTokens.join(' '))
-      console.error('Error sending message in ElectronChatManager')
+    } catch (e: unknown) {
+      const error = e as Error
+      if (error.name === 'AbortError') {
+        console.error('The operation was aborted:', error)
+      } else {
+        // console.error('Error sending message in ElectronChatManager:', error)
+      }
+    } finally {
       this.resetAbortController()
-      return
     }
+
+    return responseTokens
   }
 
   async regenerateMessage({
@@ -273,6 +276,8 @@ export class ElectronChatManager {
     modelPath: string
     onToken: (token: string) => void
   }) {
+    let responseTokens: string = ''
+
     try {
       const { messageList, session } = await this.initializeSession({
         modelPath,
@@ -281,27 +286,44 @@ export class ElectronChatManager {
 
       messageList.delete(messageID)
 
-      const response = await session.prompt(
+      await session.prompt(
         messageList.format({ systemPrompt: SYSTEM_PROMPT }),
         {
           ...promptOptions,
           signal: this.abortController.signal,
-          onToken: (chunks) => onToken(session.context.decode(chunks)),
+          onToken: (chunks: Token[]) => {
+            const token = session.context.decode(chunks)
+            onToken(token)
+            responseTokens += token
+          },
         },
       )
-      messageList.add({ role: 'assistant', message: response, id: messageID })
+      messageList.add({
+        role: 'assistant',
+        message: responseTokens,
+        id: messageID,
+      })
       await this.shiftMessageWindow({
         systemPrompt,
         modelPath,
         threadID,
         maxTokens: promptOptions?.maxTokens,
       })
-      return response
-    } catch {
-      console.error('Error regenerating message in ElectronChatManager')
+    } catch (e: unknown) {
+      const error = e as Error
+      if (error.name === 'AbortError') {
+        console.error('The operation was aborted:', error)
+      } else {
+        // console.error(
+        //   'Error regenerating message in ElectronChatManager:',
+        //   error,
+        // )
+      }
+    } finally {
       this.resetAbortController()
-      return
     }
+
+    return responseTokens
   }
 
   async abortMessage() {
