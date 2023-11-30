@@ -43,7 +43,7 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
         </div>
 
         <div className="flex flex-1 flex-col justify-center gap-8 overflow-auto p-12">
-          <div className="grid grid-cols-2 justify-around gap-4">
+          <div className="grid grid-cols-2 justify-around gap-16">
             <InfoGroup
               title="Keep your data private"
               description="Eliminate data residency, compliance, or privacy concerns with every model running on your machine"
@@ -55,7 +55,7 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
               logo={AuditIcon}
             />
           </div>
-          <div className="grid grid-cols-2 justify-around gap-4">
+          <div className="grid grid-cols-2 justify-around gap-16">
             <InfoGroup
               title="Chat with any PDF"
               description="Import PDFs into a local database for easy search, recall, and summarization by your model of choice."
@@ -120,7 +120,7 @@ function InfoGroup({
   logo: string
 }) {
   return (
-    <div className="grid grid-cols-[64px,_1fr] gap-4">
+    <div className="grid grid-cols-[48px,_1fr] gap-4">
       <img src={logo} alt="Audit Logo" className="w-16" />
       <div className="flex flex-col">
         <span className="text-sm font-bold">{title}</span>
