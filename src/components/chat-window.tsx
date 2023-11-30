@@ -13,7 +13,6 @@ import {
   useChatManager,
   useCurrentModel,
   useCurrentTemperature,
-  useCurrentThreadID,
   useCurrentTopP,
 } from '@/providers/chat/manager'
 import { useThreadMessages } from '@/providers/history/manager'
@@ -23,14 +22,13 @@ import { useTransformersManager } from '@/providers/transformers'
 import { ChatMessage } from './chat-message'
 import { Header } from './header'
 
-export function ChatWindow() {
+export function ChatWindow({ id }: { id?: string }) {
   const chatManager = useChatManager()
   const currentModel = useCurrentModel()
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
-  const currentThreadID = useCurrentThreadID()
   const transformersManager = useTransformersManager()
-  const messages = useThreadMessages(currentThreadID)
+  const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
   const { formRef, onKeyDown } = useEnterSubmit()
@@ -45,7 +43,13 @@ export function ChatWindow() {
 
   const handleFiles = useCallback(async (files: File[]) => {
     // Only process a single file for now
-    setSelectedFile(files[0])
+    const file = files[0]
+
+    setSelectedFile(file)
+
+    setRunningEmbeddings(true)
+    await transformersManager.embedDocument(file.path)
+    setRunningEmbeddings(false)
   }, [])
 
   const handleFilesChange = useCallback(
@@ -92,7 +96,7 @@ export function ChatWindow() {
       void chatManager.sendMessage({
         message,
         model: currentModel,
-        threadID: currentThreadID ?? undefined, // we will create a new thread ad-hoc if necessary
+        threadID: id ?? undefined, // we will create a new thread ad-hoc if necessary
         promptOptions: {
           temperature: Number(currentTemperature),
           topP: Number(currentTopP),
@@ -100,24 +104,8 @@ export function ChatWindow() {
       })
       event.currentTarget.reset()
     },
-    [
-      chatManager,
-      currentModel,
-      currentTemperature,
-      currentTopP,
-      currentThreadID,
-    ],
+    [chatManager, currentModel, currentTemperature, currentTopP, id],
   )
-
-  const handleEmbedFile = useCallback(async () => {
-    if (!selectedFile) {
-      return
-    }
-
-    setRunningEmbeddings(true)
-    await transformersManager.embedDocument(selectedFile.path)
-    setRunningEmbeddings(false)
-  }, [selectedFile, transformersManager])
 
   const handleFileInputClick = useCallback(() => {
     if (fileInputRef.current) {
@@ -135,6 +123,12 @@ export function ChatWindow() {
   useEffect(() => {
     scrollToBottom('auto')
   }, [messages, scrollToBottom])
+
+  useEffect(() => {
+    if (id) {
+      setSelectedFile(null)
+    }
+  }, [id])
 
   const availableModels = useAvailableModels()
 
@@ -186,20 +180,11 @@ export function ChatWindow() {
               >
                 {selectedFile.name} ⋅ {prettyBytes(selectedFile.size)}
               </span>
-              <Button
-                size="sm"
-                onClick={handleEmbedFile}
-                disabled={runningEmbeddings}
-              >
-                {runningEmbeddings ? 'Processing...' : 'Embed'}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedFile(null)}
-              >
-                Clear
-              </Button>
+              {runningEmbeddings && (
+                <Button size="sm" disabled={runningEmbeddings}>
+                  Processing...
+                </Button>
+              )}
             </div>
           )}
         </div>

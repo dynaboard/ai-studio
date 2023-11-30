@@ -12,5 +12,5 @@ export function ChatThread() {
     chatManager.setCurrentThread(currentThreadID)
   }, [chatManager, currentThreadID])
 
-  return <ChatWindow />
+  return <ChatWindow id={currentThreadID} />
 }
