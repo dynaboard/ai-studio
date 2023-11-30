@@ -48,7 +48,7 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
               return
             }
             // we dont track this because it will be completed by the time Mistral is done downloading (300mb)
-            window.transformers.loadModel('Xenova/bge-large-en-v1.5')
+            window.embeddings.loadModel('Xenova/bge-large-en-v1.5')
             setIsDownloading(true)
             const removeHandler = modelManager.onDownloadComplete(() => {
               removeHandler()

@@ -3,10 +3,10 @@ import { release } from 'node:os'
 import { join } from 'node:path'
 
 import { ElectronChatManager } from './managers/chats'
-import { ElectronEmbeddingsManager } from './managers/embeddings'
+import { EmbeddingsManager } from './managers/embeddings'
 import { ElectronModelManager } from './managers/models'
-import { TransformersManager } from './managers/transformers'
 import { SystemUsageManager } from './managers/usage'
+import { ElectronVectorStoreManager } from './managers/vector-store'
 import { update } from './update'
 
 // The built directory structure
@@ -44,8 +44,8 @@ if (!app.requestSingleInstanceLock()) {
 let win: BrowserWindow | null = null
 let modelManager: ElectronModelManager | null = null
 let chatManager: ElectronChatManager | null = null
-let transfomersManager: TransformersManager | null = null
-const embeddingsManager = new ElectronEmbeddingsManager()
+let embeddingsManager: EmbeddingsManager | null = null
+const vectorStoreManager = new ElectronVectorStoreManager()
 
 const usageManager = new SystemUsageManager()
 usageManager.addClientEventHandlers()
@@ -60,7 +60,7 @@ async function createWindow() {
     modelManager.close()
   }
 
-  embeddingsManager.initialize()
+  vectorStoreManager.initialize()
 
   win = new BrowserWindow({
     title: 'Main window',
@@ -80,7 +80,7 @@ async function createWindow() {
 
   modelManager = new ElectronModelManager(win)
   chatManager = new ElectronChatManager(win)
-  transfomersManager = new TransformersManager(win, embeddingsManager)
+  embeddingsManager = new EmbeddingsManager(win, vectorStoreManager)
 
   if (url) {
     // electron-vite-vue#298
@@ -107,7 +107,7 @@ async function createWindow() {
 
   modelManager.addClientEventHandlers()
   chatManager.addClientEventHandlers()
-  transfomersManager.addClientEventHandlers()
+  embeddingsManager.addClientEventHandlers()
 }
 
 app.whenReady().then(createWindow)
