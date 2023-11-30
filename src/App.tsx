@@ -38,7 +38,7 @@ export function App() {
   return (
     <>
       {needsLocalModels ? (
-        <div className="fixed z-[100] flex h-screen w-screen items-center justify-center bg-background/60 p-2 backdrop-blur-lg">
+        <div className="fixed z-[100] flex h-screen w-screen items-center justify-center bg-background/60 p-8 backdrop-blur-lg">
           <Setup
             onComplete={() => {
               setNeedsLocalModels(false)
