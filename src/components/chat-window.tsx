@@ -50,6 +50,8 @@ export function ChatWindow({ id }: { id?: string }) {
     setRunningEmbeddings(true)
     await transformersManager.embedDocument(file.path)
     setRunningEmbeddings(false)
+
+    // TODO: handle lingering selectedFile state
   }, [])
 
   const handleFilesChange = useCallback(
@@ -124,6 +126,7 @@ export function ChatWindow({ id }: { id?: string }) {
     scrollToBottom('auto')
   }, [messages, scrollToBottom])
 
+  // Unselect file when switching threads
   useEffect(() => {
     if (id) {
       setSelectedFile(null)
