@@ -25,7 +25,7 @@ export const router = createHashRouter([
       const isModelDownloaded =
         await window.models.isModelDownloaded(DEFAULT_MODEL)
       const areTransformersAvailable =
-        await window.transformers.doesTransformersCacheExist()
+        await window.embeddings.doesTransformersCacheExist()
       return {
         needsSetup: !isModelDownloaded || !areTransformersAvailable,
       }

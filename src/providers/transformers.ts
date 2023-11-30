@@ -13,26 +13,26 @@ export class TransformersManager {
   })
 
   async parse(filePath: string) {
-    const fileContent = await window.transformers.parse(filePath)
+    const fileContent = await window.embeddings.parse(filePath)
     console.log('parsed PDF: ', fileContent)
     return fileContent
   }
 
   async embed(fileContent: string) {
-    const embeddings = await window.transformers.embedDocument(fileContent)
+    const embeddings = await window.embeddings.embedDocument(fileContent)
     console.log('embeddings: ', embeddings)
     return embeddings
   }
 
   async embedDocument(filePath: string) {
     return new Promise((resolve) => {
-      const cleanup = window.transformers.onEmbeddingsComplete((data) => {
+      const cleanup = window.embeddings.onEmbeddingsComplete((data) => {
         console.log('Embeddings complete: ', data)
         resolve(data)
         cleanup()
       })
 
-      window.transformers.embedDocument(filePath)
+      window.embeddings.embedDocument(filePath)
     })
   }
 

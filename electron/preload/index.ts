@@ -1,6 +1,6 @@
 import './models'
 import './usage'
-import './transformers'
+import './embeddings'
 
 import { contextBridge, ipcRenderer } from 'electron'
 import { ChatMessage } from 'electron/main/message-list/base'
