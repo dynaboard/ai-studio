@@ -37,7 +37,6 @@
     "@tailwindcss/typography": "^0.5.10",
     "@xenova/transformers": "^2.9.0",
     "autoprefixer": "^10.4.16",
-    "better-sqlite3": "^9.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
