@@ -8,7 +8,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
-import { useChatManager, useCurrentTemperature } from '@/providers/chat/manager'
+import {
+  DEFAULT_TEMP,
+  useChatManager,
+  useCurrentTemperature,
+} from '@/providers/chat/manager'
 
 export function TemperatureSelector() {
   const chatManager = useChatManager()
@@ -53,7 +57,7 @@ export function TemperatureSelector() {
         <Slider
           id="temperature"
           max={1}
-          defaultValue={currentTemperature}
+          defaultValue={[currentTemperature ?? DEFAULT_TEMP]}
           step={0.1}
           onValueChange={(value) => {
             chatManager.setTemperature(value[0])

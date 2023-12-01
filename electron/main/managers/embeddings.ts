@@ -103,6 +103,16 @@ export class EmbeddingsManager {
   }
 
   async embedDocument(filePath: string) {
+    const doesIndexExist =
+      await this.vectorStoreManager.doesIndexExist(filePath)
+    if (doesIndexExist) {
+      console.log('Index already exists for:', filePath)
+      this.window.webContents.send('embeddings:embeddingsComplete', {
+        filePath: filePath,
+      })
+      return
+    }
+
     const parsedData = await this.parse(filePath)
     const splitter = new RecursiveCharacterTextSplitter({
       chunkOverlap: 32,
@@ -177,6 +187,19 @@ export class EmbeddingsManager {
     }
   }
 
+  async search({
+    filePath,
+    query,
+    topK = 10,
+  }: {
+    filePath: string
+    query: string
+    topK?: number
+  }) {
+    const embeddings = await this.getEmbeddings(query)
+    return this.vectorStoreManager.search({ filePath, embeddings, topK })
+  }
+
   // TODO: Maybe all this should be on the embeddings manager? We should probably group these two classes.
   addClientEventHandlers() {
     ipcMain.handle('embeddings:parse', (_, filePath) => {
@@ -200,8 +223,10 @@ export class EmbeddingsManager {
     })
 
     ipcMain.handle('embeddings:search', async (_, { filePath, query }) => {
-      const embeddings = await this.getEmbeddings(query)
-      return this.vectorStoreManager.search({ filePath, embeddings })
+      return this.search({
+        filePath,
+        query,
+      })
     })
   }
 }

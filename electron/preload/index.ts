@@ -40,15 +40,7 @@ contextBridge.exposeInMainWorld('chats', {
 } satisfies ChatsAPI)
 
 export interface ChatsAPI {
-  sendMessage: ({
-    systemPrompt,
-    message,
-    messageID,
-    assistantMessageID,
-    threadID,
-    promptOptions,
-    modelPath,
-  }: {
+  sendMessage: (args: {
     systemPrompt: string
     message: string
     messageID: string
@@ -56,20 +48,16 @@ export interface ChatsAPI {
     threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
+    selectedFile?: string
   }) => Promise<string>
 
-  regenerateMessage: ({
-    systemPrompt,
-    messageID,
-    threadID,
-    promptOptions,
-    modelPath,
-  }: {
+  regenerateMessage: (args: {
     systemPrompt: string
     messageID: string
     threadID: string
     promptOptions?: LLamaChatPromptOptions
     modelPath: string
+    selectedFile?: string
   }) => Promise<string>
 
   // cleanupSession: ({

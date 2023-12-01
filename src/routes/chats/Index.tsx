@@ -13,8 +13,6 @@ export function ChatsIndex() {
   const currentThreadID = useCurrentThreadID()
   const threads = useThreads()
 
-  console.log('Local models & files', availableModels)
-
   const haveModels = availableModels.length > 0
   const haveThreads = threads.length > 0
 

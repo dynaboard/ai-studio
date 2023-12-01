@@ -8,7 +8,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Slider } from '@/components/ui/slider'
-import { useChatManager, useCurrentTopP } from '@/providers/chat/manager'
+import {
+  DEFAULT_TOP_P,
+  useChatManager,
+  useCurrentTopP,
+} from '@/providers/chat/manager'
 
 export function TopPSelector() {
   const chatManager = useChatManager()
@@ -48,7 +52,7 @@ export function TopPSelector() {
         <Slider
           id="top-p"
           max={1}
-          defaultValue={currentTopP}
+          defaultValue={[currentTopP ?? DEFAULT_TOP_P]}
           step={0.1}
           onValueChange={(value) => {
             chatManager.setTopP(value[0])
