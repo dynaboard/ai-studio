@@ -16,6 +16,7 @@ import {
   useCurrentTopP,
 } from '@/providers/chat/manager'
 import {
+  useHistoryManager,
   useThreadFilePath,
   useThreadMessages,
 } from '@/providers/history/manager'
@@ -27,6 +28,7 @@ import { Header } from './header'
 
 export function ChatWindow({ id }: { id?: string }) {
   const chatManager = useChatManager()
+  const historyManager = useHistoryManager()
   const transformersManager = useTransformersManager()
 
   const availableModels = useAvailableModels()
@@ -51,6 +53,10 @@ export function ChatWindow({ id }: { id?: string }) {
 
   const handleFiles = useCallback(
     async (files: File[]) => {
+      if (!id) {
+        return
+      }
+
       // Only process a single file for now
       const file = files[0]
 
@@ -58,11 +64,12 @@ export function ChatWindow({ id }: { id?: string }) {
 
       setRunningEmbeddings(true)
       await transformersManager.embedDocument(file.path)
+      historyManager.changeThreadFilePath(id, file.path)
       setRunningEmbeddings(false)
 
       // TODO: handle lingering selectedFile state
     },
-    [transformersManager],
+    [id, historyManager, transformersManager],
   )
 
   const handleFilesChange = useCallback(
