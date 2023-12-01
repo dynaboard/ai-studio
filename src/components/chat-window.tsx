@@ -1,5 +1,4 @@
 import { SendHorizonal } from 'lucide-react'
-import prettyBytes from 'pretty-bytes'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -202,7 +201,7 @@ export function ChatWindow({ id }: { id?: string }) {
             draggedOver ? 'm-4 cursor-copy rounded border-2 border-dashed' : '',
           )}
         >
-          {!selectedFile ? (
+          {!selectedFile && (
             <>
               <StatusIndicatorText
                 text={
@@ -222,15 +221,6 @@ export function ChatWindow({ id }: { id?: string }) {
                 multiple={false}
               />
             </>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <span className="mb-4 font-medium text-muted-foreground">
-                {selectedFile.name} ⋅ {prettyBytes(selectedFile.size)}
-              </span>
-              <Button size="sm" disabled={runningEmbeddings}>
-                Processing...
-              </Button>
-            </div>
           )}
         </div>
       ) : (
