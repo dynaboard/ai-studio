@@ -1,0 +1,21 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": [
+    "src/renderer/env.d.ts",
+    "src/renderer/**/*",
+    "src/renderer/**/*.tsx",
+    "src/shared/**/*/*.{js,ts}"
+  ],
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "composite": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@/*": ["src/renderer/*"],
+      "@shared/*": ["src/shared/*"]
+    }
+  }
+}
