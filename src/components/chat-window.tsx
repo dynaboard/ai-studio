@@ -88,11 +88,11 @@ export function ChatWindow({ id }: { id?: string }) {
   })
 
   const scrollToBottom = useCallback(
-    (behavior?: ScrollBehavior) => {
+    (behavior?: ScrollBehavior, force?: boolean) => {
       const scrollHeight = scrollAreaRef.current?.querySelector(
         '[data-radix-scroll-area-viewport]',
       )?.scrollHeight
-      if (!userScrolled) {
+      if (force || !userScrolled) {
         scrollAreaRef.current
           ?.querySelector('[data-radix-scroll-area-viewport]')
           ?.scrollTo({
@@ -160,8 +160,10 @@ export function ChatWindow({ id }: { id?: string }) {
   }, [])
 
   useEffect(() => {
-    scrollToBottom('auto')
-  }, [messages, scrollToBottom])
+    if (id) {
+      scrollToBottom('auto', true)
+    }
+  }, [id, messages, scrollToBottom])
 
   // Unselect file when switching threads
   useEffect(() => {
