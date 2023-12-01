@@ -13,7 +13,7 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentTopP,
-  useIsGenerating,
+  useIsCurrentThreadGenerating,
 } from '@/providers/chat/manager'
 import {
   useHistoryManager,
@@ -59,7 +59,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const currentModel = useCurrentModel()
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
-  const isGenerating = useIsGenerating()
+  const isCurrentThreadGenerating = useIsCurrentThreadGenerating(id)
 
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
@@ -160,8 +160,10 @@ export function ChatWindow({ id }: { id?: string }) {
   )
 
   const handleAbort = useCallback(() => {
-    chatManager.abortMessage()
-  }, [chatManager])
+    if (id) {
+      chatManager.abort(id)
+    }
+  }, [chatManager, id])
 
   const fileName = useMemo(() => {
     if (currentThreadFilePath) {
@@ -298,7 +300,7 @@ export function ChatWindow({ id }: { id?: string }) {
         </div>
       )}
 
-      {isGenerating && (
+      {isCurrentThreadGenerating && (
         <div className="mb-2 flex h-fit items-center justify-center">
           <Button size="sm" onClick={handleAbort}>
             <LucideStopCircle size={14} className="mr-2" />

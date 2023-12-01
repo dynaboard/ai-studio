@@ -13,7 +13,7 @@ type ModelState = {
   currentTemperature?: number
   currentTopP?: number
   currentSystemPrompt?: string
-  isGenerating?: boolean
+  runningPrompts: Map<string, boolean>
 }
 
 export const DEFAULT_TEMP = 0.5
@@ -26,7 +26,7 @@ export class ChatManager {
     currentModel: undefined,
     currentTemperature: 0.5,
     currentTopP: 0.3,
-    isGenerating: false,
+    runningPrompts: new Map<string, boolean>(),
   })
 
   cleanupHandler: (() => void) | undefined
@@ -94,6 +94,15 @@ export class ChatManager {
     return this._state.value
   }
 
+  setRunningPrompt(threadID: string, isGenerating: boolean) {
+    this._state.update((state) => {
+      state.runningPrompts.set(threadID, isGenerating)
+      return {
+        ...state,
+      }
+    })
+  }
+
   async sendMessage({
     message,
     model,
@@ -107,9 +116,11 @@ export class ChatManager {
     promptOptions?: LLamaChatPromptOptions
     selectedFile?: string
   }) {
-    try {
-      await this.setIsGenerating(true)
+    if (threadID) {
+      this.setRunningPrompt(threadID, true)
+    }
 
+    try {
       let currentSystemPrompt = 'You are a helpful AI assistant.'
       if (!model || !this.model) {
         // eslint-disable-next-line no-console
@@ -186,9 +197,11 @@ export class ChatManager {
     } catch (e) {
       const error = e as Error
       // eslint-disable-next-line no-console
-      console.log('Message sending was aborted:', error)
+      console.error('Error sending message:', error)
     } finally {
-      await this.setIsGenerating(false)
+      if (threadID) {
+        this.setRunningPrompt(threadID, false)
+      }
     }
   }
 
@@ -199,9 +212,11 @@ export class ChatManager {
     threadID: string
     messageID: string
   }) {
-    try {
-      await this.setIsGenerating(true)
+    if (threadID) {
+      this.setRunningPrompt(threadID, true)
+    }
 
+    try {
       const thread = this.historyManager.getThread(threadID)
       if (!thread) {
         // eslint-disable-next-line no-console
@@ -235,17 +250,17 @@ export class ChatManager {
       // eslint-disable-next-line no-console
       console.error('Error regenerating message:', error)
     } finally {
-      await this.setIsGenerating(false)
+      if (threadID) {
+        this.setRunningPrompt(threadID, false)
+      }
     }
   }
 
-  abortMessage() {
-    window.chats.abortMessage()
-  }
-
-  async isGenerating() {
-    const generating = await window.chats.isGenerating()
-    return generating
+  abort(threadID: string) {
+    if (this.state.runningPrompts.get(threadID)) {
+      window.chats.abort(threadID)
+      this.setRunningPrompt(threadID, false)
+    }
   }
 
   setModel(model: string) {
@@ -332,13 +347,6 @@ export class ChatManager {
         currentTemperature: temperature,
       }
     })
-  }
-
-  async setIsGenerating(flag: boolean) {
-    this._state.update((state) => ({
-      ...state,
-      isGenerating: flag,
-    }))
   }
 
   async loadMessageList(threadID: string) {
@@ -459,9 +467,13 @@ export function useCurrentSystemPrompt() {
   )
 }
 
-export function useIsGenerating() {
+export function useIsCurrentThreadGenerating(threadID?: string) {
   const chatManager = useChatManager()
-  return useValue('useIsGenerating', () => chatManager.state.isGenerating, [
-    chatManager,
-  ])
+  return useValue(
+    'useIsCurrentThreadGenerating',
+    () => {
+      return chatManager.state.runningPrompts.get(threadID!) || false
+    },
+    [chatManager, threadID],
+  )
 }

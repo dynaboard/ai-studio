@@ -14,8 +14,8 @@ contextBridge.exposeInMainWorld('chats', {
   regenerateMessage: (message) => {
     return ipcRenderer.invoke('chats:regenerateMessage', message)
   },
-  abortMessage: () => {
-    return ipcRenderer.invoke('chats:abortMessage')
+  abort: (threadID) => {
+    return ipcRenderer.invoke('chats:abort', threadID)
   },
   onToken: (callback) => {
     const handler = (
@@ -61,7 +61,7 @@ export interface ChatsAPI {
     selectedFile?: string
   }) => Promise<string>
 
-  abortMessage: () => void
+  abort: (threadID: string) => void
 
   // cleanupSession: ({
   //   modelPath,
