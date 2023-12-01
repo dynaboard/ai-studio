@@ -102,6 +102,14 @@ async function createWindow() {
     return { action: 'deny' }
   })
 
+  win.on('enter-full-screen', () => {
+    win?.webContents.send('full-screen-change', true)
+  })
+
+  win.on('leave-full-screen', () => {
+    win?.webContents.send('full-screen-change', false)
+  })
+
   // Apply electron-updater
   update(win)
 

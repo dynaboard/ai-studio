@@ -2,6 +2,7 @@ import { PanelLeft } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 
 import { cn } from '@/lib/utils'
+import { useIsFullScreen } from '@/providers/browser-window'
 import { useThread } from '@/providers/history/manager'
 
 function toCapitalize(str: string) {
@@ -20,9 +21,15 @@ export function Titlebar({
   const currentThread = useThread(currentPageName)
   const currentThreadTitle = currentThread?.title
 
+  const isFullScreen = useIsFullScreen()
+
   return (
-    // TODO: detect is full screen then pl to 0
-    <div className="titlebar sticky top-0 z-50 flex h-9 w-full items-center justify-between border-b pl-[76px]">
+    <div
+      className={cn(
+        'titlebar sticky top-0 z-50 flex h-9 w-full items-center justify-between border-b',
+        isFullScreen ? 'px-2' : 'pl-[76px]',
+      )}
+    >
       <div
         className={cn(
           'col-start-1 col-end-3 mt-[3px] flex items-center justify-end',
