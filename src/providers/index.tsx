@@ -12,6 +12,11 @@ import {
   SystemUsageManagerContext,
 } from '@/providers/system-usage'
 
+import {
+  BrowserWindowManager,
+  BrowserWindowManagerContext,
+} from './browser-window'
+
 export function ChatManagerProvider({
   children,
   model,
@@ -100,5 +105,26 @@ export function SystemUsageManagerProvider({
     <SystemUsageManagerContext.Provider value={manager}>
       {children}
     </SystemUsageManagerContext.Provider>
+  )
+}
+
+export function BrowserWindowManagerProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const manager = useMemo(() => {
+    return new BrowserWindowManager()
+  }, [])
+
+  useEffect(() => {
+    manager.initialize()
+    return () => manager.destroy()
+  }, [manager])
+
+  return (
+    <BrowserWindowManagerContext.Provider value={manager}>
+      {children}
+    </BrowserWindowManagerContext.Provider>
   )
 }

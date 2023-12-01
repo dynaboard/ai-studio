@@ -1,6 +1,7 @@
 import './models'
 import './usage'
 import './embeddings'
+import './browser-window'
 
 import { contextBridge, ipcRenderer } from 'electron'
 import { ChatMessage } from 'electron/main/message-list/base'
