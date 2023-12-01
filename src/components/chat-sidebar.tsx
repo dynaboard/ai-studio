@@ -51,6 +51,9 @@ export function ThreadsSidebar() {
               title: 'New Thread',
               createdAt: new Date(),
               messages: [],
+              systemPrompt: 'You are a helpful AI assistant.',
+              temperature: 1,
+              topP: 1,
             })
 
             navigate(`/chats/${newThread.id}`)

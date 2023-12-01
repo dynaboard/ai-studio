@@ -10,8 +10,18 @@
   },
   files: ['dist-electron', 'dist'],
   mac: {
+    icon: 'build/icon.icns',
+    entitlements: 'build/entitlements.mac.plist',
+    entitlementsInherit: 'build/entitlements.mac.plist',
     artifactName: '${productName}_${version}.${ext}',
     target: ['dmg', 'zip'],
+    hardenedRuntime: true,
+    gatekeeperAssess: false,
+    preAutoEntitlements: false,
+  },
+  afterSign: 'scripts/notarize.js',
+  dmg: {
+    sign: false,
   },
   win: {
     target: [
