@@ -14,8 +14,8 @@ exports.default = async function notarizing(context) {
   return await notarize({
     appBundleId: 'com.dynaboard.ai-studio',
     appPath: `${appOutDir}/${appName}.app`,
-    appleId: process.env.APPLEID,
-    appleIdPassword: process.env.APPLEIDPASS,
-    teamId: 'Dynaboard',
+    appleApiKey: process.env.APPLE_API_KEY,
+    appleApiKeyId: process.env.APPLE_API_KEY_ID,
+    appleApiIssuer: process.env.APPLE_API_ISSUER,
   })
 }
