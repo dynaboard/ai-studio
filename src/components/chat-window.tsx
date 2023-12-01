@@ -324,13 +324,17 @@ export function ChatWindow({ id }: { id?: string }) {
             rows={1}
             placeholder="Say something..."
             spellCheck={false}
-            disabled={disabled || isCurrentThreadGenerating}
+            disabled={
+              disabled || isCurrentThreadGenerating || runningEmbeddings
+            }
           />
           <Button
             variant="ghost"
             className="group absolute right-0 top-0 hover:bg-transparent"
             type="submit"
-            disabled={disabled || isCurrentThreadGenerating}
+            disabled={
+              disabled || isCurrentThreadGenerating || runningEmbeddings
+            }
           >
             <SendHorizonal size={16} className="group-hover:text-primary" />
           </Button>
