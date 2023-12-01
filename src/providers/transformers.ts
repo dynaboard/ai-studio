@@ -2,14 +2,14 @@ import { createContext, useContext } from 'react'
 import { atom } from 'signia'
 
 type TransformersState = {
-  documentText: string
-  loading: boolean
+  // documentText: string
+  // loading: boolean
 }
 
 export class TransformersManager {
   private _state = atom<TransformersState>('TransformersState', {
-    documentText: '',
-    loading: false,
+    // documentText: '',
+    // loading: false,
   })
 
   async parse(filePath: string) {

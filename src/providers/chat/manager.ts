@@ -13,6 +13,7 @@ type ModelState = {
   currentTemperature?: number
   currentTopP?: number
   currentSystemPrompt?: string
+  runningPrompts: Map<string, boolean>
 }
 
 export const DEFAULT_TEMP = 0.5
@@ -25,6 +26,7 @@ export class ChatManager {
     currentModel: undefined,
     currentTemperature: 0.5,
     currentTopP: 0.3,
+    runningPrompts: new Map<string, boolean>(),
   })
 
   cleanupHandler: (() => void) | undefined
@@ -92,6 +94,15 @@ export class ChatManager {
     return this._state.value
   }
 
+  setRunningPrompt(threadID: string, isGenerating: boolean) {
+    this._state.update((state) => {
+      state.runningPrompts.set(threadID, isGenerating)
+      return {
+        ...state,
+      }
+    })
+  }
+
   async sendMessage({
     message,
     model,
@@ -105,78 +116,93 @@ export class ChatManager {
     promptOptions?: LLamaChatPromptOptions
     selectedFile?: string
   }) {
-    let currentSystemPrompt = 'You are a helpful AI assistant.'
-    if (!model || !this.model) {
-      console.error('No model selected')
-      return
+    if (threadID) {
+      this.setRunningPrompt(threadID, true)
     }
 
-    const modelPath = model || this.model
-
-    const newUserMessage: Message = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      message: message,
-      state: 'sent',
-      date: new Date().toISOString(),
-    }
-
-    // You always message on a thread, so we are starting a new one if its not provided
-    if (!threadID) {
-      const thread = this.historyManager.addThread({
-        systemPrompt: currentSystemPrompt,
-        createdAt: new Date(),
-        modelID: modelPath,
-        title: message.substring(0, 36),
-        messages: [newUserMessage],
-        topP: promptOptions?.topP ?? DEFAULT_TOP_P,
-        temperature: promptOptions?.temperature ?? DEFAULT_TEMP,
-      })
-      threadID = thread.id
-    } else {
-      const thread = this.historyManager.getThread(threadID)
-      if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
-      // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
-      const isUnnamedThread =
-        thread?.messages.length === 0 || thread?.title === 'New Thread'
-
-      if (isUnnamedThread) {
-        this.historyManager.renameThread(threadID, message.substring(0, 100))
+    try {
+      let currentSystemPrompt = 'You are a helpful AI assistant.'
+      if (!model || !this.model) {
+        // eslint-disable-next-line no-console
+        console.error('No model selected')
+        return
       }
 
-      this.historyManager.addMessage({ threadID, message: newUserMessage })
+      const modelPath = model || this.model
+
+      const newUserMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        message: message,
+        state: 'sent',
+        date: new Date().toISOString(),
+      }
+
+      // You always message on a thread, so we are starting a new one if its not provided
+      if (!threadID) {
+        const thread = this.historyManager.addThread({
+          systemPrompt: currentSystemPrompt,
+          createdAt: new Date(),
+          modelID: modelPath,
+          title: message.substring(0, 36),
+          messages: [newUserMessage],
+          topP: promptOptions?.topP ?? DEFAULT_TOP_P,
+          temperature: promptOptions?.temperature ?? DEFAULT_TEMP,
+        })
+        threadID = thread.id
+      } else {
+        const thread = this.historyManager.getThread(threadID)
+        if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
+        // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
+        const isUnnamedThread =
+          thread?.messages.length === 0 || thread?.title === 'New Thread'
+
+        if (isUnnamedThread) {
+          this.historyManager.renameThread(threadID, message.substring(0, 100))
+        }
+
+        this.historyManager.addMessage({ threadID, message: newUserMessage })
+      }
+
+      const assistantMessageID = crypto.randomUUID()
+      const newAssistantMessage: Message = {
+        id: assistantMessageID,
+        role: 'assistant',
+        message: '',
+        state: 'pending',
+        date: new Date().toISOString(),
+      }
+
+      this.historyManager.addMessage({
+        threadID,
+        message: newAssistantMessage,
+      })
+
+      const response = await window.chats.sendMessage({
+        systemPrompt: currentSystemPrompt,
+        messageID: newUserMessage.id,
+        assistantMessageID,
+        message,
+        modelPath,
+        threadID,
+        promptOptions,
+        selectedFile,
+      })
+
+      this.historyManager.editMessage({
+        threadID,
+        messageID: assistantMessageID,
+        contents: response,
+      })
+    } catch (e) {
+      const error = e as Error
+      // eslint-disable-next-line no-console
+      console.error('Error sending message:', error)
+    } finally {
+      if (threadID) {
+        this.setRunningPrompt(threadID, false)
+      }
     }
-
-    const assistantMessageID = crypto.randomUUID()
-    const newAssistantMessage: Message = {
-      id: assistantMessageID,
-      role: 'assistant',
-      message: '',
-      state: 'pending',
-      date: new Date().toISOString(),
-    }
-
-    this.historyManager.addMessage({
-      threadID,
-      message: newAssistantMessage,
-    })
-
-    const response = await window.chats.sendMessage({
-      systemPrompt: currentSystemPrompt,
-      messageID: newUserMessage.id,
-      assistantMessageID,
-      message,
-      modelPath,
-      threadID,
-      promptOptions,
-      selectedFile,
-    })
-
-    this.historyManager.editMessage({
-      threadID,
-      messageID: assistantMessageID,
-      contents: response,
-    })
   }
 
   async regenerateMessage({
@@ -186,33 +212,55 @@ export class ChatManager {
     threadID: string
     messageID: string
   }) {
-    const thread = this.historyManager.getThread(threadID)
-    if (!thread) {
-      console.error(
-        'Cannot regenerate a message without a valid thread (this should be an impossible state).',
-      )
-      return
+    if (threadID) {
+      this.setRunningPrompt(threadID, true)
     }
 
-    this.historyManager.editMessage({
-      threadID,
-      messageID,
-      contents: '',
-      state: 'pending',
-    })
+    try {
+      const thread = this.historyManager.getThread(threadID)
+      if (!thread) {
+        // eslint-disable-next-line no-console
+        console.error(
+          'Cannot regenerate a message without a valid thread (this should be an impossible state).',
+        )
+        return
+      }
 
-    const response = await window.chats.regenerateMessage({
-      systemPrompt: thread.systemPrompt,
-      messageID,
-      threadID,
-      modelPath: thread.modelID,
-    })
+      this.historyManager.editMessage({
+        threadID,
+        messageID,
+        contents: '',
+        state: 'pending',
+      })
 
-    this.historyManager.editMessage({
-      threadID,
-      messageID,
-      contents: response,
-    })
+      const response = await window.chats.regenerateMessage({
+        systemPrompt: thread.systemPrompt,
+        messageID,
+        threadID,
+        modelPath: thread.modelID,
+      })
+
+      this.historyManager.editMessage({
+        threadID,
+        messageID,
+        contents: response,
+      })
+    } catch (e) {
+      const error = e as Error
+      // eslint-disable-next-line no-console
+      console.error('Error regenerating message:', error)
+    } finally {
+      if (threadID) {
+        this.setRunningPrompt(threadID, false)
+      }
+    }
+  }
+
+  abort(threadID: string) {
+    if (this.state.runningPrompts.get(threadID)) {
+      window.chats.abort(threadID)
+      this.setRunningPrompt(threadID, false)
+    }
   }
 
   setModel(model: string) {
@@ -416,5 +464,16 @@ export function useCurrentSystemPrompt() {
     'useCurrentSystemPrompt',
     () => chatManager.state.currentSystemPrompt,
     [chatManager],
+  )
+}
+
+export function useIsCurrentThreadGenerating(threadID?: string) {
+  const chatManager = useChatManager()
+  return useValue(
+    'useIsCurrentThreadGenerating',
+    () => {
+      return chatManager.state.runningPrompts.get(threadID!) || false
+    },
+    [chatManager, threadID],
   )
 }

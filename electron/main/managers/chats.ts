@@ -33,6 +33,7 @@ const DEFAULT_CONTEXT_SIZE = 4096
 export class ElectronChatManager {
   private lastSessionKey?: string | null
   private chatSession?: ChatSession | null
+  private abortControllers = new Map<string, AbortController>()
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(
@@ -186,6 +187,13 @@ export class ElectronChatManager {
     }
   }
 
+  private getAbortController(threadID: string): AbortController {
+    if (!this.abortControllers.has(threadID)) {
+      this.abortControllers.set(threadID, new AbortController())
+    }
+    return this.abortControllers.get(threadID)!
+  }
+
   async sendMessage({
     systemPrompt,
     message,
@@ -207,6 +215,8 @@ export class ElectronChatManager {
     selectedFile?: string
     onToken: (token: string) => void
   }) {
+    const abortController = this.getAbortController(threadID)
+
     const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
@@ -239,6 +249,7 @@ export class ElectronChatManager {
         temperature: 0.5,
         maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
         ...promptOptions,
+        signal: abortController.signal,
         onToken: (chunks) => {
           if (!messageEnd) messageEnd = performance.now()
           onToken(session.context.decode(chunks))
@@ -279,6 +290,7 @@ export class ElectronChatManager {
     selectedFile?: string
     onToken: (token: string) => void
   }) {
+    const abortController = this.getAbortController(threadID)
     const { messageList, session } = await this.initializeSession({
       modelPath,
       threadID,
@@ -305,6 +317,7 @@ export class ElectronChatManager {
         topP: 0.3,
         temperature: 0.5,
         ...promptOptions,
+        signal: abortController.signal,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
     )
@@ -316,6 +329,19 @@ export class ElectronChatManager {
       maxTokens: promptOptions?.maxTokens,
     })
     return response
+  }
+
+  abort(threadID: string) {
+    if (this.abortControllers.has(threadID)) {
+      const controller = this.abortControllers.get(threadID)
+      if (controller) {
+        controller.abort()
+        this.abortControllers.delete(threadID)
+      } else {
+        // eslint-disable-next-line no-console
+        console.log(`No AbortController found for threadID: ${threadID}`)
+      }
+    }
   }
 
   addClientEventHandlers() {
@@ -356,14 +382,6 @@ export class ElectronChatManager {
     )
 
     ipcMain.handle(
-      'chats:loadMessageList',
-      async (_, { modelPath, threadID, messages }) => {
-        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        return this.loadMessageList({ modelPath: fullPath, threadID, messages })
-      },
-    )
-
-    ipcMain.handle(
       'chats:regenerateMessage',
       async (
         _,
@@ -388,6 +406,18 @@ export class ElectronChatManager {
             this.window.webContents.send('token', { token, messageID })
           },
         })
+      },
+    )
+
+    ipcMain.handle('chats:abort', (_, threadID) => {
+      this.abort(threadID)
+    })
+
+    ipcMain.handle(
+      'chats:loadMessageList',
+      async (_, { modelPath, threadID, messages }) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        return this.loadMessageList({ modelPath: fullPath, threadID, messages })
       },
     )
   }

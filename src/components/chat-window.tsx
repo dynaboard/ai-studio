@@ -1,4 +1,4 @@
-import { LucideLoader2, SendHorizonal } from 'lucide-react'
+import { LucideLoader2, LucideStopCircle, SendHorizonal } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -13,6 +13,7 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentTopP,
+  useIsCurrentThreadGenerating,
 } from '@/providers/chat/manager'
 import {
   useHistoryManager,
@@ -58,6 +59,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const currentModel = useCurrentModel()
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
+  const isCurrentThreadGenerating = useIsCurrentThreadGenerating(id)
 
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
@@ -156,6 +158,12 @@ export function ChatWindow({ id }: { id?: string }) {
       selectedFile,
     ],
   )
+
+  const handleAbort = useCallback(() => {
+    if (id) {
+      chatManager.abort(id)
+    }
+  }, [chatManager, id])
 
   const fileName = useMemo(() => {
     if (currentThreadFilePath) {
@@ -292,6 +300,15 @@ export function ChatWindow({ id }: { id?: string }) {
         </div>
       )}
 
+      {isCurrentThreadGenerating && (
+        <div className="mb-2 flex h-fit items-center justify-center">
+          <Button size="sm" onClick={handleAbort}>
+            <LucideStopCircle size={14} className="mr-2" />
+            <span className="select-none">Stop generating</span>
+          </Button>
+        </div>
+      )}
+
       <div className="flex h-fit items-center p-4 pt-2">
         <form
           className="relative w-full"
@@ -307,13 +324,13 @@ export function ChatWindow({ id }: { id?: string }) {
             rows={1}
             placeholder="Say something..."
             spellCheck={false}
-            disabled={disabled}
+            disabled={disabled || isCurrentThreadGenerating}
           />
           <Button
             variant="ghost"
             className="group absolute right-0 top-0 hover:bg-transparent"
             type="submit"
-            disabled={disabled}
+            disabled={disabled || isCurrentThreadGenerating}
           >
             <SendHorizonal size={16} className="group-hover:text-primary" />
           </Button>

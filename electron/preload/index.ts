@@ -14,9 +14,9 @@ contextBridge.exposeInMainWorld('chats', {
   regenerateMessage: (message) => {
     return ipcRenderer.invoke('chats:regenerateMessage', message)
   },
-  // cleanupSession: ({ modelPath, threadID }) => {
-  //   return ipcRenderer.invoke('chats:cleanupSession', { modelPath, threadID })
-  // },
+  abort: (threadID) => {
+    return ipcRenderer.invoke('chats:abort', threadID)
+  },
   onToken: (callback) => {
     const handler = (
       _event: Electron.IpcRendererEvent,
@@ -60,6 +60,8 @@ export interface ChatsAPI {
     modelPath: string
     selectedFile?: string
   }) => Promise<string>
+
+  abort: (threadID: string) => void
 
   // cleanupSession: ({
   //   modelPath,
