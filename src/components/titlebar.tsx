@@ -17,7 +17,7 @@ export function Titlebar({
   setOpen: (open: boolean) => void
 }) {
   const { pathname } = useLocation()
-  const currentPageName = pathname.split('/').pop()
+  const currentPageName = pathname.split('/').pop() || 'Chats'
   const currentThread = useThread(currentPageName)
   const currentThreadTitle = currentThread?.title
 

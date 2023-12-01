@@ -10,9 +10,8 @@
   },
   files: ['dist-electron', 'dist'],
   mac: {
-    icon: 'build/icon.icns',
-    entitlements: 'build/entitlements.mac.plist',
-    entitlementsInherit: 'build/entitlements.mac.plist',
+    entitlements: './build/entitlements.mac.plist',
+    entitlementsInherit: './build/entitlements.mac.plist',
     artifactName: '${productName}_${version}.${ext}',
     target: ['dmg', 'zip'],
     hardenedRuntime: true,

@@ -40,6 +40,8 @@ export class HistoryManager {
           messages,
         })
       }
+
+      return threads
     } catch {
       // ignore
     }
@@ -61,7 +63,7 @@ export class HistoryManager {
     }
 
     this._state.update((state) => {
-      const threads = [...state.threads, newThread]
+      const threads = [newThread, ...state.threads]
       localStorage.setItem('threads', JSON.stringify(threads))
 
       newThread.messages.forEach((message) => {

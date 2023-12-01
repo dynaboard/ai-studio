@@ -74,7 +74,6 @@
     "zod-to-json-schema": "^3.21.4"
   },
   "devDependencies": {
-    "@electron/rebuild": "^3.3.1",
     "@electron/notarize": "^2.2.0",
     "@types/better-sqlite3": "^7.6.8",
     "@types/lodash": "^4.14.202",
