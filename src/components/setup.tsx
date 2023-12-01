@@ -29,12 +29,12 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
     : 0
 
   return (
-    <div className="h-[75vh] max-h-[800px] w-full max-w-[1200px] rounded-md border bg-background shadow-md">
-      <div className="flex h-full w-full flex-col justify-between gap-4 pt-8">
-        <div className="flex w-full justify-center px-8">
+    <div className="h-[75vh] max-h-[800px] w-full max-w-[1000px] rounded-md border bg-background shadow-md">
+      <div className="flex h-full w-full flex-col gap-4 pt-12">
+        <div className="flex w-full flex-1 justify-center px-8">
           <img
             src={LogoLight}
-            className="w-full max-w-[400px]"
+            className="w-full max-w-[300px]"
             alt="Dynaboard AI Studio Logo"
             style={{
               imageRendering: '-webkit-optimize-contrast',
@@ -42,16 +42,16 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
           />
         </div>
 
-        <div className="flex flex-1 flex-col justify-center gap-8 overflow-auto p-12">
+        <div className="flex-2 flex flex-col gap-8 overflow-auto p-12 px-24">
           <div className="grid grid-cols-2 justify-around gap-16">
             <InfoGroup
               title="Keep your data private"
-              description="Eliminate data residency, compliance, or privacy concerns with every model running on your machine"
+              description="Eliminate data residency, compliance, or privacy concerns with every model running on your machine."
               logo={OfflineIcon}
             />
             <InfoGroup
               title="Use one model or every model"
-              description="Not every project is the same. Choose from dozens of models and sizes to find the right one for your use case."
+              description="Not every project is the same. Choose from dozens of models and sizes to find the right one."
               logo={AuditIcon}
             />
           </div>
@@ -63,20 +63,20 @@ export function Setup({ onComplete }: { onComplete: () => void }) {
             />
             <InfoGroup
               title="Generate text, code, JSON, and more"
-              description="Chat is just the beginning. Specify code, JSON, and more as your desired output with validation (coming soon)."
+              description="Chat is just the beginning. Specify code, JSON, and more as output with validation (coming soon)."
               logo={MagicCommandIcon}
             />
           </div>
         </div>
-        <div className="w-100 flex flex-col items-center justify-center gap-4 px-6 pb-8">
+        <div className="w-100 flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-8">
           {isDownloading ? (
             <div className="w-full max-w-[375px]">
               <Progress value={Number(progress)} />
             </div>
           ) : (
             <span className="text-xs text-slate-600">
-              To get started you'll need to download ~4.5 GB worth of model
-              files including: BGE Large v1.5 and Mistral 7B.
+              To get started you&rsquo;ll need to download ~4.5 GB worth of
+              model files including: BGE Large v1.5 and Mistral 7B.
             </span>
           )}
           <Button
