@@ -198,7 +198,7 @@ export function ChatWindow({ id }: { id?: string }) {
     // 36px - titlebar height
     // 24px - statusbar height
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
-      <Header models={availableModels} />
+      <Header models={availableModels} fileName={fileName} />
 
       {/* Possible states */}
       {/* fileName && messages.length === 0 - chat with filename */}
