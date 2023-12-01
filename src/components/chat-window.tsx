@@ -1,4 +1,4 @@
-import { SendHorizonal } from 'lucide-react'
+import { LucideLoader2, SendHorizonal } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -27,9 +27,11 @@ import { Header } from './header'
 
 function StatusIndicatorText({
   text,
+  spinner,
   className,
 }: {
   text: string
+  spinner?: boolean
   className?: string
 }) {
   return (
@@ -39,6 +41,9 @@ function StatusIndicatorText({
         className,
       )}
     >
+      {spinner && (
+        <LucideLoader2 className="mr-2 h-4 w-4 animate-spin text-muted-foreground" />
+      )}
       {text}
     </span>
   )
@@ -241,8 +246,9 @@ export function ChatWindow({ id }: { id?: string }) {
             <div className="flex h-full flex-col items-center justify-center gap-2">
               {runningEmbeddings && selectedFile ? (
                 <StatusIndicatorText
-                  text={`Processing ${selectedFile.name}...`}
+                  text={`Processing ${selectedFile.name}`}
                   className="cursor-progress"
+                  spinner
                 />
               ) : (
                 <StatusIndicatorText text={`Chat with ${fileName}`} />
