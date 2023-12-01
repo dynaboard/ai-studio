@@ -114,11 +114,9 @@ export function ChatMessage({
               />
             </form>
           ) : message.role === 'assistant' && message.state === 'pending' ? (
-            <div className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900">
-              <p className="mb-2 inline-block leading-relaxed after:inline-block after:w-0 after:animate-ellipsis after:overflow-hidden after:align-bottom after:content-['…'] last:mb-0">
-                Thinking
-              </p>
-            </div>
+            <p className="mb-2 inline-block text-sm leading-relaxed text-gray-900 after:inline-block after:w-0 after:animate-ellipsis after:overflow-hidden after:align-bottom after:content-['…'] last:mb-0">
+              Thinking
+            </p>
           ) : (
             <MemoizedReactMarkdown
               className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
