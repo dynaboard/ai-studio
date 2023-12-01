@@ -10,6 +10,8 @@ export type ChatMessage = {
 export type FormatOptions = {
   systemPrompt: string
   prefix?: string
+  startOffset?: number
+  endOffset?: number
 }
 
 export abstract class BaseMessageList {

@@ -164,7 +164,7 @@ export class ElectronChatManager {
       messageList: newMessageList,
     })
 
-    if (messageList.length < 1) {
+    if (messageList.offsetLength < 1) {
       throw new Error(
         `message exceeded max token size: ${context.getContextSize()}`,
       )
@@ -175,7 +175,7 @@ export class ElectronChatManager {
         .length + 16 // 16 is just a random buffer number
 
     if (estimatedTokenCount > context.getContextSize() - maxTokens) {
-      messageList.dequeue()
+      messageList.setOffset(messageList.offsetIndex + 1)
       await this.shiftMessageWindow({
         systemPrompt,
         modelPath,
@@ -262,17 +262,11 @@ export class ElectronChatManager {
       message: response,
       id: assistantMessageID,
     })
-    await this.shiftMessageWindow({
-      systemPrompt,
-      modelPath,
-      threadID,
-      alwaysInit: true,
-      newMessageList: messageList,
-      maxTokens: promptOptions?.maxTokens,
-    })
     return response
   }
 
+  // Note: Only regenerate messages for the last message for now...
+  // We can update this later on, but will be more expensive calculating the correct context window.
   async regenerateMessage({
     systemPrompt,
     messageID,
@@ -291,12 +285,19 @@ export class ElectronChatManager {
     onToken: (token: string) => void
   }) {
     const abortController = this.getAbortController(threadID)
-    const { messageList, session } = await this.initializeSession({
+
+    const { messageList: newMessageList } = await this.initializeSession({
       modelPath,
       threadID,
     })
 
-    messageList.delete(messageID)
+    // Prevent KV buffer overflow by always starting a new session
+    const { messageList, session } = await this.initializeSession({
+      modelPath,
+      threadID,
+      alwaysInit: true,
+      messageList: newMessageList,
+    })
 
     // If we are chatting with a file, let's get the context and use a custom prompt
     if (selectedFile) {
@@ -310,8 +311,12 @@ export class ElectronChatManager {
       })
     }
 
+    const index = messageList.delete(messageID)
     const response = await session.prompt(
-      messageList.format({ systemPrompt }),
+      messageList.format({
+        systemPrompt,
+        endOffset: index,
+      }),
       {
         topK: 20,
         topP: 0.3,
@@ -321,14 +326,10 @@ export class ElectronChatManager {
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
     )
-    messageList.add({ role: 'assistant', message: response, id: messageID })
-    await this.shiftMessageWindow({
-      systemPrompt,
-      modelPath,
-      threadID,
-      newMessageList: messageList,
-      maxTokens: promptOptions?.maxTokens,
-    })
+    messageList.add(
+      { role: 'assistant', message: response, id: messageID },
+      index,
+    )
     return response
   }
 
