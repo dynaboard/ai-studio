@@ -215,6 +215,10 @@ export class ChatManager {
     })
   }
 
+  abortMessage() {
+    window.chats.abortMessage()
+  }
+
   setModel(model: string) {
     const currentThreadID = this.state.currentThreadID
     if (currentThreadID) {

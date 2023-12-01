@@ -33,6 +33,7 @@ const DEFAULT_CONTEXT_SIZE = 4096
 export class ElectronChatManager {
   private lastSessionKey?: string | null
   private chatSession?: ChatSession | null
+  private controller: AbortController = new AbortController()
   // private sessions: Map<string, ChatSession> = new Map<string, ChatSession>()
 
   constructor(
@@ -239,6 +240,7 @@ export class ElectronChatManager {
         temperature: 0.5,
         maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
         ...promptOptions,
+        signal: this.controller.signal,
         onToken: (chunks) => {
           if (!messageEnd) messageEnd = performance.now()
           onToken(session.context.decode(chunks))
@@ -305,6 +307,7 @@ export class ElectronChatManager {
         topP: 0.3,
         temperature: 0.5,
         ...promptOptions,
+        signal: this.controller.signal,
         onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
     )
@@ -316,6 +319,11 @@ export class ElectronChatManager {
       maxTokens: promptOptions?.maxTokens,
     })
     return response
+  }
+
+  abortMessage() {
+    this.controller.abort()
+    this.controller = new AbortController()
   }
 
   addClientEventHandlers() {
@@ -356,14 +364,6 @@ export class ElectronChatManager {
     )
 
     ipcMain.handle(
-      'chats:loadMessageList',
-      async (_, { modelPath, threadID, messages }) => {
-        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        return this.loadMessageList({ modelPath: fullPath, threadID, messages })
-      },
-    )
-
-    ipcMain.handle(
       'chats:regenerateMessage',
       async (
         _,
@@ -388,6 +388,18 @@ export class ElectronChatManager {
             this.window.webContents.send('token', { token, messageID })
           },
         })
+      },
+    )
+
+    ipcMain.handle('chats:abortMessage', () => {
+      this.abortMessage()
+    })
+
+    ipcMain.handle(
+      'chats:loadMessageList',
+      async (_, { modelPath, threadID, messages }) => {
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        return this.loadMessageList({ modelPath: fullPath, threadID, messages })
       },
     )
   }

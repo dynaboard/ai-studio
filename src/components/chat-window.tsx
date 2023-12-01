@@ -1,4 +1,4 @@
-import { LucideLoader2, SendHorizonal } from 'lucide-react'
+import { LucideLoader2, LucideStopCircle, SendHorizonal } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -157,6 +157,10 @@ export function ChatWindow({ id }: { id?: string }) {
     ],
   )
 
+  const handleAbort = useCallback(() => {
+    chatManager.abortMessage()
+  }, [chatManager])
+
   const fileName = useMemo(() => {
     if (currentThreadFilePath) {
       return currentThreadFilePath.split('/').pop()
@@ -291,6 +295,13 @@ export function ChatWindow({ id }: { id?: string }) {
           </ScrollArea>
         </div>
       )}
+
+      <div className="mb-2 flex h-fit items-center justify-center">
+        <Button size="sm" onClick={handleAbort}>
+          <LucideStopCircle size={14} className="mr-2" />
+          <span className="select-none">Stop generating</span>
+        </Button>
+      </div>
 
       <div className="flex h-fit items-center p-4 pt-2">
         <form
