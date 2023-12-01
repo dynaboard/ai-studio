@@ -326,6 +326,7 @@ export class ElectronChatManager {
       systemPrompt,
       modelPath,
       threadID,
+      newMessageList: messageList,
       maxTokens: promptOptions?.maxTokens,
     })
     return response

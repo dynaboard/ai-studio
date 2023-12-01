@@ -238,6 +238,10 @@ export class ChatManager {
         messageID,
         threadID,
         modelPath: thread.modelID,
+        promptOptions: {
+          topP: thread.topP,
+          temperature: thread.temperature,
+        },
       })
 
       this.historyManager.editMessage({
