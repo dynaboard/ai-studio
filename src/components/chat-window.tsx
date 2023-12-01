@@ -13,6 +13,7 @@ import {
   useCurrentModel,
   useCurrentTemperature,
   useCurrentTopP,
+  useIsGenerating,
 } from '@/providers/chat/manager'
 import {
   useHistoryManager,
@@ -58,6 +59,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const currentModel = useCurrentModel()
   const currentTemperature = useCurrentTemperature()
   const currentTopP = useCurrentTopP()
+  const isGenerating = useIsGenerating()
 
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
@@ -296,12 +298,14 @@ export function ChatWindow({ id }: { id?: string }) {
         </div>
       )}
 
-      <div className="mb-2 flex h-fit items-center justify-center">
-        <Button size="sm" onClick={handleAbort}>
-          <LucideStopCircle size={14} className="mr-2" />
-          <span className="select-none">Stop generating</span>
-        </Button>
-      </div>
+      {isGenerating && (
+        <div className="mb-2 flex h-fit items-center justify-center">
+          <Button size="sm" onClick={handleAbort}>
+            <LucideStopCircle size={14} className="mr-2" />
+            <span className="select-none">Stop generating</span>
+          </Button>
+        </div>
+      )}
 
       <div className="flex h-fit items-center p-4 pt-2">
         <form
