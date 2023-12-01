@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('browserWindow', {
 } satisfies UsageAPI)
 
 export interface UsageAPI {
-  onFullScreenChange: (callback: (isFullScreen: boolean) => void) => void
+  onFullScreenChange: (callback: (isFullScreen: boolean) => void) => () => void
 }
 
 declare global {
