@@ -1,5 +1,4 @@
-import { SendHorizonal } from 'lucide-react'
-import prettyBytes from 'pretty-bytes'
+import { LucideLoader2, SendHorizonal } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -25,6 +24,30 @@ import { useTransformersManager } from '@/providers/transformers'
 
 import { ChatMessage } from './chat-message'
 import { Header } from './header'
+
+function StatusIndicatorText({
+  text,
+  spinner,
+  className,
+}: {
+  text: string
+  spinner?: boolean
+  className?: string
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground',
+        className,
+      )}
+    >
+      {spinner && (
+        <LucideLoader2 className="mr-2 h-4 w-4 animate-spin text-muted-foreground" />
+      )}
+      {text}
+    </span>
+  )
+}
 
 export function ChatWindow({ id }: { id?: string }) {
   const chatManager = useChatManager()
@@ -66,8 +89,6 @@ export function ChatWindow({ id }: { id?: string }) {
       await transformersManager.embedDocument(file.path)
       historyManager.changeThreadFilePath(id, file.path)
       setRunningEmbeddings(false)
-
-      // TODO: handle lingering selectedFile state
     },
     [id, historyManager, transformersManager],
   )
@@ -136,13 +157,6 @@ export function ChatWindow({ id }: { id?: string }) {
     ],
   )
 
-  const handleFileInputClick = useCallback(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-      fileInputRef.current.click()
-    }
-  }, [])
-
   const fileName = useMemo(() => {
     if (currentThreadFilePath) {
       return currentThreadFilePath.split('/').pop()
@@ -177,7 +191,14 @@ export function ChatWindow({ id }: { id?: string }) {
     // 24px - statusbar height
     <div className="chat-window flex-no-wrap flex h-[calc(100vh-36px-24px)] flex-1 flex-col overflow-y-auto overflow-x-hidden">
       <Header models={availableModels} />
-      {messages.length === 0 ? (
+
+      {/* Possible states */}
+      {/* fileName && messages.length === 0 - chat with filename */}
+      {/* fileName && messages.length !== 0 - thread filename, no messages */}
+      {/* draggedOver - dragging a file */}
+      {/* messages.length === 0 && !fileName - no messages, no thread filename */}
+
+      {messages.length === 0 && !fileName ? (
         <div
           ref={setTargetElement}
           className={cn(
@@ -187,19 +208,13 @@ export function ChatWindow({ id }: { id?: string }) {
         >
           {!selectedFile && (
             <>
-              {draggedOver ? (
-                <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                  Drop the PDF here
-                </span>
-              ) : (
-                <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
-                  Say something or&nbsp;
-                  <span onClick={handleFileInputClick} className="cursor-copy">
-                    drop a PDF
-                  </span>
-                  &nbsp;to get started
-                </span>
-              )}
+              <StatusIndicatorText
+                text={
+                  draggedOver
+                    ? 'Drop the PDF here'
+                    : 'Say something or drop a PDF to get started'
+                }
+              />
 
               <input
                 ref={fileInputRef}
@@ -211,21 +226,6 @@ export function ChatWindow({ id }: { id?: string }) {
                 multiple={false}
               />
             </>
-          )}
-          {selectedFile && (
-            <div className="flex flex-col gap-2">
-              <span
-                className="mb-4 font-medium text-muted-foreground"
-                onClick={handleFileInputClick}
-              >
-                {selectedFile.name} ⋅ {prettyBytes(selectedFile.size)}
-              </span>
-              {runningEmbeddings && (
-                <Button size="sm" disabled={runningEmbeddings}>
-                  Processing...
-                </Button>
-              )}
-            </div>
           )}
         </div>
       ) : (
@@ -241,6 +241,21 @@ export function ChatWindow({ id }: { id?: string }) {
               <span className="font-bold">{fileName}</span>
             </div>
           ) : null}
+
+          {fileName && messages.length === 0 && (
+            <div className="flex h-full flex-col items-center justify-center gap-2">
+              {runningEmbeddings && selectedFile ? (
+                <StatusIndicatorText
+                  text={`Processing ${selectedFile.name}`}
+                  className="cursor-progress"
+                  spinner
+                />
+              ) : (
+                <StatusIndicatorText text={`Chat with ${fileName}`} />
+              )}
+            </div>
+          )}
+
           <ScrollArea
             className="h-full"
             ref={scrollAreaRef}
