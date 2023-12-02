@@ -11,6 +11,10 @@ exports.default = async function notarizing(context) {
 
   const appName = context.packager.appInfo.productFilename
 
+  if (process.env.CSC_IDENTITY_AUTO_DISCOVERY === 'false') {
+    return
+  }
+
   return await notarize({
     appBundleId: 'com.dynaboard.ai-studio',
     appPath: `${appOutDir}/${appName}.app`,
