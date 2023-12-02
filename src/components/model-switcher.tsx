@@ -1,12 +1,12 @@
 import Fuse from 'fuse.js'
-import { Check, ChevronsUpDown } from 'lucide-react'
+import { Check, ChevronsUpDown, LucidePlusCircle } from 'lucide-react'
 import * as React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { InfoMarker } from '@/components/info'
 import { Button } from '@/components/ui/button'
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -52,6 +52,7 @@ export function ModelSwitcher({
   models,
   className,
 }: ModelSwitcherProps & { models: Model[] }) {
+  const navigate = useNavigate()
   const [showDialog, setShowDialog] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [search, setSearch] = React.useState('')
@@ -78,20 +79,6 @@ export function ModelSwitcher({
           ),
         ],
       },
-      // TODO: add openai call impl
-      // {
-      //   label: 'OpenAI',
-      //   models: [
-      //     {
-      //       label: 'gpt-3.5-turbo-1106',
-      //       value: 'gpt-3.5-turbo-1106',
-      //     },
-      //     {
-      //       label: 'gpt-3.5-turbo',
-      //       value: 'gpt-3.5-turbo',
-      //     },
-      //   ],
-      // },
     ]
   }, [models])
 
@@ -175,10 +162,11 @@ export function ModelSwitcher({
                 value={search}
                 onValueChange={handleFuzzySearch}
               />
+              {/* <CommandEmpty>No model found.</CommandEmpty> */}
               {filteredItems.map(
                 (group) =>
                   group.models.length > 0 && (
-                    <CommandGroup key={group.label} heading={group.label}>
+                    <CommandGroup key={group.label}>
                       {group.models.map((model) => (
                         <CommandItem
                           key={model.value}
@@ -205,9 +193,25 @@ export function ModelSwitcher({
                     </CommandGroup>
                   ),
               )}
-              {filteredItems.every((group) => group.models.length === 0) && (
-                <CommandEmpty>No model found.</CommandEmpty>
+
+              {filteredItems.every((group) => group.models.length !== 0) && (
+                // <CommandSeparator />
+                // FIXME: command separator hides automatically when shouldFilter is false
+                // Workaround
+                <div className="-mx-1 h-px bg-border" role="separator" />
               )}
+              <CommandList>
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={() => {
+                      navigate('/models')
+                    }}
+                  >
+                    <LucidePlusCircle className="mr-2 h-4 w-4" />
+                    Browse new model...
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
             </CommandList>
           </Command>
         </PopoverContent>
