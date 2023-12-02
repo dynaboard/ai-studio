@@ -176,10 +176,10 @@ export function ChatWindow({ id }: { id?: string }) {
   }, [currentThreadFilePath, selectedFile])
 
   useEffect(() => {
-    if (!isCurrentThreadGenerating && textAreaInputRef.current) {
+    if (id && !isCurrentThreadGenerating && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
-  }, [isCurrentThreadGenerating])
+  }, [isCurrentThreadGenerating, id])
 
   useEffect(() => {
     if (id) {
