@@ -71,10 +71,10 @@ export function ChatMessage({
   return (
     <div
       ref={ref}
-      className="grid-cols hover:bg-secondary/75 group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4"
+      className="grid-cols group mb-1 grid grid-cols-[24px,1fr] gap-3 px-4 py-2 first:pt-4 hover:bg-secondary/75"
     >
       <div className="mt-[3px]">
-        <span className="bg-secondary text-muted-foreground text-xs">
+        <span className="bg-secondary text-xs text-muted-foreground">
           {message.role === 'user' ? (
             <LucideUser2 size={18} />
           ) : (
@@ -106,16 +106,20 @@ export function ChatMessage({
               <Textarea
                 name="message"
                 ref={inputRef}
-                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring mb-1 flex min-h-[60px] w-full resize-none rounded-md border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="mb-1 flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                 tabIndex={0}
                 onKeyDown={onKeyDown}
                 rows={1}
                 spellCheck={false}
               />
             </form>
+          ) : message.role === 'assistant' && message.state === 'pending' ? (
+            <p className="mb-2 inline-block text-sm leading-relaxed text-gray-900 after:inline-block after:w-0 after:animate-ellipsis after:overflow-hidden after:align-bottom after:content-['…'] last:mb-0">
+              Thinking
+            </p>
           ) : (
             <MemoizedReactMarkdown
-              className="markdown prose prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900 max-w-none text-sm"
+              className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
               remarkPlugins={[remarkGfm, remarkMath]}
               components={{
                 p({ children }) {
@@ -161,7 +165,7 @@ export function ChatMessage({
               }}
             >
               {message.role === 'assistant' && message.state === 'pending'
-                ? 'Thinking...'
+                ? ''
                 : message.message || ' '}
             </MemoizedReactMarkdown>
           )}
@@ -173,7 +177,7 @@ export function ChatMessage({
           )}
         >
           {editing ? (
-            <span className="text-muted-foreground text-xs">
+            <span className="text-xs text-muted-foreground">
               Submit new message using Enter
             </span>
           ) : (
@@ -181,7 +185,7 @@ export function ChatMessage({
               <MessageControlTooltip description="Edit">
                 <Button
                   variant="iconButton"
-                  className="text-muted-foreground h-4 p-0"
+                  className="h-4 p-0 text-muted-foreground"
                   onClick={() => {
                     // we can avoid a useEffect
                     ReactDOM.flushSync(() => {
@@ -200,7 +204,7 @@ export function ChatMessage({
               <MessageControlTooltip description="Delete">
                 <Button
                   variant="iconButton"
-                  className="text-muted-foreground hover:text-destructive h-4 p-0"
+                  className="h-4 p-0 text-muted-foreground hover:text-destructive"
                   onClick={() =>
                     chatManager.deleteMessage({
                       threadID: currentThreadID,
@@ -217,7 +221,7 @@ export function ChatMessage({
               >
                 <Button
                   variant="iconButton"
-                  className="text-muted-foreground h-4 p-0"
+                  className="h-4 p-0 text-muted-foreground"
                   onClick={() => {
                     copyToClipboard(message.message)
                   }}
@@ -229,7 +233,7 @@ export function ChatMessage({
                 <MessageControlTooltip description="Regenerate">
                   <Button
                     variant="iconButton"
-                    className="text-muted-foreground hidden h-4 p-0 group-last:block"
+                    className="hidden h-4 p-0 text-muted-foreground group-last:block"
                     onClick={() => {
                       chatManager.regenerateMessage({
                         threadID: currentThreadID,

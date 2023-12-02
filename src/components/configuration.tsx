@@ -11,7 +11,7 @@ import { SystemPrompt } from './parameters/system-prompt'
 import { TemperatureSelector } from './parameters/temperature'
 import { TopPSelector } from './parameters/top-p'
 
-export function ParametersConfig() {
+export function ParametersConfig({ fileName }: { fileName?: string }) {
   return (
     <div className="flex items-center space-x-2">
       <div className="hidden md:flex">
@@ -39,7 +39,7 @@ export function ParametersConfig() {
                 </div>
               </div>
               <div className="mt-6 flex flex-1 flex-col gap-4">
-                <SystemPrompt />
+                {!fileName && <SystemPrompt />}
                 <TemperatureSelector />
                 <TopPSelector />
               </div>
