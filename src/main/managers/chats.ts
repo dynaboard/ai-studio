@@ -249,25 +249,11 @@ export class ElectronChatManager {
       })
     }
 
-    // const response = await session.prompt(
-    //   messageList.format({ systemPrompt }),
-    //   {
-    //     topK: 20,
-    //     topP: 0.3,
-    //     temperature: 0.5,
-    //     maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
-    //     ...promptOptions,
-    //     signal: abortController.signal,
-    //     onToken: (chunks) => {
-    //       if (!messageEnd) messageEnd = performance.now()
-    //       onToken(session.context.decode(chunks))
-    //     },
-    //   },
-    // )
+    const prompt = messageList.format({ systemPrompt })
 
     let response = ''
     for await (const chunk of this.llama(
-      messageList.format({ systemPrompt }),
+      prompt,
       {
         top_k: 20,
         top_p: 0.3,
@@ -288,14 +274,7 @@ export class ElectronChatManager {
       message: response,
       id: assistantMessageID,
     })
-    await this.shiftMessageWindow({
-      systemPrompt,
-      modelPath,
-      threadID,
-      alwaysInit: true,
-      newMessageList: messageList,
-      maxTokens: promptOptions?.maxTokens,
-    })
+
     return response
   }
 
@@ -335,18 +314,6 @@ export class ElectronChatManager {
         systemPrompt,
       })
     }
-
-    // const response = await session.prompt(
-    //   messageList.format({ systemPrompt }),
-    //   {
-    //     topK: 20,
-    //     topP: 0.3,
-    //     temperature: 0.5,
-    //     ...promptOptions,
-    //     signal: abortController.signal,
-    //     onToken: (chunks) => onToken(session.context.decode(chunks)),
-    //   },
-    // )
 
     let response = ''
     for await (const chunk of this.llama(
