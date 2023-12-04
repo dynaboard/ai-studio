@@ -27,10 +27,7 @@ let modelManager: ElectronModelManager | null = null
 let chatManager: ElectronChatManager | null = null
 let embeddingsManager: EmbeddingsManager | null = null
 const vectorStoreManager = new ElectronVectorStoreManager()
-// @ts-expect-error TODO: fix this
 const llamaServerManager = new ElectronLlamaServerManager()
-
-// llamaServerManager.launchServer()
 
 const usageManager = new SystemUsageManager()
 usageManager.addClientEventHandlers()
@@ -58,7 +55,11 @@ async function createWindow() {
 
   embeddingsManager = new EmbeddingsManager(win, vectorStoreManager)
   modelManager = new ElectronModelManager(win)
-  chatManager = new ElectronChatManager(win, embeddingsManager)
+  chatManager = new ElectronChatManager(
+    win,
+    embeddingsManager,
+    llamaServerManager,
+  )
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -119,4 +120,9 @@ app.on('activate', () => {
   } else {
     createWindow()
   }
+})
+
+app.on('will-quit', () => {
+  modelManager?.close()
+  llamaServerManager.close()
 })

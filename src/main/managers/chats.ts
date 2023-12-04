@@ -3,9 +3,10 @@ import { ChatMessage } from '@shared/message-list/base'
 import { BasicMessageList } from '@shared/message-list/basic'
 import { MODELS } from '@shared/model-list'
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { type LlamaContext } from 'node-llama-cpp'
-import { LLamaChatPromptOptions, LlamaChatSession } from 'node-llama-cpp'
+import { LLamaChatPromptOptions } from 'node-llama-cpp'
 import path from 'path'
+
+import { ElectronLlamaServerManager } from '@/managers/llama-server'
 
 import {
   BasePromptWrapper,
@@ -18,17 +19,18 @@ import {
 } from '../../shared/prompt-wrappers'
 import { EmbeddingsManager } from './embeddings'
 
-const SYSTEM_PROMPT = `You are a helpful AI assistant.`
-
 export type ChatSession = {
   modelName: string
-  session: LlamaChatSession
-  context: LlamaContext
+  // session: LlamaChatSession
+  // context: LlamaContext
+  parameters: {
+    contextSize: number
+    modelPath: string
+  }
   messageList: BasicMessageList
 }
 
 const DEFAULT_MAX_OUTPUT_TOKENS = 512
-const DEFAULT_CONTEXT_SIZE = 4096
 
 export class ElectronChatManager {
   private lastSessionKey?: string | null
@@ -39,6 +41,7 @@ export class ElectronChatManager {
   constructor(
     readonly window: BrowserWindow,
     readonly embeddingsManager: EmbeddingsManager,
+    readonly llamaServerManager: ElectronLlamaServerManager,
   ) {}
 
   close() {
@@ -68,48 +71,53 @@ export class ElectronChatManager {
       return this.chatSession
     }
 
-    const {
-      LlamaContext,
-      LlamaChatSession,
-      LlamaModel,
-      EmptyChatPromptWrapper,
-    } = await import('node-llama-cpp')
+    await this.llamaServerManager.launchServer({ modelPath })
+
+    const modelParameters = await this.llamaServerManager.getModelParameters()
+
+    // const {
+    //   LlamaContext,
+    //   LlamaChatSession,
+    //   LlamaModel,
+    //   EmptyChatPromptWrapper,
+    // } = await import('node-llama-cpp')
 
     const modelName = modelPath.split('/').pop() as string
     const promptWrapper = this.getPromptWrapper(modelName)
 
-    const model = new LlamaModel({
-      modelPath,
-      batchSize: DEFAULT_CONTEXT_SIZE,
-      contextSize: DEFAULT_CONTEXT_SIZE,
-    })
-    const context = new LlamaContext({
-      model,
-      batchSize: DEFAULT_CONTEXT_SIZE,
-      contextSize: DEFAULT_CONTEXT_SIZE,
-    })
+    // const model = new LlamaModel({
+    //   modelPath,
+    //   batchSize: DEFAULT_CONTEXT_SIZE,
+    //   contextSize: DEFAULT_CONTEXT_SIZE,
+    // })
+    // const context = new LlamaContext({
+    //   model,
+    //   batchSize: DEFAULT_CONTEXT_SIZE,
+    //   contextSize: DEFAULT_CONTEXT_SIZE,
+    // })
 
     const chatSession = {
       modelName,
-      session: new LlamaChatSession({
-        context,
-        systemPrompt: SYSTEM_PROMPT,
-        promptWrapper: new (class extends EmptyChatPromptWrapper {
-          wrapPrompt(prompt: string): string {
-            return prompt
-          }
-          getStopStrings(): string[] {
-            return ['</s>']
-          }
-        })(),
-      }),
-      context,
+      // session: new LlamaChatSession({
+      //   context,
+      //   systemPrompt: SYSTEM_PROMPT,
+      //   promptWrapper: new (class extends EmptyChatPromptWrapper {
+      //     wrapPrompt(prompt: string): string {
+      //       return prompt
+      //     }
+      //     getStopStrings(): string[] {
+      //       return ['</s>']
+      //     }
+      //   })(),
+      // }),
+      // context,
       messageList:
         messageList ||
         new BasicMessageList({
           messageList: [],
           promptWrapper,
         }),
+      parameters: modelParameters,
     }
 
     this.lastSessionKey = key
@@ -157,7 +165,10 @@ export class ElectronChatManager {
     newMessageList?: BasicMessageList
     maxTokens?: number
   }): Promise<void> {
-    const { context, messageList } = await this.initializeSession({
+    const {
+      messageList,
+      parameters: { contextSize },
+    } = await this.initializeSession({
       modelPath,
       threadID,
       alwaysInit,
@@ -165,16 +176,15 @@ export class ElectronChatManager {
     })
 
     if (messageList.length < 1) {
-      throw new Error(
-        `message exceeded max token size: ${context.getContextSize()}`,
-      )
+      throw new Error(`message exceeded max token size: ${contextSize}`)
     }
 
-    const estimatedTokenCount =
-      context.encode(messageList.format({ systemPrompt: systemPrompt }))
-        .length + 16 // 16 is just a random buffer number
+    const prompt = messageList.format({ systemPrompt: systemPrompt })
+    const encoded = await this.llamaServerManager.encode(prompt)
 
-    if (estimatedTokenCount > context.getContextSize() - maxTokens) {
+    const estimatedTokenCount = encoded.length + 16 // 16 is just a random buffer number
+
+    if (estimatedTokenCount > contextSize - maxTokens) {
       messageList.dequeue()
       await this.shiftMessageWindow({
         systemPrompt,
@@ -217,12 +227,10 @@ export class ElectronChatManager {
   }) {
     const abortController = this.getAbortController(threadID)
 
-    const { messageList, session } = await this.initializeSession({
+    const { messageList } = await this.initializeSession({
       modelPath,
       threadID,
     })
-
-    let messageEnd = 0
 
     messageList.add({ role: 'user', message, id: messageID })
     await this.shiftMessageWindow({
@@ -241,21 +249,39 @@ export class ElectronChatManager {
       })
     }
 
-    const response = await session.prompt(
+    // const response = await session.prompt(
+    //   messageList.format({ systemPrompt }),
+    //   {
+    //     topK: 20,
+    //     topP: 0.3,
+    //     temperature: 0.5,
+    //     maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
+    //     ...promptOptions,
+    //     signal: abortController.signal,
+    //     onToken: (chunks) => {
+    //       if (!messageEnd) messageEnd = performance.now()
+    //       onToken(session.context.decode(chunks))
+    //     },
+    //   },
+    // )
+
+    let response = ''
+    for await (const chunk of this.llama(
       messageList.format({ systemPrompt }),
       {
-        topK: 20,
-        topP: 0.3,
+        top_k: 20,
+        top_p: 0.3,
         temperature: 0.5,
-        maxTokens: DEFAULT_MAX_OUTPUT_TOKENS,
-        ...promptOptions,
-        signal: abortController.signal,
-        onToken: (chunks) => {
-          if (!messageEnd) messageEnd = performance.now()
-          onToken(session.context.decode(chunks))
-        },
       },
-    )
+      {
+        controller: abortController,
+      },
+    )) {
+      if (chunk.data) {
+        onToken(chunk.data.content)
+        response += chunk.data.content
+      }
+    }
 
     messageList.add({
       role: 'assistant',
@@ -291,7 +317,7 @@ export class ElectronChatManager {
     onToken: (token: string) => void
   }) {
     const abortController = this.getAbortController(threadID)
-    const { messageList, session } = await this.initializeSession({
+    const { messageList } = await this.initializeSession({
       modelPath,
       threadID,
     })
@@ -310,17 +336,36 @@ export class ElectronChatManager {
       })
     }
 
-    const response = await session.prompt(
+    // const response = await session.prompt(
+    //   messageList.format({ systemPrompt }),
+    //   {
+    //     topK: 20,
+    //     topP: 0.3,
+    //     temperature: 0.5,
+    //     ...promptOptions,
+    //     signal: abortController.signal,
+    //     onToken: (chunks) => onToken(session.context.decode(chunks)),
+    //   },
+    // )
+
+    let response = ''
+    for await (const chunk of this.llama(
       messageList.format({ systemPrompt }),
       {
-        topK: 20,
-        topP: 0.3,
+        top_k: 20,
+        top_p: 0.3,
         temperature: 0.5,
-        ...promptOptions,
-        signal: abortController.signal,
-        onToken: (chunks) => onToken(session.context.decode(chunks)),
       },
-    )
+      {
+        controller: abortController,
+      },
+    )) {
+      if (chunk.data) {
+        onToken(chunk.data.content)
+        response += chunk.data.content
+      }
+    }
+
     messageList.add({ role: 'assistant', message: response, id: messageID })
     await this.shiftMessageWindow({
       systemPrompt,
@@ -485,5 +530,128 @@ Helpful Answer:
     }
 
     return model.promptTemplate
+  }
+
+  async *llama(
+    prompt: string,
+    params: {
+      temperature?: number
+      top_k?: number
+      top_p?: number
+      min_p?: number
+      n_predict?: number
+      n_keep?: number
+      stop?: string[]
+      presence_penalty?: number
+      frequency_penalty?: number
+      grammar?: string
+      seed?: number
+      image_data?: { data: string; id: number }
+    } = {},
+    config: {
+      controller?: AbortController
+    } = {},
+  ): AsyncGenerator<{
+    data: {
+      content: string
+      multimodal: boolean
+      slot_id: number
+      stop: boolean
+      generation_settings?: Record<string, unknown>
+    }
+  }> {
+    let controller = config.controller
+
+    if (!controller) {
+      controller = new AbortController()
+    }
+
+    const paramDefaults = {
+      stream: true,
+      n_predict: 500,
+      temperature: 0.3,
+      stop: ['</s>'],
+    }
+
+    const completionParams = { ...paramDefaults, ...params, prompt }
+
+    const response = await fetch('http://127.0.0.1:8080/completion', {
+      method: 'POST',
+      body: JSON.stringify(completionParams),
+      headers: {
+        Connection: 'keep-alive',
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      signal: controller.signal,
+    })
+
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder()
+
+    let content = ''
+    let leftover = '' // Buffer for partially read lines
+
+    try {
+      let cont = true
+
+      while (cont) {
+        const streamData = await reader?.read()
+        if (!streamData || streamData?.done) {
+          break
+        }
+
+        // Add any leftover data to the current chunk of data
+        const text = leftover + decoder.decode(streamData?.value)
+
+        // Check if the last character is a line break
+        const endsWithLineBreak = text.endsWith('\n')
+
+        // Split the text into lines
+        const lines = text.split('\n')
+
+        // If the text doesn't end with a line break, then the last line is incomplete
+        // Store it in leftover to be added to the next chunk of data
+        if (!endsWithLineBreak) {
+          leftover = lines.pop() ?? ''
+        } else {
+          leftover = '' // Reset leftover if we have a line break at the end
+        }
+
+        // Parse all sse events and add them to result
+        const regex = /^(\S+):\s(.*)$/gm
+        for (const line of lines) {
+          const match = regex.exec(line)
+          if (match) {
+            streamData[match[1]] = match[2]
+            // since we know this is llama.cpp, let's just decode the json in data
+            if (match[1] === 'data') {
+              const data = JSON.parse(match[2])
+              content += data
+
+              // yield
+              yield { data }
+
+              // if we got a stop token from server, we will break here
+              if (data.stop) {
+                cont = false
+                break
+              }
+            }
+            if (match[1] === 'error') {
+              const error = JSON.parse(match[2])
+              console.error(`llama.cpp error: ${error.content}`)
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') {
+        console.error('llama error: ', e)
+      }
+      throw e
+    }
+
+    return content
   }
 }
