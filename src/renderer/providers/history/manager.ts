@@ -44,6 +44,7 @@ export class HistoryManager {
       return threads
     } catch {
       // ignore
+      return []
     }
   }
 

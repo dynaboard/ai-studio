@@ -29,7 +29,7 @@ let embeddingsManager: EmbeddingsManager | null = null
 const vectorStoreManager = new ElectronVectorStoreManager()
 const llamaServerManager = new ElectronLlamaServerManager()
 
-const usageManager = new SystemUsageManager()
+const usageManager = new SystemUsageManager(llamaServerManager)
 usageManager.addClientEventHandlers()
 
 const preload = join(__dirname, '../preload/index.js')

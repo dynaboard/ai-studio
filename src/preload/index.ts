@@ -3,9 +3,9 @@ import './usage'
 import './embeddings'
 import './browser-window'
 
+import { PromptOptions } from '@shared/chats'
 import { type ChatMessage } from '@shared/message-list/base'
 import { contextBridge, ipcRenderer } from 'electron'
-import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 
 contextBridge.exposeInMainWorld('chats', {
   sendMessage: (message) => {
@@ -38,6 +38,13 @@ contextBridge.exposeInMainWorld('chats', {
       messages,
     })
   },
+
+  cleanupSession: ({ modelPath, threadID }) => {
+    return ipcRenderer.invoke('chats:cleanupSession', {
+      modelPath,
+      threadID,
+    })
+  },
 } satisfies ChatsAPI)
 
 export interface ChatsAPI {
@@ -47,7 +54,7 @@ export interface ChatsAPI {
     messageID: string
     assistantMessageID: string
     threadID: string
-    promptOptions?: LLamaChatPromptOptions
+    promptOptions?: PromptOptions
     modelPath: string
     selectedFile?: string
   }) => Promise<string>
@@ -56,20 +63,20 @@ export interface ChatsAPI {
     systemPrompt: string
     messageID: string
     threadID: string
-    promptOptions?: LLamaChatPromptOptions
+    promptOptions?: PromptOptions
     modelPath: string
     selectedFile?: string
   }) => Promise<string>
 
   abort: (threadID: string) => void
 
-  // cleanupSession: ({
-  //   modelPath,
-  //   threadID,
-  // }: {
-  //   modelPath: string
-  //   threadID: string
-  // }) => Promise<void>
+  cleanupSession: ({
+    modelPath,
+    threadID,
+  }: {
+    modelPath: string
+    threadID: string
+  }) => Promise<void>
 
   onToken: (callback: (token: string, messageID: string) => void) => () => void
 

@@ -9,7 +9,7 @@ export function ChatThread() {
   const { threadID: currentThreadID } = useParams()
 
   useEffect(() => {
-    chatManager.setCurrentThread(currentThreadID)
+    void chatManager.setCurrentThread(currentThreadID)
   }, [chatManager, currentThreadID])
 
   return <ChatWindow id={currentThreadID} />

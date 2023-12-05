@@ -1,4 +1,5 @@
 import { ChildProcess, execFile } from 'child_process'
+import pidusage from 'pidusage'
 
 import llamaServer from '../../../resources/llamacpp/server?asset&asarUnpack'
 
@@ -92,7 +93,7 @@ export class ElectronLlamaServerManager {
         try {
           const message = JSON.parse(line)
           console.group(`[LLAMACPP] Process: ${process.pid}`)
-          console.table(message)
+          console.log(message)
           console.groupEnd()
         } catch (err) {
           console.log('Could not parse stdout message:', data.toString(), err)
@@ -126,9 +127,38 @@ export class ElectronLlamaServerManager {
     return data.tokens
   }
 
+  cleanupProcess(modelPath: string) {
+    console.log(this.processes)
+    const process = this.processes.get(modelPath)
+    if (process) {
+      process.kill()
+      this.processes.delete(modelPath)
+      this.loading.delete(modelPath)
+    }
+  }
+
   close() {
     this.processes.forEach((process) => {
       process.kill()
+    })
+    this.processes.clear()
+    this.loading.clear()
+  }
+
+  async memoryUsage(): Promise<number> {
+    const pids = Array.from(this.processes.values())
+      .map((p) => p.pid)
+      .filter((p) => p) as number[]
+    return new Promise((resolve) => {
+      pidusage(pids, (err, stats) => {
+        if (err) {
+          resolve(0)
+        } else {
+          resolve(
+            Object.values(stats).reduce((acc, curr) => acc + curr.memory, 0),
+          )
+        }
+      })
     })
   }
 }

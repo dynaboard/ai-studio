@@ -1,10 +1,10 @@
 // we should probably store this in a shared location, tbh
+import { PromptOptions } from '@shared/chats'
 import { ChatMessage } from '@shared/message-list/base'
 import { BasicMessageList } from '@shared/message-list/basic'
 import { ModelFile, MODELS } from '@shared/model-list'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { readFile } from 'fs/promises'
-import { LLamaChatPromptOptions } from 'node-llama-cpp'
 import path from 'path'
 
 import { ElectronLlamaServerManager } from '@/managers/llama-server'
@@ -204,7 +204,7 @@ export class ElectronChatManager {
     messageID: string
     assistantMessageID: string
     threadID: string
-    promptOptions?: LLamaChatPromptOptions
+    promptOptions?: PromptOptions
     modelPath: string
     selectedFile?: string
     onToken: (token: string) => void
@@ -291,7 +291,7 @@ export class ElectronChatManager {
     systemPrompt: string
     messageID: string
     threadID: string
-    promptOptions?: LLamaChatPromptOptions
+    promptOptions?: PromptOptions
     modelPath: string
     selectedFile?: string
     onToken: (token: string) => void
@@ -433,6 +433,15 @@ export class ElectronChatManager {
         return this.loadMessageList({ modelPath: fullPath, threadID, messages })
       },
     )
+
+    ipcMain.handle(
+      'chats:cleanupSession',
+      async (_, { modelPath, threadID }) => {
+        console.log('Cleaning up chat session:', { threadID, modelPath })
+        const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
+        this.llamaServerManager.cleanupProcess(fullPath)
+      },
+    )
   }
 
   private async generateSystemPromptForFile({
@@ -498,10 +507,6 @@ Helpful Answer:
     }
 
     return model.promptTemplate
-  }
-
-  private getModelData(modelName: string) {
-    return MODELS.find((m) => m.files.find((f) => f.name === modelName))
   }
 
   private getModelFile(modelName: string) {

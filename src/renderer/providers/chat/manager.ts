@@ -1,4 +1,3 @@
-import { LLamaChatPromptOptions } from 'node-llama-cpp/dist/llamaEvaluator/LlamaChatSession'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
@@ -14,6 +13,11 @@ type ModelState = {
   currentTopP?: number
   currentSystemPrompt?: string
   runningPrompts: Map<string, boolean>
+}
+
+type PromptOptions = {
+  topP?: number
+  temperature?: number
 }
 
 export const DEFAULT_TEMP = 0.5
@@ -113,7 +117,7 @@ export class ChatManager {
     message: string
     threadID?: string
     model?: string
-    promptOptions?: LLamaChatPromptOptions
+    promptOptions?: PromptOptions
     selectedFile?: string
   }) {
     if (threadID) {
@@ -315,9 +319,23 @@ export class ChatManager {
     })
   }
 
-  setCurrentThread(threadID?: string) {
+  async setCurrentThread(threadID?: string) {
     if (!threadID) {
       return
+    }
+
+    if (this.state.currentThreadID === threadID) {
+      return
+    }
+
+    const currentThread = this.historyManager.getThread(
+      this.state.currentThreadID,
+    )
+    if (currentThread) {
+      await window.chats.cleanupSession({
+        modelPath: currentThread.modelID,
+        threadID: currentThread.id,
+      })
     }
 
     const thread = this.historyManager.getThread(threadID)
@@ -353,7 +371,6 @@ export class ChatManager {
     const thread = this.historyManager.getThread(threadID)
 
     if (thread) {
-      console.log('messages', thread.messages)
       window.chats.loadMessageList({
         modelPath: thread.modelID,
         threadID: thread.id,
@@ -393,15 +410,15 @@ export class ChatManager {
     await this.loadMessageList(threadID)
   }
 
-  // async cleanupChatSession(threadID: string) {
-  //   const thread = this.historyManager.getThread(threadID)
-  //   if (!thread) {
-  //     return
-  //   }
+  async cleanupChatSession(threadID: string) {
+    const thread = this.historyManager.getThread(threadID)
+    if (!thread) {
+      return
+    }
 
-  //   const modelPath = thread.modelID
-  //   await window.chats.cleanupSession({ modelPath, threadID: thread.id })
-  // }
+    const modelPath = thread.modelID
+    await window.chats.cleanupSession({ modelPath, threadID: thread.id })
+  }
 
   @computed
   get messages() {
