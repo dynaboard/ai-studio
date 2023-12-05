@@ -250,7 +250,7 @@ export function ChatWindow({ id }: { id?: string }) {
               <StatusIndicatorText
                 text={
                   draggedOver
-                    ? 'Drop the PDF here'
+                    ? 'Drop your file here'
                     : supportsImages
                       ? 'Say something, drop a PDF, or drop an image to get started'
                       : 'Say something or drop a PDF to get started'
