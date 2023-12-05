@@ -217,6 +217,7 @@ export class ElectronChatManager {
     })
 
     let imageData: { data: string; id: number } | undefined
+    let messageWithImage: string | undefined
 
     // If we are chatting with a file, let's get the context and use a custom prompt
     if (selectedFile) {
@@ -237,7 +238,7 @@ export class ElectronChatManager {
           data: await readFile(selectedFile, { encoding: 'base64' }),
           id: imageID,
         }
-        message = `[img-${imageID}]${message}`
+        messageWithImage = `[img-${imageID}]${message}`
       }
     }
 
@@ -249,7 +250,10 @@ export class ElectronChatManager {
       maxTokens: promptOptions?.maxTokens,
     })
 
-    const prompt = messageList.format({ systemPrompt })
+    const prompt = messageList.format({
+      systemPrompt,
+      includeHistory: !messageWithImage,
+    })
 
     let response = ''
     for await (const chunk of this.llama(

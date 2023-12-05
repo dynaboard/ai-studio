@@ -9,6 +9,7 @@ export type ChatMessage = {
 
 export type FormatOptions = {
   systemPrompt: string
+  includeHistory?: boolean
   prefix?: string
 }
 

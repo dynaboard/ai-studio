@@ -17,10 +17,11 @@ export class BasicMessageList extends BaseMessageList {
     this.promptWrapper = input.promptWrapper
   }
 
-  format({ systemPrompt }: FormatOptions): string {
+  format({ systemPrompt, includeHistory }: FormatOptions): string {
     return this.promptWrapper.getPrompt({
       messages: this.messages,
       systemPrompt: systemPrompt,
+      includeHistory,
     })
   }
 
