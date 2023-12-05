@@ -11,6 +11,8 @@ import { SystemUsageManager } from '@/managers/usage'
 import { ElectronVectorStoreManager } from '@/managers/vector-store'
 import { update } from '@/update'
 
+import { sendToRenderer } from './webcontents'
+
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) app.disableHardwareAcceleration()
 
@@ -69,7 +71,13 @@ async function createWindow() {
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
+    if (win) {
+      sendToRenderer(
+        win.webContents,
+        'main-process-message',
+        new Date().toLocaleString(),
+      )
+    }
   })
 
   // Make all links open with the browser, not with the application
@@ -79,11 +87,15 @@ async function createWindow() {
   })
 
   win.on('enter-full-screen', () => {
-    win?.webContents.send('full-screen-change', true)
+    if (win) {
+      sendToRenderer(win.webContents, 'full-screen-change', true)
+    }
   })
 
   win.on('leave-full-screen', () => {
-    win?.webContents.send('full-screen-change', false)
+    if (win) {
+      sendToRenderer(win.webContents, 'full-screen-change', false)
+    }
   })
 
   // Apply electron-updater

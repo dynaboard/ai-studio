@@ -5,6 +5,8 @@ import fs, { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import pdfParse from 'pdf-parse'
 
+import { sendToRenderer } from '@/webcontents'
+
 import embeddingsWorker from '../workers/embeddings?nodeWorker'
 import { ElectronVectorStoreManager } from './vector-store'
 
@@ -107,7 +109,7 @@ export class EmbeddingsManager {
       await this.vectorStoreManager.doesIndexExist(filePath)
     if (doesIndexExist) {
       console.log('Index already exists for:', filePath)
-      this.window.webContents.send('embeddings:embeddingsComplete', {
+      sendToRenderer(this.window.webContents, 'embeddings:embeddingsComplete', {
         filePath: filePath,
       })
       return
@@ -154,9 +156,13 @@ export class EmbeddingsManager {
         data: message.data,
       })
       .then(() => {
-        this.window.webContents.send('embeddings:embeddingsComplete', {
-          filePath: message.id,
-        })
+        sendToRenderer(
+          this.window.webContents,
+          'embeddings:embeddingsComplete',
+          {
+            filePath: message.id,
+          },
+        )
       })
   }
 
