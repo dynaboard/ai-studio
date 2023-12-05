@@ -52,6 +52,7 @@ export function SystemPrompt() {
           }}
           rows={1}
           spellCheck={false}
+          maxRows={12}
         />
       </div>
     </div>
