@@ -1,5 +1,6 @@
 // we should probably store this in a shared location, tbh
 import { PromptOptions } from '@shared/chats'
+import { SearchApi } from '@shared/duckduckgo-search'
 import { ChatMessage } from '@shared/message-list/base'
 import { BasicMessageList } from '@shared/message-list/basic'
 import { ModelFile, MODELS } from '@shared/model-list'
@@ -271,6 +272,19 @@ export class ElectronChatManager {
       if (chunk.data) {
         onToken(chunk.data.content)
         response += chunk.data.content
+      }
+    }
+
+    const searchAPI = new SearchApi()
+    const startIndex = response.indexOf('<INFO>')
+    const endIndex = response.indexOf('</INFO>')
+
+    console.log({ startIndex, endIndex })
+    if (startIndex >= 0 && endIndex >= 0 && endIndex > startIndex) {
+      const query = response.slice(startIndex + 6, endIndex)
+      for await (const text of searchAPI.text(query)) {
+        console.log(text.title)
+        onToken(`${text.title}\n`)
       }
     }
 
