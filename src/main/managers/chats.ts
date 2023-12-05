@@ -216,9 +216,7 @@ export class ElectronChatManager {
       threadID,
     })
 
-    let imageData: string | undefined
-
-    console.log('SELECTED FILE', selectedFile)
+    let imageData: { data: string; id: number } | undefined
 
     // If we are chatting with a file, let's get the context and use a custom prompt
     if (selectedFile) {
@@ -234,9 +232,12 @@ export class ElectronChatManager {
         selectedFile.endsWith('.jpeg')
       ) {
         // We can chat with an image using a multimodal model like LLAVA
-        imageData = await readFile(selectedFile, { encoding: 'base64' })
-        const id = 10 // Randomize?
-        message = `[img-${id}]${message}`
+        const imageID = Math.round(Math.random() * 100)
+        imageData = {
+          data: await readFile(selectedFile, { encoding: 'base64' }),
+          id: imageID,
+        }
+        message = `[img-${imageID}]${message}`
       }
     }
 
@@ -257,7 +258,7 @@ export class ElectronChatManager {
         top_k: 20,
         top_p: 0.3,
         temperature: 0.5,
-        image_data: imageData ? [{ data: imageData, id: 10 }] : undefined,
+        image_data: imageData ? [imageData] : undefined,
       },
       {
         controller: abortController,

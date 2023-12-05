@@ -107,7 +107,11 @@ export function ChatWindow({ id }: { id?: string }) {
         await transformersManager.embedDocument(file.path)
         historyManager.changeThreadFilePath(id, file.path)
         setRunningEmbeddings(false)
-      } else if (file.name.endsWith('.png') || file.name.endsWith('.jpg')) {
+      } else if (
+        file.name.endsWith('.png') ||
+        file.name.endsWith('.jpg') ||
+        file.name.endsWith('.jpeg')
+      ) {
         const image = await new Promise((resolve) => {
           const reader = new FileReader()
           reader.onload = () => resolve(reader.result as string)
