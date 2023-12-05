@@ -131,7 +131,10 @@ export class ElectronLlamaServerManager {
     console.log(this.processes)
     const process = this.processes.get(modelPath)
     if (process) {
-      process.kill()
+      const killed = process.kill()
+      if (!killed) {
+        process.kill('SIGKILL')
+      }
       this.processes.delete(modelPath)
       this.loading.delete(modelPath)
     }
