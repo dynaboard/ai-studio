@@ -128,7 +128,6 @@ export class ElectronLlamaServerManager {
   }
 
   cleanupProcess(modelPath: string) {
-    console.log(this.processes)
     const process = this.processes.get(modelPath)
     if (process) {
       const killed = process.kill()
