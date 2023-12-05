@@ -220,8 +220,9 @@ export function ChatWindow({ id }: { id?: string }) {
     if (id) {
       setSelectedFile(null)
       setBase64Image(null)
+      formRef.current?.reset()
     }
-  }, [id])
+  }, [id, formRef])
 
   return (
     // 36px - titlebar height
