@@ -25,6 +25,26 @@
       "presentation": {
         "hidden": true
       }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": ["swift"],
+      "args": [],
+      "cwd": "${workspaceFolder:ai-studio}/src/native",
+      "name": "Debug nativecli (src/native)",
+      "program": "${workspaceFolder:ai-studio}/src/native/.build/debug/nativecli",
+      "preLaunchTask": "swift: Build Debug nativecli (src/native)"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "sourceLanguages": ["swift"],
+      "args": [],
+      "cwd": "${workspaceFolder:ai-studio}/src/native",
+      "name": "Release nativecli (src/native)",
+      "program": "${workspaceFolder:ai-studio}/src/native/.build/release/nativecli",
+      "preLaunchTask": "swift: Build Release nativecli (src/native)"
     }
   ],
   "compounds": [

@@ -35,3 +35,4 @@ yarn.lock
 /playwright/.cache/
 
 .cache/
+.swiftpm/
