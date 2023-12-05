@@ -71,7 +71,13 @@ function Download({ download }: { download: ActiveDownload }) {
     <div key={download.filename} className="flex w-full items-center gap-2">
       <div className="flex flex-1 flex-col gap-1">
         <span className="text-xs">
-          {modelData.model?.name} ({modelData.file?.quantization})
+          {modelData.model ? (
+            <>
+              {modelData.model?.name} ({modelData.file?.quantization})
+            </>
+          ) : (
+            'Supporting file'
+          )}
         </span>
         <span className="text-xs text-foreground/50">{download.filename}</span>
       </div>

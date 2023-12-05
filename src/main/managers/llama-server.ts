@@ -33,30 +33,17 @@ export class ElectronLlamaServerManager {
       '4',
     ]
     if (multimodal && mmprojPath) {
-      args.push('-mmproj', mmprojPath)
+      args.push('--mmproj', mmprojPath)
     }
 
     const promise = new Promise((resolve, reject) => {
-      const process = execFile(
-        llamaServer,
-        [
-          '-m',
-          modelPath,
-          '-c',
-          CONTEXT_SIZE.toString(),
-          '-ngl',
-          '4',
-          '-t',
-          '4',
-        ],
-        (err) => {
-          if (err) {
-            console.error(err)
-            reject(err)
-            return
-          }
-        },
-      )
+      const process = execFile(llamaServer, args, (err) => {
+        if (err) {
+          console.error(err)
+          reject(err)
+          return
+        }
+      })
 
       const handler = (data) => {
         const message = data.toString().split('\n')
@@ -96,6 +83,10 @@ export class ElectronLlamaServerManager {
       const message = data.toString().split('\n')
       message.forEach((line: string) => {
         if (line.length === 0) {
+          return
+        }
+        if (!line.trim().startsWith('{')) {
+          console.log(line)
           return
         }
         try {

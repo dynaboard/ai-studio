@@ -222,3 +222,17 @@ export function useDownloads() {
     modelManager.downloads,
   ])
 }
+
+export function useModel(fileName?: string) {
+  const modelManager = useModelManager()
+
+  return useValue(
+    'useModel',
+    () => {
+      return modelManager.availableModels.find((m) =>
+        m.files.find((f) => f.name === fileName),
+      )
+    },
+    [modelManager.availableModels, fileName],
+  )
+}

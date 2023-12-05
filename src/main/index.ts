@@ -123,6 +123,5 @@ app.on('activate', () => {
 })
 
 app.on('will-quit', () => {
-  modelManager?.close()
   llamaServerManager.close()
 })

@@ -1,8 +1,9 @@
 // we should probably store this in a shared location, tbh
 import { ChatMessage } from '@shared/message-list/base'
 import { BasicMessageList } from '@shared/message-list/basic'
-import { MODELS } from '@shared/model-list'
+import { ModelFile, MODELS } from '@shared/model-list'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { readFile } from 'fs/promises'
 import { LLamaChatPromptOptions } from 'node-llama-cpp'
 import path from 'path'
 
@@ -71,46 +72,29 @@ export class ElectronChatManager {
       return this.chatSession
     }
 
-    await this.llamaServerManager.launchServer({ modelPath })
-
-    const modelParameters = await this.llamaServerManager.getModelParameters()
-
-    // const {
-    //   LlamaContext,
-    //   LlamaChatSession,
-    //   LlamaModel,
-    //   EmptyChatPromptWrapper,
-    // } = await import('node-llama-cpp')
-
     const modelName = modelPath.split('/').pop() as string
     const promptWrapper = this.getPromptWrapper(modelName)
 
-    // const model = new LlamaModel({
-    //   modelPath,
-    //   batchSize: DEFAULT_CONTEXT_SIZE,
-    //   contextSize: DEFAULT_CONTEXT_SIZE,
-    // })
-    // const context = new LlamaContext({
-    //   model,
-    //   batchSize: DEFAULT_CONTEXT_SIZE,
-    //   contextSize: DEFAULT_CONTEXT_SIZE,
-    // })
+    const modelFile = this.getModelFile(modelName)
+    let mmprojPath = ''
+    if (modelFile?.multimodal && modelFile?.supportingFiles?.[0]) {
+      mmprojPath = path.join(
+        app.getPath('userData'),
+        'models',
+        modelFile.supportingFiles[0].name,
+      )
+    }
+
+    await this.llamaServerManager.launchServer({
+      modelPath,
+      mmprojPath: mmprojPath,
+      multimodal: modelFile?.multimodal,
+    })
+
+    const modelParameters = await this.llamaServerManager.getModelParameters()
 
     const chatSession = {
       modelName,
-      // session: new LlamaChatSession({
-      //   context,
-      //   systemPrompt: SYSTEM_PROMPT,
-      //   promptWrapper: new (class extends EmptyChatPromptWrapper {
-      //     wrapPrompt(prompt: string): string {
-      //       return prompt
-      //     }
-      //     getStopStrings(): string[] {
-      //       return ['</s>']
-      //     }
-      //   })(),
-      // }),
-      // context,
       messageList:
         messageList ||
         new BasicMessageList({
@@ -232,6 +216,30 @@ export class ElectronChatManager {
       threadID,
     })
 
+    let imageData: string | undefined
+
+    console.log('SELECTED FILE', selectedFile)
+
+    // If we are chatting with a file, let's get the context and use a custom prompt
+    if (selectedFile) {
+      if (selectedFile.endsWith('.pdf')) {
+        systemPrompt = await this.generateSystemPromptForFile({
+          selectedFile,
+          message,
+          systemPrompt,
+        })
+      } else if (
+        selectedFile.endsWith('.png') ||
+        selectedFile.endsWith('.jpg') ||
+        selectedFile.endsWith('.jpeg')
+      ) {
+        // We can chat with an image using a multimodal model like LLAVA
+        imageData = await readFile(selectedFile, { encoding: 'base64' })
+        const id = 10 // Randomize?
+        message = `[img-${id}]${message}`
+      }
+    }
+
     messageList.add({ role: 'user', message, id: messageID })
     await this.shiftMessageWindow({
       systemPrompt,
@@ -239,15 +247,6 @@ export class ElectronChatManager {
       threadID,
       maxTokens: promptOptions?.maxTokens,
     })
-
-    // If we are chatting with a file, let's get the context and use a custom prompt
-    if (selectedFile) {
-      systemPrompt = await this.generateSystemPromptForFile({
-        selectedFile,
-        message,
-        systemPrompt,
-      })
-    }
 
     const prompt = messageList.format({ systemPrompt })
 
@@ -258,6 +257,7 @@ export class ElectronChatManager {
         top_k: 20,
         top_p: 0.3,
         temperature: 0.5,
+        image_data: imageData ? [{ data: imageData, id: 10 }] : undefined,
       },
       {
         controller: abortController,
@@ -499,6 +499,18 @@ Helpful Answer:
     return model.promptTemplate
   }
 
+  private getModelData(modelName: string) {
+    return MODELS.find((m) => m.files.find((f) => f.name === modelName))
+  }
+
+  private getModelFile(modelName: string) {
+    let modelFile: ModelFile | undefined
+    MODELS.forEach(
+      (m) => (modelFile = m.files.find((f) => f.name === modelName)),
+    )
+    return modelFile
+  }
+
   async *llama(
     prompt: string,
     params: {
@@ -513,7 +525,7 @@ Helpful Answer:
       frequency_penalty?: number
       grammar?: string
       seed?: number
-      image_data?: { data: string; id: number }
+      image_data?: { data: string; id: number }[]
     } = {},
     config: {
       controller?: AbortController

@@ -2,21 +2,20 @@ import { BasePromptWrapper, GetPromptOptions } from './base'
 
 export class SimplePromptWrapper extends BasePromptWrapper {
   getPrompt({ systemPrompt, messages }: GetPromptOptions): string {
-    let prompt = `You are a helpful AI assistant that remembers previous conversation between yourself the "assistant" and a human the "user":
-### user:
-<previous user message>
-### assistant:
-<previous AI assistant message>
-### user:
-<new user prompt>
+    let prompt = `You are a helpful AI assistant that remembers previous conversation between yourself the "ASSISTANT" and a human the "USER":
+USER: <previous user message>
+ASSISTANT: <previous AI assistant message>
 
 The AI's task is to understand the context and utilize the previous conversation in addressing the user's questions or requests.
 ${systemPrompt}`
-    messages.forEach(({ role, message }) => {
+    messages.forEach(({ role, message }, idx, messages) => {
       if (role === 'user') {
-        prompt += `\n### user:\n${message}`
+        prompt += `\nUSER:\n${message}`
+        if (idx === messages.length - 1) {
+          prompt += '\nASSISTANT:\n'
+        }
       } else {
-        prompt += `\n### assistant:\n${message}\n\n`
+        prompt += `\nASSISTANT:\n${message}\n\n`
       }
     })
     return prompt

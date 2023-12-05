@@ -97,9 +97,21 @@ function FileEntry({ file }: { file: ModelFile }) {
           return
         }
 
+        if (file.supportingFiles) {
+          file.supportingFiles.forEach((supportingFile) => {
+            const anchor = document.createElement('a')
+            anchor.href = supportingFile.url
+            anchor.download = supportingFile.name
+            document.body.appendChild(anchor)
+            anchor.addEventListener('click', (e) => {
+              e.stopPropagation()
+            })
+            setTimeout(() => anchor.click(), 500)
+          })
+        }
+
         if (hasLocalFile) {
           event.preventDefault()
-          setShowDeleteDialog(true)
         } else {
           event.stopPropagation()
         }

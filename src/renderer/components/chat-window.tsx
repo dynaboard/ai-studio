@@ -1,4 +1,9 @@
-import { LucideLoader2, LucideStopCircle, SendHorizonal } from 'lucide-react'
+import {
+  LucideLoader2,
+  LucideStopCircle,
+  LucideTrash2,
+  SendHorizonal,
+} from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
@@ -20,7 +25,7 @@ import {
   useThreadFilePath,
   useThreadMessages,
 } from '@/providers/history/manager'
-import { useAvailableModels } from '@/providers/models/manager'
+import { useAvailableModels, useModel } from '@/providers/models/manager'
 import { useTransformersManager } from '@/providers/transformers'
 
 import { ChatMessage } from './chat-message'
@@ -61,6 +66,8 @@ export function ChatWindow({ id }: { id?: string }) {
   const currentTopP = useCurrentTopP()
   const isCurrentThreadGenerating = useIsCurrentThreadGenerating(id)
 
+  const modelData = useModel(currentModel)
+
   const messages = useThreadMessages(id)
   const disabled = useValue('disabled', () => chatManager.paused, [chatManager])
 
@@ -70,11 +77,19 @@ export function ChatWindow({ id }: { id?: string }) {
 
   const [userScrolled, setUserScrolled] = useState(false)
   const [runningEmbeddings, setRunningEmbeddings] = useState(false)
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [base64Image, setBase64Image] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const textAreaInputRef = React.useRef<HTMLTextAreaElement>(null)
   const scrollAreaRef = React.useRef<HTMLDivElement>(null)
+
+  const supportsImages = modelData?.capabilities?.includes('images') ?? false
+
+  const fileTypes = supportsImages
+    ? ['application/pdf', 'image/png', 'image/jpeg']
+    : ['application/pdf']
 
   const handleFiles = useCallback(
     async (files: File[]) => {
@@ -87,10 +102,19 @@ export function ChatWindow({ id }: { id?: string }) {
 
       setSelectedFile(file)
 
-      setRunningEmbeddings(true)
-      await transformersManager.embedDocument(file.path)
-      historyManager.changeThreadFilePath(id, file.path)
-      setRunningEmbeddings(false)
+      if (file.name.endsWith('.pdf')) {
+        setRunningEmbeddings(true)
+        await transformersManager.embedDocument(file.path)
+        historyManager.changeThreadFilePath(id, file.path)
+        setRunningEmbeddings(false)
+      } else if (file.name.endsWith('.png') || file.name.endsWith('.jpg')) {
+        const image = await new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(file)
+        })
+        setBase64Image(image as string)
+      }
     },
     [id, historyManager, transformersManager],
   )
@@ -106,7 +130,7 @@ export function ChatWindow({ id }: { id?: string }) {
   )
 
   const { draggedOver, setTargetElement } = useDragAndDrop({
-    fileTypes: ['application/pdf'],
+    fileTypes,
     onDrop: handleFiles,
   })
 
@@ -191,6 +215,7 @@ export function ChatWindow({ id }: { id?: string }) {
   useEffect(() => {
     if (id) {
       setSelectedFile(null)
+      setBase64Image(null)
     }
   }, [id])
 
@@ -203,6 +228,8 @@ export function ChatWindow({ id }: { id?: string }) {
       {/* Possible states */}
       {/* fileName && messages.length === 0 - chat with filename */}
       {/* fileName && messages.length !== 0 - thread filename, no messages */}
+      {/* image && messages.length === 0 - ephemeral image, no messages */}
+      {/* image && messages.length !== 0 - ephemeral image, messages */}
       {/* draggedOver - dragging a file */}
       {/* messages.length === 0 && !fileName - no messages, no thread filename */}
 
@@ -220,7 +247,9 @@ export function ChatWindow({ id }: { id?: string }) {
                 text={
                   draggedOver
                     ? 'Drop the PDF here'
-                    : 'Say something or drop a PDF to get started'
+                    : supportsImages
+                      ? 'Say something, drop a PDF, or drop an image to get started'
+                      : 'Say something or drop a PDF to get started'
                 }
               />
 
@@ -230,7 +259,7 @@ export function ChatWindow({ id }: { id?: string }) {
                 title="drop a pdf"
                 type="file"
                 onChange={handleFilesChange}
-                accept="application/pdf"
+                accept={fileTypes.join(',')}
                 multiple={false}
               />
             </>
@@ -240,11 +269,29 @@ export function ChatWindow({ id }: { id?: string }) {
         <div
           className={cn(
             'grid h-full overflow-hidden py-0',
-            fileName ? 'grid-rows-[32px,_1fr]' : 'grid-rows-1',
+            fileName ? 'grid-rows-[min-content,_1fr]' : 'grid-rows-1',
           )}
         >
-          {fileName ? (
-            <div className="flex h-full w-full items-center border-b px-2 text-xs">
+          {base64Image ? (
+            <div className="flex h-20 w-full items-center border-b px-2 text-xs">
+              <span>Current image:</span>&nbsp;
+              <img src={base64Image} className="h-full p-1" />
+              <Button
+                variant="iconButton"
+                size="sm"
+                className="ml-2"
+                onClick={() => {
+                  setBase64Image(null)
+                  setSelectedFile(null)
+                }}
+              >
+                <LucideTrash2 size={14} />
+              </Button>
+            </div>
+          ) : null}
+
+          {fileName && !base64Image ? (
+            <div className="flex h-8 w-full items-center border-b px-2 text-xs">
               <span>Current file:</span>&nbsp;
               <span className="font-bold">{fileName}</span>
             </div>

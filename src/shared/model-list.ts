@@ -10,6 +10,7 @@ export type Model = {
     | 'mistral'
     | 'zephyr'
     | 'openfunctions'
+  capabilities?: string[]
   files: ModelFile[]
 }
 
@@ -20,6 +21,8 @@ export type ModelFile = {
   repository: string
   quantization: string
   sizeBytes: number
+  multimodal?: boolean
+  supportingFiles?: { name: string; url: string }[]
 }
 
 export const MODELS: Model[] = [
@@ -221,6 +224,7 @@ export const MODELS: Model[] = [
       'Fine-tuned to formulate executable API calls given natural language instructions.',
     parameters: '7B',
     promptTemplate: 'openfunctions',
+    capabilities: ['tools'],
     files: [
       {
         name: 'gorilla-openfunctions-v1.Q4_K_M.gguf',
@@ -248,6 +252,32 @@ export const MODELS: Model[] = [
         url: 'https://huggingface.co/TheBloke/gorilla-openfunctions-v1-GGUF/resolve/main/gorilla-openfunctions-v1.Q8_0.gguf?download=true',
         quantization: '8-bit',
         sizeBytes: 7161089856,
+      },
+    ],
+  },
+  {
+    name: 'LLaVA-1.5 13B',
+    description:
+      'An end-to-end trained large multimodal model that connects a vision encoder and LLM for general-purpose visual and language understanding',
+    parameters: '13B',
+    promptTemplate: 'general',
+    capabilities: ['images'],
+    files: [
+      {
+        multimodal: true,
+        name: 'llava-v1.5-13b-Q4_0.gguf',
+        format: 'gguf',
+        quantization: '4-bit',
+        repository:
+          'https://huggingface.co/PsiPi/liuhaotian_llava-v1.5-13b-GGUF',
+        url: 'https://huggingface.co/PsiPi/liuhaotian_llava-v1.5-13b-GGUF/resolve/main/llava-v1.5-13b-Q4_0.gguf?download=true',
+        sizeBytes: 7365834720,
+        supportingFiles: [
+          {
+            name: 'mmproj-model-f16.gguf',
+            url: 'https://huggingface.co/PsiPi/liuhaotian_llava-v1.5-13b-GGUF/resolve/main/mmproj-model-f16.gguf?download=true',
+          },
+        ],
       },
     ],
   },

@@ -406,7 +406,7 @@ export function useThreadMessages(threadID?: string) {
 
 export function useThreadFilePath(threadID?: string) {
   const thread = useThread(threadID)
-  return useValue('threadFilePath', () => thread?.filePath ?? '', [thread])
+  return useValue('threadFilePath', () => thread?.filePath ?? null, [thread])
 }
 
 export function useMessage(messageID: string) {

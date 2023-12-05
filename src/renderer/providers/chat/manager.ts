@@ -454,7 +454,7 @@ export function useCurrentThreadID() {
   return useValue(
     'useCurrentThreadID',
     () => chatManager.state.currentThreadID,
-    [chatManager],
+    [chatManager.state.currentThreadID],
   )
 }
 
