@@ -88,3 +88,7 @@ Workaround for the focus visible of the treeitem from react-arborist
 [role='treeitem']:focus-visible {
   outline: none;
 }
+
+[role='treeitem'] + [role='treeitem'] {
+  margin-top: 1px;
+}
