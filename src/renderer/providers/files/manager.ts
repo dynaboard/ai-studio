@@ -19,7 +19,6 @@ export class FilesManager {
   destroy() {}
 
   async deleteFile(filename: string) {
-    console.log('deleting file:', filename)
     await window.files.deleteFile(filename)
     await this.loadFiles()
   }

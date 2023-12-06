@@ -20,6 +20,7 @@ import {
   useCurrentTopP,
   useIsCurrentThreadGenerating,
 } from '@/providers/chat/manager'
+import { useFilesManager } from '@/providers/files/manager'
 import {
   useHistoryManager,
   useThreadFilePath,
@@ -59,6 +60,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const chatManager = useChatManager()
   const historyManager = useHistoryManager()
   const transformersManager = useTransformersManager()
+  const filesManager = useFilesManager()
 
   const availableModels = useAvailableModels()
   const currentModel = useCurrentModel()
@@ -105,6 +107,7 @@ export function ChatWindow({ id }: { id?: string }) {
       if (file.name.endsWith('.pdf')) {
         setRunningEmbeddings(true)
         await transformersManager.embedDocument(file.path)
+        await filesManager.loadFiles()
         historyManager.changeThreadFilePath(id, file.path)
         setRunningEmbeddings(false)
       } else if (
@@ -120,7 +123,7 @@ export function ChatWindow({ id }: { id?: string }) {
         setBase64Image(image as string)
       }
     },
-    [id, historyManager, transformersManager],
+    [id, historyManager, transformersManager, filesManager],
   )
 
   const handleFilesChange = useCallback(
