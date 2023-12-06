@@ -19,12 +19,12 @@ Dynaboard AI Studio is the easiest way to run LLM (Large Language Models) locall
 
 ### Minimum Requirements
 
-* macOS 10.14+
+* macOS 13+ (Ventura)
 * M1 with 16GB of RAM
 
 ### Recommended Requirements
 
-* macOS 10.14+
+* macOS 14+ (Sonoma)
 * M1 Pro with 16GB of RAM
 
 ## Development
