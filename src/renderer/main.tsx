@@ -9,7 +9,6 @@ import {
   HistoryManagerProvider,
   ModelManagerProvider,
   SystemUsageManagerProvider,
-  ToolManagerProvider,
 } from '@/providers'
 import { router } from '@/router'
 
@@ -19,9 +18,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <BrowserWindowManagerProvider>
         <SystemUsageManagerProvider>
           <HistoryManagerProvider>
-            <ToolManagerProvider>
-              <RouterProvider router={router} />
-            </ToolManagerProvider>
+            <RouterProvider router={router} />
           </HistoryManagerProvider>
         </SystemUsageManagerProvider>
       </BrowserWindowManagerProvider>

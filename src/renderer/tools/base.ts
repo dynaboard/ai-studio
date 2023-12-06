@@ -1,9 +1,22 @@
-import { BrowserWindowManager } from '@/providers/browser-window'
-import { HistoryManager } from '@/providers/history/manager'
+import { PromptOptions } from '@shared/chats'
+
+import type { BrowserWindowManager } from '@/providers/browser-window'
+import type { ChatManager } from '@/providers/chat/manager'
+import type { HistoryManager } from '@/providers/history/manager'
+import type { ToolManager } from '@/providers/tools/manager'
 
 export type BaseToolManagers = {
   historyManager: HistoryManager
   browserWindowManager: BrowserWindowManager
+  toolManager: ToolManager
+  chatManager: ChatManager
+}
+
+export type RunContext = {
+  assistantMessageID: string
+  threadID: string
+  modelPath: string
+  promptOptions?: PromptOptions
 }
 
 export type ToolParameter = {
@@ -22,7 +35,7 @@ export abstract class BaseTool {
     // empty
   }
 
-  abstract run(): Promise<unknown>
+  abstract run(context: RunContext, ...parameters: unknown[]): Promise<unknown>
 
   protected async ensureRequiredModels() {
     for (const model of this.requiredModels) {

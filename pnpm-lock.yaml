@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@mozilla/readability':
+    specifier: ^0.4.4
+    version: 0.4.4
   '@radix-ui/react-alert-dialog':
     specifier: ^1.0.5
     version: 1.0.5(@types/react-dom@18.2.15)(@types/react@18.2.37)(react-dom@18.2.0)(react@18.2.0)
@@ -79,7 +82,7 @@ dependencies:
     version: 3.19.3
   langchain:
     specifier: ^0.0.198
-    version: 0.0.198(@xenova/transformers@2.9.0)(lodash@4.17.21)(pdf-parse@1.1.1)
+    version: 0.0.198(@mozilla/readability@0.4.4)(@xenova/transformers@2.9.0)(lodash@4.17.21)(pdf-parse@1.1.1)
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
@@ -1256,6 +1259,11 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@mozilla/readability@0.4.4:
+    resolution: {integrity: sha512-MCgZyANpJ6msfvVMi6+A0UAsvZj//4OHREYUB9f2087uXHVoU+H+SWhuihvb1beKpM323bReQPRio0WNk2+V6g==}
+    engines: {node: '>=14.0.0'}
+    dev: false
 
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -5824,7 +5832,7 @@ packages:
     engines: {node: '>=6'}
     dev: false
 
-  /langchain@0.0.198(@xenova/transformers@2.9.0)(lodash@4.17.21)(pdf-parse@1.1.1):
+  /langchain@0.0.198(@mozilla/readability@0.4.4)(@xenova/transformers@2.9.0)(lodash@4.17.21)(pdf-parse@1.1.1):
     resolution: {integrity: sha512-YC0O1g8r61InCWyF5NmiQjdghdq6LKcgMrDZtqLbgDxAe4RoSldonm+5oNXS3yjCISG0j3s5Cty+yB7klqvUpg==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -6132,6 +6140,7 @@ packages:
     dependencies:
       '@anthropic-ai/sdk': 0.9.1
       '@langchain/core': 0.0.2
+      '@mozilla/readability': 0.4.4
       '@xenova/transformers': 2.9.0
       binary-extensions: 2.2.0
       expr-eval: 2.0.2

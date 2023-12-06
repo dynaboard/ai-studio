@@ -36,9 +36,10 @@ export class ChatManager {
 
   cleanupHandler: (() => void) | undefined
 
+  declare toolManager: ToolManager
+
   constructor(
     readonly historyManager: HistoryManager,
-    readonly toolManager: ToolManager,
     model?: string,
     threadID?: string,
   ) {
@@ -121,6 +122,7 @@ export class ChatManager {
     model?: string
     promptOptions?: PromptOptions
     selectedFile?: string
+    addToHistory?: boolean
   }) {
     if (threadID) {
       this.setRunningPrompt(threadID, true)
@@ -189,7 +191,10 @@ export class ChatManager {
         const possibleTool = await this.toolManager.getToolForPrompt(message)
         if (possibleTool) {
           console.log('Found a tool:', possibleTool)
-          const result = await possibleTool.run()
+          const result = await possibleTool.tool.run(
+            { assistantMessageID, threadID, modelPath, promptOptions },
+            ...(possibleTool.parameters as unknown[]),
+          )
           this.historyManager.editMessage({
             threadID,
             messageID: assistantMessageID,
@@ -437,6 +442,11 @@ export class ChatManager {
     await window.chats.cleanupSession({ modelPath, threadID: thread.id })
   }
 
+  // kind of gross, but there is a cyclic dep at the moment that we need to break eventually
+  setToolManager(toolManager: ToolManager) {
+    this.toolManager = toolManager
+  }
+
   @computed
   get messages() {
     return this.state.messages
@@ -454,7 +464,7 @@ export class ChatManager {
 }
 
 export const ChatManagerContext = createContext(
-  new ChatManager(new HistoryManager(), new ToolManager({} as never)),
+  new ChatManager(new HistoryManager()),
 )
 
 export function useChatManager() {

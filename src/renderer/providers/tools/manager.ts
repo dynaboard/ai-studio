@@ -15,8 +15,11 @@ export class ToolManager {
     activeToolIDs: new Set(),
   })
 
-  constructor(readonly managers: BaseToolManagers) {
-    this.getAllTools(managers).then((tools) => {
+  constructor(readonly managers: Omit<BaseToolManagers, 'toolManager'>) {
+    this.getAllTools({
+      ...managers,
+      toolManager: this,
+    }).then((tools) => {
       this._state.update((state) => {
         return {
           ...state,
@@ -28,14 +31,24 @@ export class ToolManager {
     })
   }
 
-  async getToolForPrompt(prompt: string) {
+  async getToolForPrompt(
+    prompt: string,
+  ): Promise<{ tool: BaseTool; parameters: unknown } | null> {
     const response = await window.tools.getTool(prompt, this.activeToolJSON)
     try {
       const possibleTool = JSON.parse(response)
       if (possibleTool.id === 'invalid-tool') {
         return null
       }
-      return this.state.tools.find((tool) => tool.id === possibleTool.id)
+      const tool = this.state.tools.find((tool) => tool.id === possibleTool.id)
+      if (!tool) {
+        return null
+      }
+
+      return {
+        tool: tool,
+        parameters: possibleTool.parameters,
+      }
     } catch (err) {
       console.error('Could not parse tool response:', err)
       return null

@@ -69,9 +69,29 @@ export class ElectronToolManager {
     return json.content
   }
 
+  async fetch(
+    url: string,
+    request: NodeJS.fetch.RequestInit,
+    resultType: 'text' | 'json',
+  ) {
+    const response = await fetch(url, request)
+    if (resultType === 'text') {
+      return await response.text()
+    } else {
+      return await response.json()
+    }
+  }
+
   addClientEventHandlers() {
     ipcMain.handle(ToolChannel.GetTool, async (_, { prompt, tools }) => {
       return await this.getTool(prompt, tools)
     })
+
+    ipcMain.handle(
+      ToolChannel.Fetch,
+      async (_, { url, request, resultType }) => {
+        return await this.fetch(url, request, resultType)
+      },
+    )
   }
 }

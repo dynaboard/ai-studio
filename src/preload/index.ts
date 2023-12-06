@@ -58,6 +58,7 @@ export interface ChatsAPI {
     promptOptions?: PromptOptions
     modelPath: string
     selectedFile?: string
+    outOfBand?: boolean
   }) => Promise<string>
 
   regenerateMessage: (args: {
