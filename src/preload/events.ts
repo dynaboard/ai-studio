@@ -12,6 +12,12 @@ export enum ModelChannel {
   IsModelDownloaded = 'models:isModelDownloaded',
 }
 
+export enum FileChannel {
+  // GetFilePath = 'files:getFilePath',
+  ListFilesInFolder = 'files:listFilesInFolder',
+  // DeleteFile = 'files:deleteModelFile',
+}
+
 export enum UsageChannel {
   GetSystemUsage = 'usage:getSystemUsage',
 }

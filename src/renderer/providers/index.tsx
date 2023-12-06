@@ -16,6 +16,7 @@ import {
   BrowserWindowManager,
   BrowserWindowManagerContext,
 } from './browser-window'
+import { FilesManager, FilesManagerContext } from './files/manager'
 
 export function ChatManagerProvider({
   children,
@@ -126,5 +127,26 @@ export function BrowserWindowManagerProvider({
     <BrowserWindowManagerContext.Provider value={manager}>
       {children}
     </BrowserWindowManagerContext.Provider>
+  )
+}
+
+export function FilesManagerProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const manager = useMemo(() => {
+    return new FilesManager()
+  }, [])
+
+  useEffect(() => {
+    manager.initialize()
+    return () => manager.destroy()
+  }, [manager])
+
+  return (
+    <FilesManagerContext.Provider value={manager}>
+      {children}
+    </FilesManagerContext.Provider>
   )
 }

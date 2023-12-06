@@ -6,6 +6,7 @@ import { RouterProvider } from 'react-router-dom'
 
 import {
   BrowserWindowManagerProvider,
+  FilesManagerProvider,
   HistoryManagerProvider,
   ModelManagerProvider,
   SystemUsageManagerProvider,
@@ -15,13 +16,15 @@ import { router } from '@/router'
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ModelManagerProvider>
-      <BrowserWindowManagerProvider>
-        <SystemUsageManagerProvider>
-          <HistoryManagerProvider>
-            <RouterProvider router={router} />
-          </HistoryManagerProvider>
-        </SystemUsageManagerProvider>
-      </BrowserWindowManagerProvider>
+      <FilesManagerProvider>
+        <BrowserWindowManagerProvider>
+          <SystemUsageManagerProvider>
+            <HistoryManagerProvider>
+              <RouterProvider router={router} />
+            </HistoryManagerProvider>
+          </SystemUsageManagerProvider>
+        </BrowserWindowManagerProvider>
+      </FilesManagerProvider>
     </ModelManagerProvider>
   </React.StrictMode>,
 )
