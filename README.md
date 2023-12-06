@@ -4,10 +4,7 @@
   <p>Run AI models, completely local. (better tagline please)</p>
 </div>
 
-<p>&nbsp;</p>
-
 <hr />
-<p>&nbsp;</p>
 
 Dynaboard AI Studio is the easiest way to run LLM (Large Language Models) locally on macOS.
 
