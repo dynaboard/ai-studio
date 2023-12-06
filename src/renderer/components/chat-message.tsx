@@ -119,7 +119,12 @@ export function ChatMessage({
             </p>
           ) : (
             <MemoizedReactMarkdown
-              className="markdown prose max-w-none text-sm prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900"
+              className={cn(
+                'markdown max-w-none text-sm',
+                message.role === 'assistant'
+                  ? 'prose prose-p:text-gray-900 prose-pre:bg-transparent prose-pre:p-0 prose-ol:text-gray-900 prose-ul:text-gray-900 prose-li:text-gray-900'
+                  : '',
+              )}
               remarkPlugins={[remarkGfm, remarkMath]}
               components={{
                 p({ children }) {
