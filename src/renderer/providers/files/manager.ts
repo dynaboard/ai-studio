@@ -18,10 +18,11 @@ export class FilesManager {
 
   destroy() {}
 
-  // async deleteFile(fileName: string) {
-  //   await window.files.deleteFile(fileName)
-  //   await this.localLocalFiles()
-  // }
+  async deleteFile(filename: string) {
+    console.log('deleting file:', filename)
+    await window.files.deleteFile(filename)
+    await this.loadFiles()
+  }
 
   async loadFiles() {
     const files = await window.files.listFilesInFolder('embeddings')

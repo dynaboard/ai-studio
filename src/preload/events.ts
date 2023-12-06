@@ -15,7 +15,7 @@ export enum ModelChannel {
 export enum FileChannel {
   // GetFilePath = 'files:getFilePath',
   ListFilesInFolder = 'files:listFilesInFolder',
-  // DeleteFile = 'files:deleteModelFile',
+  DeleteFile = 'files:deleteFile',
 }
 
 export enum UsageChannel {

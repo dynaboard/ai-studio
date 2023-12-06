@@ -11,12 +11,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DEFAULT_TEMP, DEFAULT_TOP_P } from '@/providers/chat/manager'
-import { useAvailableFiles } from '@/providers/files/manager'
+import { useAvailableFiles, useFilesManager } from '@/providers/files/manager'
 import { useHistoryManager } from '@/providers/history/manager'
 import { DEFAULT_MODEL } from '@/providers/models/manager'
 
 export function FilesList() {
   const historyManager = useHistoryManager()
+  const filesManager = useFilesManager()
   const navigate = useNavigate()
   const files = useAvailableFiles()
 
@@ -44,14 +45,12 @@ export function FilesList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {files.map((invoice, idx) => (
+                {files.map((file, idx) => (
                   <TableRow key={idx}>
-                    <TableCell className="font-medium">
-                      {invoice.name}
-                    </TableCell>
+                    <TableCell className="font-medium">{file.name}</TableCell>
                     <TableCell>
                       <span className="inline-flex h-5 items-center rounded border border-neutral-200 bg-neutral-50 p-[1px] font-mono text-xs leading-7 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
-                        {invoice.path}
+                        {file.path}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -76,7 +75,12 @@ export function FilesList() {
                       />
                     </TableCell>
                     <TableCell>
-                      <LucideTrash className="h-5 w-5 cursor-pointer text-muted-foreground group-hover:text-red-600" />
+                      <LucideTrash
+                        className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-red-600"
+                        onClick={() => {
+                          filesManager.deleteFile(file.name)
+                        }}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

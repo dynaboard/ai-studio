@@ -1,9 +1,11 @@
 import { app, ipcMain } from 'electron'
-import { readdir, unlink } from 'fs/promises'
+import { promises as fsPromises } from 'fs'
+import { readdir } from 'fs/promises'
 
 import { FileChannel } from '../../preload/events'
 
 export class ElectronFilesManager {
+  // TODO: make this more dynamic, pass in folder name, support models
   async listFilesInFolder(folderName: string) {
     try {
       const files = await readdir(`${app.getPath('userData')}/${folderName}`, {
@@ -19,9 +21,15 @@ export class ElectronFilesManager {
     }
   }
 
-  async deleteFile(filename: string) {
-    const modelPath = `${app.getPath('userData')}/embeddings/${filename}`
-    await unlink(modelPath)
+  async deleteFileOrFolder(file: string) {
+    const modelPath = `${app.getPath('userData')}/embeddings/${file}`
+    const stats = await fsPromises.stat(modelPath)
+
+    if (stats.isDirectory()) {
+      await fsPromises.rm(modelPath, { recursive: true, force: true })
+    } else if (stats.isFile()) {
+      await fsPromises.unlink(modelPath)
+    }
   }
 
   addClientEventHandlers() {
@@ -39,8 +47,8 @@ export class ElectronFilesManager {
     //   }
     // })
 
-    // ipcMain.handle(FileChannel.DeleteFile, async (_, filename) => {
-    //   await this.deleteFile(filename)
-    // })
+    ipcMain.handle(FileChannel.DeleteFile, async (_, filename) => {
+      await this.deleteFileOrFolder(filename)
+    })
   }
 }
