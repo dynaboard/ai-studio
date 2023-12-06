@@ -7,18 +7,24 @@ contextBridge.exposeInMainWorld('files', {
   listFilesInFolder(folderName) {
     return ipcRenderer.invoke(FileChannel.ListFilesInFolder, folderName)
   },
+  readMetaFile() {
+    return ipcRenderer.invoke(FileChannel.ReadFile)
+  },
   deleteFile(filename) {
     return ipcRenderer.invoke(FileChannel.DeleteFile, filename)
   },
-  // getFilePath(filename) {
-  //   return ipcRenderer.invoke(FileChannel.GetFilePath, filename)
-  // },
 } satisfies FilesAPI)
 
 export interface FilesAPI {
   listFilesInFolder: (folderName: string) => Promise<Dirent[]>
+  readMetaFile: () => Promise<
+    {
+      filename: string
+      filePath: string
+      indexDir: string
+    }[]
+  >
   deleteFile: (filename: string) => Promise<void>
-  // getFilePath: (filename: string) => Promise<string | null>
 }
 
 declare global {

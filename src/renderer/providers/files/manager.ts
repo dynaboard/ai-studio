@@ -25,6 +25,8 @@ export class FilesManager {
 
   async loadFiles() {
     const files = await window.files.listFilesInFolder('embeddings')
+    const metafile = await window.files.readMetaFile()
+    console.log('metafile: ', metafile)
 
     this._state.update((state) => {
       return {

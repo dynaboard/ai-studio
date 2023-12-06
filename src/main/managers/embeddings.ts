@@ -1,8 +1,10 @@
 import { Tensor } from '@xenova/transformers'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { promises as fsPromises } from 'fs'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import fs, { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import path from 'path'
 import pdfParse from 'pdf-parse'
 
 import { sendToRenderer } from '@/webcontents'
@@ -12,6 +14,8 @@ import { ElectronVectorStoreManager } from './vector-store'
 
 export class EmbeddingsManager {
   worker = embeddingsWorker({})
+
+  private storagePath = path.join(app.getPath('userData'), 'embeddings')
 
   constructor(
     readonly window: BrowserWindow,
@@ -133,10 +137,43 @@ export class EmbeddingsManager {
       }
     }
 
+    await this.writeToEmbeddingsJSON({
+      filename: path.basename(filePath),
+      filePath,
+      indexDir: this.filePathToStoragePath(filePath),
+    })
+
     this.worker.postMessage({
       id: filePath,
       data: allData,
     })
+  }
+
+  async writeToEmbeddingsJSON(data) {
+    try {
+      const existingData = await this.readEmbeddingsJSON()
+
+      existingData.push(data)
+
+      const embeddingsJsonPath = join(this.storagePath, '_meta.json')
+      await fsPromises.writeFile(
+        embeddingsJsonPath,
+        JSON.stringify(existingData, null, 2),
+        'utf-8',
+      )
+    } catch (error) {
+      console.error('Error writing to embeddings.json:', error)
+    }
+  }
+
+  async readEmbeddingsJSON() {
+    try {
+      const embeddingsJsonPath = join(this.storagePath, '_meta.json')
+      const data = await fsPromises.readFile(embeddingsJsonPath, 'utf-8')
+      return JSON.parse(data)
+    } catch (error) {
+      return []
+    }
   }
 
   handleWorkerMessage = (message: {
@@ -235,5 +272,9 @@ export class EmbeddingsManager {
         query,
       })
     })
+  }
+
+  private filePathToStoragePath(filePath: string) {
+    return path.join(this.storagePath, `${path.basename(filePath)}-index`)
   }
 }
