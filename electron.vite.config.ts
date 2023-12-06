@@ -10,6 +10,7 @@ export default defineConfig({
       alias: {
         '@': resolve('src/main'),
         '@shared': resolve('src/shared'),
+        '@preload': resolve('src/preload'),
       },
     },
     plugins: [swcPlugin(), externalizeDepsPlugin()],

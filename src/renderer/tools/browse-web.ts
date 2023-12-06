@@ -11,11 +11,10 @@ export default class BrowseWebTool extends BaseTool {
       name: 'URL',
       description: 'URL to browse to',
       type: 'string',
-      required: true,
     },
   ]
 
   async run() {
-    console.log('BrowseWebTool.run()')
+    return 'This is the result of the Browse Web tool'
   }
 }

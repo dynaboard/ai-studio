@@ -15,3 +15,7 @@ export enum ModelChannel {
 export enum UsageChannel {
   GetSystemUsage = 'usage:getSystemUsage',
 }
+
+export enum ToolChannel {
+  GetTool = 'tools:getTool',
+}

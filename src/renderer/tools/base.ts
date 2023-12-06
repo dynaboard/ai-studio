@@ -1,9 +1,7 @@
 import { BrowserWindowManager } from '@/providers/browser-window'
-import { ChatManager } from '@/providers/chat/manager'
 import { HistoryManager } from '@/providers/history/manager'
 
 export type BaseToolManagers = {
-  chatManager: ChatManager
   historyManager: HistoryManager
   browserWindowManager: BrowserWindowManager
 }
@@ -24,7 +22,7 @@ export abstract class BaseTool {
     // empty
   }
 
-  abstract run(): Promise<void>
+  abstract run(): Promise<unknown>
 
   protected async ensureRequiredModels() {
     for (const model of this.requiredModels) {

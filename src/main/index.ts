@@ -7,6 +7,7 @@ import { ElectronChatManager } from '@/managers/chats'
 import { EmbeddingsManager } from '@/managers/embeddings'
 import { ElectronLlamaServerManager } from '@/managers/llama-server'
 import { ElectronModelManager } from '@/managers/models'
+import { ElectronToolManager } from '@/managers/tools'
 import { SystemUsageManager } from '@/managers/usage'
 import { ElectronVectorStoreManager } from '@/managers/vector-store'
 import { update } from '@/update'
@@ -28,6 +29,7 @@ let chatManager: ElectronChatManager | null = null
 let embeddingsManager: EmbeddingsManager | null = null
 const vectorStoreManager = new ElectronVectorStoreManager()
 const llamaServerManager = new ElectronLlamaServerManager()
+const toolManager = new ElectronToolManager(llamaServerManager)
 
 const usageManager = new SystemUsageManager(llamaServerManager)
 usageManager.addClientEventHandlers()
@@ -92,6 +94,7 @@ async function createWindow() {
   modelManager.addClientEventHandlers()
   chatManager.addClientEventHandlers()
   embeddingsManager.addClientEventHandlers()
+  toolManager.addClientEventHandlers()
 }
 
 app.whenReady().then(createWindow)

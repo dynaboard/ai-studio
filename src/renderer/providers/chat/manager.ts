@@ -4,6 +4,7 @@ import { useValue } from 'signia-react'
 
 import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
+import { ToolManager } from '@/providers/tools/manager'
 
 type ModelState = {
   messages: Message[]
@@ -37,6 +38,7 @@ export class ChatManager {
 
   constructor(
     readonly historyManager: HistoryManager,
+    readonly toolManager: ToolManager,
     model?: string,
     threadID?: string,
   ) {
@@ -182,22 +184,37 @@ export class ChatManager {
         message: newAssistantMessage,
       })
 
-      const response = await window.chats.sendMessage({
-        systemPrompt: currentSystemPrompt,
-        messageID: newUserMessage.id,
-        assistantMessageID,
-        message,
-        modelPath,
-        threadID,
-        promptOptions,
-        selectedFile,
-      })
+      if (this.toolManager.hasActiveTools) {
+        console.log('Checking if prompt can be handled by a tool')
+        const possibleTool = await this.toolManager.getToolForPrompt(message)
+        if (possibleTool) {
+          console.log('Found a tool:', possibleTool)
+          const result = await possibleTool.run()
+          this.historyManager.editMessage({
+            threadID,
+            messageID: assistantMessageID,
+            contents: String(result),
+            state: 'sent',
+          })
+        }
+      } else {
+        const response = await window.chats.sendMessage({
+          systemPrompt: currentSystemPrompt,
+          messageID: newUserMessage.id,
+          assistantMessageID,
+          message,
+          modelPath,
+          threadID,
+          promptOptions,
+          selectedFile,
+        })
 
-      this.historyManager.editMessage({
-        threadID,
-        messageID: assistantMessageID,
-        contents: response,
-      })
+        this.historyManager.editMessage({
+          threadID,
+          messageID: assistantMessageID,
+          contents: response,
+        })
+      }
     } catch (e) {
       const error = e as Error
       // eslint-disable-next-line no-console
@@ -437,7 +454,7 @@ export class ChatManager {
 }
 
 export const ChatManagerContext = createContext(
-  new ChatManager(new HistoryManager()),
+  new ChatManager(new HistoryManager(), new ToolManager({} as never)),
 )
 
 export function useChatManager() {

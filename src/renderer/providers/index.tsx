@@ -1,10 +1,6 @@
 import { useEffect, useMemo } from 'react'
 
-import {
-  ChatManager,
-  ChatManagerContext,
-  useChatManager,
-} from '@/providers/chat/manager'
+import { ChatManager, ChatManagerContext } from '@/providers/chat/manager'
 import {
   HistoryManager,
   HistoryManagerContext,
@@ -15,7 +11,11 @@ import {
   SystemUsageManager,
   SystemUsageManagerContext,
 } from '@/providers/system-usage'
-import { ToolManager, ToolManagerContext } from '@/providers/tools/manager'
+import {
+  ToolManager,
+  ToolManagerContext,
+  useToolManager,
+} from '@/providers/tools/manager'
 
 import {
   BrowserWindowManager,
@@ -31,6 +31,7 @@ export function ChatManagerProvider({
   model?: string
 }) {
   const historyManager = useHistoryManager()
+  const toolManager = useToolManager()
 
   const manager = useMemo(() => {
     // we dont use the router here because we want the threadID as fast as possible
@@ -41,8 +42,8 @@ export function ChatManagerProvider({
       threadID = splitName[splitName.length - 1]
     }
 
-    return new ChatManager(historyManager, model, threadID)
-  }, [model, historyManager])
+    return new ChatManager(historyManager, toolManager, model, threadID)
+  }, [model, historyManager, toolManager])
 
   useEffect(() => {
     manager.initialize()
@@ -141,16 +142,14 @@ export function ToolManagerProvider({
   children: React.ReactNode
 }) {
   const historyManager = useHistoryManager()
-  const chatManager = useChatManager()
   const browserWindowManager = useBrowserWindowManager()
 
   const manager = useMemo(() => {
     return new ToolManager({
       browserWindowManager,
-      chatManager,
       historyManager,
     })
-  }, [browserWindowManager, chatManager, historyManager])
+  }, [browserWindowManager, historyManager])
 
   return (
     <ToolManagerContext.Provider value={manager}>

@@ -7,7 +7,10 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { readFile } from 'fs/promises'
 import path from 'path'
 
-import { ElectronLlamaServerManager } from '@/managers/llama-server'
+import {
+  CompletionParams,
+  ElectronLlamaServerManager,
+} from '@/managers/llama-server'
 
 import {
   BasePromptWrapper,
@@ -86,6 +89,7 @@ export class ElectronChatManager {
     }
 
     await this.llamaServerManager.launchServer({
+      id: modelPath,
       modelPath,
       mmprojPath: mmprojPath,
       multimodal: modelFile?.multimodal,
@@ -525,20 +529,7 @@ Helpful Answer:
 
   async *llama(
     prompt: string,
-    params: {
-      temperature?: number
-      top_k?: number
-      top_p?: number
-      min_p?: number
-      n_predict?: number
-      n_keep?: number
-      stop?: string[]
-      presence_penalty?: number
-      frequency_penalty?: number
-      grammar?: string
-      seed?: number
-      image_data?: { data: string; id: number }[]
-    } = {},
+    params: CompletionParams = {},
     config: {
       controller?: AbortController
     } = {},
