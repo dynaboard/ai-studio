@@ -1,7 +1,9 @@
 <div align="center">
   <img alt="Dynaboard AI Studio Logo" src="src/renderer/assets/logo-light.svg" />
   <p></p>
-  <p>Run AI models, completely local. (better tagline please)</p>
+  <p>
+    <sub>Run AI models, completely local. (better tagline please)</sub>
+  </p>
 </div>
 
 <hr />
