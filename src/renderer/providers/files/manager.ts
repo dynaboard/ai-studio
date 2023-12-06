@@ -42,6 +42,10 @@ export class FilesManager {
   get availableFiles() {
     return this.state.availableFiles
   }
+
+  isFileNotArchived(filename: string) {
+    return !this.state.availableFiles.some((entry) => entry.name === filename)
+  }
 }
 
 export const FilesManagerContext = createContext(new FilesManager())
