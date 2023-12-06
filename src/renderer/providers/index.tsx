@@ -1,6 +1,10 @@
 import { useEffect, useMemo } from 'react'
 
-import { ChatManager, ChatManagerContext } from '@/providers/chat/manager'
+import {
+  ChatManager,
+  ChatManagerContext,
+  useChatManager,
+} from '@/providers/chat/manager'
 import {
   HistoryManager,
   HistoryManagerContext,
@@ -11,10 +15,12 @@ import {
   SystemUsageManager,
   SystemUsageManagerContext,
 } from '@/providers/system-usage'
+import { ToolManager, ToolManagerContext } from '@/providers/tools/manager'
 
 import {
   BrowserWindowManager,
   BrowserWindowManagerContext,
+  useBrowserWindowManager,
 } from './browser-window'
 
 export function ChatManagerProvider({
@@ -126,5 +132,29 @@ export function BrowserWindowManagerProvider({
     <BrowserWindowManagerContext.Provider value={manager}>
       {children}
     </BrowserWindowManagerContext.Provider>
+  )
+}
+
+export function ToolManagerProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const historyManager = useHistoryManager()
+  const chatManager = useChatManager()
+  const browserWindowManager = useBrowserWindowManager()
+
+  const manager = useMemo(() => {
+    return new ToolManager({
+      browserWindowManager,
+      chatManager,
+      historyManager,
+    })
+  }, [browserWindowManager, chatManager, historyManager])
+
+  return (
+    <ToolManagerContext.Provider value={manager}>
+      {children}
+    </ToolManagerContext.Provider>
   )
 }

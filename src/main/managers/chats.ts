@@ -255,13 +255,15 @@ export class ElectronChatManager {
       includeHistory: !messageWithImage,
     })
 
+    console.log('\n\n\n', prompt, '\n\n\n')
+
     let response = ''
     for await (const chunk of this.llama(
       prompt,
       {
         top_k: 20,
-        top_p: 0.3,
-        temperature: 0.5,
+        top_p: promptOptions?.topP ?? 0.3,
+        temperature: promptOptions?.temperature ?? 0.5,
         image_data: imageData ? [imageData] : undefined,
       },
       {
