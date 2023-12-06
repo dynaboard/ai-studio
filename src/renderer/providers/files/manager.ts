@@ -19,12 +19,12 @@ export class FilesManager {
   destroy() {}
 
   async deleteFile(filename: string) {
-    await window.files.deleteFile(filename)
+    await window.files.deleteFile('embeddings', filename)
     await this.loadFiles()
   }
 
   async loadFiles() {
-    const files = await window.files.readFile('_meta.json')
+    const files = await window.files.readFile('embeddings', '_meta.json')
 
     this._state.update((state) => {
       return {

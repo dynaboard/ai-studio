@@ -6,8 +6,6 @@ import path, { join } from 'node:path'
 import { FileChannel } from '../../preload/events'
 
 export class ElectronFilesManager {
-  private embeddingsPath = path.join(app.getPath('userData'), 'embeddings')
-
   async listFilesInFolder(folderName: string) {
     try {
       const files = await readdir(`${app.getPath('userData')}/${folderName}`, {
@@ -25,14 +23,17 @@ export class ElectronFilesManager {
     }
   }
 
-  async readFile(filename: string) {
-    const embeddingsJsonPath = join(this.embeddingsPath, filename)
+  async readFile(dir: string, filename: string) {
+    const embeddingsJsonPath = join(
+      path.join(app.getPath('userData'), dir),
+      filename,
+    )
     const data = await fsPromises.readFile(embeddingsJsonPath, 'utf-8')
     return JSON.parse(data)
   }
 
-  async deleteFileOrFolder(file: string) {
-    const fileOrFolderPath = `${app.getPath('userData')}/embeddings/${file}`
+  async deleteFileOrFolder(dir: string, file: string) {
+    const fileOrFolderPath = `${app.getPath('userData')}/${dir}/${file}`
     const stats = await fsPromises.stat(fileOrFolderPath)
 
     // Remove file or folder
@@ -44,7 +45,10 @@ export class ElectronFilesManager {
 
     // Read and update the _meta.json file
     try {
-      const metaPath = join(this.embeddingsPath, '_meta.json')
+      const metaPath = join(
+        path.join(app.getPath('userData'), dir),
+        '_meta.json',
+      )
       const data = await fsPromises.readFile(metaPath, 'utf-8')
       const metaArray = JSON.parse(data)
 
@@ -54,16 +58,9 @@ export class ElectronFilesManager {
         (entry) => entry.name === filenameWithoutIndex,
       )
 
-      console.log(
-        'Removing entry at index:',
-        filenameWithoutIndex,
-        indexToRemove,
-      )
-
       if (indexToRemove !== -1) {
         metaArray.splice(indexToRemove, 1)
         const updatedMetaJSON = JSON.stringify(metaArray, null, 2)
-        console.log('Updating _meta.json with:', updatedMetaJSON)
         await fsPromises.writeFile(metaPath, updatedMetaJSON, 'utf-8')
       }
     } catch (error) {
@@ -76,12 +73,12 @@ export class ElectronFilesManager {
       return this.listFilesInFolder(folderName)
     })
 
-    ipcMain.handle(FileChannel.ReadFile, async (_, filename) => {
-      return this.readFile(filename)
+    ipcMain.handle(FileChannel.ReadFile, async (_, dir, filename) => {
+      return this.readFile(dir, filename)
     })
 
-    ipcMain.handle(FileChannel.DeleteFile, async (_, filename) => {
-      await this.deleteFileOrFolder(filename)
+    ipcMain.handle(FileChannel.DeleteFile, async (_, dir, filename) => {
+      await this.deleteFileOrFolder(dir, filename)
     })
   }
 }
