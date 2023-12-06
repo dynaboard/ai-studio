@@ -9,6 +9,7 @@ import { Link as BaseLink, useMatches } from 'react-router-dom'
 
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAvailableFiles } from '@/providers/files/manager'
 
 function Link({
   icon: Icon,
@@ -36,6 +37,10 @@ function Link({
 }
 
 export function Sidebar() {
+  const files = useAvailableFiles()
+
+  const haveFiles = files.length > 0
+
   return (
     <nav className="h-full w-full">
       <div className={cn('space-y-[1px] p-2')}>
@@ -45,9 +50,13 @@ export function Sidebar() {
         <Link to="/models" icon={LucideFileBox}>
           <span className="select-none">Models</span>
         </Link>
-        <Link to="/files" icon={LucideFiles}>
-          <span className="select-none">Files</span>
-        </Link>
+        {haveFiles ? (
+          <Link to="/files" icon={LucideFiles}>
+            <span className="select-none">Files</span>
+          </Link>
+        ) : (
+          <></>
+        )}
       </div>
     </nav>
   )
