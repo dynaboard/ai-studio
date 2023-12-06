@@ -276,15 +276,30 @@ export class ElectronChatManager {
     }
 
     const searchAPI = new SearchApi()
-    const startIndex = response.indexOf('<INFO>')
-    const endIndex = response.indexOf('</INFO>')
+    const startTextIndex = response.indexOf('<TEXT>')
+    const endTextIndex = response.indexOf('</TEXT>')
+    const startImageIndex = response.indexOf('<IMAGE>')
+    const endImageIndex = response.indexOf('</IMAGE>')
 
-    console.log({ startIndex, endIndex })
-    if (startIndex >= 0 && endIndex >= 0 && endIndex > startIndex) {
-      const query = response.slice(startIndex + 6, endIndex)
+    if (
+      startTextIndex >= 0 &&
+      endTextIndex >= 0 &&
+      endTextIndex > startTextIndex
+    ) {
+      const query = response.slice(startTextIndex + 6, endTextIndex)
       for await (const text of searchAPI.text(query)) {
-        console.log(text.title)
-        onToken(`${text.title}\n`)
+        onToken(`\n\n${text.title}`)
+      }
+    }
+
+    if (
+      startImageIndex >= 0 &&
+      endImageIndex >= 0 &&
+      endImageIndex > startImageIndex
+    ) {
+      const query = response.slice(startImageIndex + 6, endImageIndex)
+      for await (const text of searchAPI.images(query)) {
+        onToken(`\n\n![image](${text.thumbnail})`)
       }
     }
 

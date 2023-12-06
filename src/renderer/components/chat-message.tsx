@@ -29,6 +29,36 @@ import { useMessage } from '@/providers/history/manager'
 import { CodeBlock } from './codeblock'
 import { MemoizedReactMarkdown } from './markdown'
 
+function removeBetweenTags(
+  input: string,
+  startTag: string,
+  endTag: string,
+): string {
+  const startIndex = input.indexOf(startTag)
+  const endIndex = input.indexOf(endTag)
+
+  if (startIndex !== -1) {
+    if (endIndex !== -1) {
+      return (
+        input.substring(0, startIndex) +
+        input.substring(endIndex + endTag.length)
+      )
+    } else {
+      // If endIndex is not found, truncate everything starting from startIndex
+      return input.substring(0, startIndex)
+    }
+  } else {
+    // If startIndex is not found, truncate everything until after endIndex
+
+    return endIndex !== -1 ? input.substring(endIndex + endTag.length) : input
+  }
+}
+
+function cleanMessage(input: string): string {
+  const noImageTags = removeBetweenTags(input, '<IMAGE>', '</IMAGE>')
+  return removeBetweenTags(noImageTags, '<TEXT>', '</TEXT>')
+}
+
 export function ChatMessage({
   messageID,
   onHeightChange,
@@ -166,7 +196,7 @@ export function ChatMessage({
             >
               {message.role === 'assistant' && message.state === 'pending'
                 ? ''
-                : message.message || ' '}
+                : cleanMessage(message.message) || ' '}
             </MemoizedReactMarkdown>
           )}
         </div>

@@ -92,7 +92,7 @@ export class SearchApi {
     }
 
     const cache = new Set<string>()
-    for (let _ = 0; _ < 10; _++) {
+    for (let _ = 0; _ < 1; _++) {
       const resp = await this._getUrl(
         'GET',
         'https://duckduckgo.com/i.js',
@@ -111,7 +111,7 @@ export class SearchApi {
         }
 
         let resultExists = false
-        for (const row of pageData) {
+        for (const row of pageData.slice(0, 2)) {
           const image_url = row.image
           if (image_url && !cache.has(image_url)) {
             cache.add(image_url)
@@ -198,12 +198,13 @@ export class SearchApi {
 
       try {
         const pageData = resp.data.results
+
         if (!pageData) {
           break
         }
 
         let resultExists = false
-        for (const row of pageData) {
+        for (const row of pageData.slice(0, 2)) {
           const href = row.u
           if (
             href &&
