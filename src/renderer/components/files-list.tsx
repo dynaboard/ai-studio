@@ -1,13 +1,19 @@
-import { LucideMessageSquarePlus } from 'lucide-react'
+import { LucideMessageSquarePlus, LucideTrash } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { DEFAULT_TEMP, DEFAULT_TOP_P } from '@/providers/chat/manager'
 import { useAvailableFiles } from '@/providers/files/manager'
 import { useHistoryManager } from '@/providers/history/manager'
 import { DEFAULT_MODEL } from '@/providers/models/manager'
-
-import { Label } from './ui/label'
-import { ScrollArea } from './ui/scroll-area'
 
 export function FilesList() {
   const historyManager = useHistoryManager()
@@ -27,39 +33,55 @@ export function FilesList() {
             </span>
           </div>
           <div className="h-screen overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="mx-auto flex h-screen flex-1 flex-col gap-4 bg-slate-50 p-4 dark:bg-slate-900">
-                {files.map((file) => {
-                  return (
-                    <div
-                      key={file.name}
-                      className="flex h-32 cursor-pointer grid-rows-1 flex-col items-center justify-center gap-4 rounded-lg border bg-card text-card-foreground shadow-sm"
-                      onClick={() => {
-                        const newThread = historyManager.addThread({
-                          modelID: DEFAULT_MODEL,
-                          title: 'New Thread',
-                          createdAt: new Date(),
-                          messages: [],
-                          temperature: DEFAULT_TEMP,
-                          topP: DEFAULT_TOP_P,
-                          systemPrompt: 'You are a helpful assistant.',
-                          // TODO: create a new file called embeddings.json then write the filePath to the file
-                          filePath:
-                            '/Users/cyrusgoh/Desktop/PDF/Toolformer.pdf',
-                        })
+            <Table>
+              <TableCaption className="sr-only">
+                A list of your recent invoices.
+              </TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">Name</TableHead>
+                  <TableHead>Path</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {files.map((invoice, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell className="font-medium">
+                      {invoice.name}
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex h-5 items-center rounded border border-neutral-200 bg-neutral-50 p-[1px] font-mono text-xs leading-7 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100">
+                        {invoice.path}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <LucideMessageSquarePlus
+                        className="h-5 w-5 cursor-pointer text-muted-foreground"
+                        onClick={() => {
+                          const newThread = historyManager.addThread({
+                            modelID: DEFAULT_MODEL,
+                            title: 'New Thread',
+                            createdAt: new Date(),
+                            messages: [],
+                            temperature: DEFAULT_TEMP,
+                            topP: DEFAULT_TOP_P,
+                            systemPrompt: 'You are a helpful assistant.',
+                            // TODO: create a new file called embeddings.json then write the filePath to the file
+                            filePath:
+                              '/Users/cyrusgoh/Desktop/PDF/Toolformer.pdf',
+                          })
 
-                        navigate(`/chats/${newThread.id}`)
-                      }}
-                    >
-                      <Label className="text-lg font-semibold leading-none tracking-tight">
-                        {file.name}
-                      </Label>
-                      <LucideMessageSquarePlus className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  )
-                })}
-              </div>
-            </ScrollArea>
+                          navigate(`/chats/${newThread.id}`)
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <LucideTrash className="h-5 w-5 cursor-pointer text-muted-foreground group-hover:text-red-600" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </>
       ) : (
