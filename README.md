@@ -22,17 +22,17 @@ Dynaboard AI is pre-packaged for Apple M-series operating systems. Simply downlo
 
 ### Getting Started
 
-1. Once downloaded, you can download any supported model. We recommend going with the default, Mistral 7B v0.1.
+1. Once installed, you can download any supported model. We recommend going with the default, Mistral 7B v0.1, which is downloaded when you first start the application.
 1. Go to a thread, configure parameters / system prompt.
-1. Chat with the model
+1. Chat with the model.
 
-### Minimum Requirements
+#### Minimum Requirements
 
 * macOS 13+ (Ventura)
 * M1 with 16GB of RAM
 * 5GB of free disk space (for models)
 
-### Recommended Requirements
+#### Recommended Requirements
 
 * macOS 14+ (Sonoma)
 * M1 Pro with 16GB of RAM
