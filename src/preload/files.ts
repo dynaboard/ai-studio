@@ -1,3 +1,4 @@
+import { EmbeddingMeta } from '@shared/meta'
 import { contextBridge, ipcRenderer } from 'electron'
 import { Dirent } from 'node:fs'
 
@@ -7,8 +8,8 @@ contextBridge.exposeInMainWorld('files', {
   listFilesInFolder(folderName) {
     return ipcRenderer.invoke(FileChannel.ListFilesInFolder, folderName)
   },
-  readMetaFile() {
-    return ipcRenderer.invoke(FileChannel.ReadFile)
+  readFile(filename) {
+    return ipcRenderer.invoke(FileChannel.ReadFile, filename)
   },
   deleteFile(filename) {
     return ipcRenderer.invoke(FileChannel.DeleteFile, filename)
@@ -17,13 +18,7 @@ contextBridge.exposeInMainWorld('files', {
 
 export interface FilesAPI {
   listFilesInFolder: (folderName: string) => Promise<Dirent[]>
-  readMetaFile: () => Promise<
-    {
-      filename: string
-      filePath: string
-      indexDir: string
-    }[]
-  >
+  readFile: (filename: string) => Promise<EmbeddingMeta[]>
   deleteFile: (filename: string) => Promise<void>
 }
 

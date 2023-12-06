@@ -1,10 +1,10 @@
-import { Dirent } from 'node:fs'
+import { EmbeddingMeta } from '@shared/meta'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
 
 type FilesManagerState = {
-  availableFiles: Dirent[]
+  availableFiles: EmbeddingMeta[]
 }
 
 export class FilesManager {
@@ -24,9 +24,7 @@ export class FilesManager {
   }
 
   async loadFiles() {
-    const files = await window.files.listFilesInFolder('embeddings')
-    const metafile = await window.files.readMetaFile()
-    console.log('metafile: ', metafile)
+    const files = await window.files.readFile('_meta.json')
 
     this._state.update((state) => {
       return {

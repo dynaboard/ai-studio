@@ -138,8 +138,8 @@ export class EmbeddingsManager {
     }
 
     await this.writeToEmbeddingsJSON({
-      filename: path.basename(filePath),
-      filePath,
+      name: path.basename(filePath),
+      path: filePath,
       indexDir: this.filePathToStoragePath(filePath),
     })
 

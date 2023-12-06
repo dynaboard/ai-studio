@@ -301,9 +301,8 @@ export function ChatWindow({ id }: { id?: string }) {
           {fileName && !base64Image ? (
             <div className="flex h-8 w-full items-center border-b px-2 text-xs">
               <span>Current file:</span>&nbsp;
+              {/* TODO: removed filename index */}
               <span className="font-bold">{fileName}</span>
-              {/* TODO: open pdf viewer */}
-              {/* <LucideEye className="ml-1 h-4 w-4 hover:cursor-pointer hover:text-muted-foreground" /> */}
             </div>
           ) : null}
 

@@ -65,9 +65,7 @@ export function FilesList() {
                             temperature: DEFAULT_TEMP,
                             topP: DEFAULT_TOP_P,
                             systemPrompt: 'You are a helpful assistant.',
-                            // TODO: create a new file called embeddings.json then write the filePath to the file
-                            filePath:
-                              '/Users/cyrusgoh/Desktop/PDF/Toolformer.pdf',
+                            filePath: file.path,
                           })
 
                           navigate(`/chats/${newThread.id}`)
@@ -78,7 +76,8 @@ export function FilesList() {
                       <LucideTrash
                         className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-red-600"
                         onClick={() => {
-                          filesManager.deleteFile(file.name)
+                          const fileIndexName = `${file.name}-index`
+                          filesManager.deleteFile(fileIndexName)
                         }}
                       />
                     </TableCell>
