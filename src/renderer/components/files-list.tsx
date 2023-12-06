@@ -1,6 +1,17 @@
 import { LucideMessageSquarePlus, LucideTrash } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import {
   Table,
   TableBody,
@@ -15,11 +26,15 @@ import { useAvailableFiles, useFilesManager } from '@/providers/files/manager'
 import { useHistoryManager } from '@/providers/history/manager'
 import { DEFAULT_MODEL } from '@/providers/models/manager'
 
+import { Button } from './ui/button'
+
 export function FilesList() {
   const historyManager = useHistoryManager()
   const filesManager = useFilesManager()
   const navigate = useNavigate()
   const files = useAvailableFiles()
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   return (
     <div className="grid h-[calc(100vh-36px)] grid-cols-1">
@@ -73,13 +88,51 @@ export function FilesList() {
                       />
                     </TableCell>
                     <TableCell>
-                      <LucideTrash
-                        className="h-5 w-5 cursor-pointer text-muted-foreground hover:text-red-600"
-                        onClick={() => {
-                          const fileIndexName = `${file.name}-index`
-                          filesManager.deleteFile(fileIndexName)
-                        }}
-                      />
+                      <AlertDialog open={showDeleteDialog}>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            size="sm"
+                            variant="iconButton"
+                            className="block p-0 hover:text-destructive"
+                            onClick={() => {
+                              setShowDeleteDialog(true)
+                            }}
+                          >
+                            <LucideTrash className="h-5 w-5 text-muted-foreground hover:text-red-600" />
+                          </Button>
+                        </AlertDialogTrigger>
+
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you sure absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This index will no
+                              longer be accessible by you.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel
+                              onClick={() => {
+                                setShowDeleteDialog(false)
+                              }}
+                            >
+                              Cancel
+                            </AlertDialogCancel>
+                            <Button
+                              variant="destructive"
+                              onClick={() => {
+                                const fileIndexName = `${file.name}-index`
+                                filesManager.deleteFile(fileIndexName)
+                                setShowDeleteDialog(false)
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}
