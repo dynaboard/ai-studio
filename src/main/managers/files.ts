@@ -39,8 +39,10 @@ export class ElectronFilesManager {
     // Remove file or folder
     if (stats.isDirectory()) {
       await fsPromises.rm(fileOrFolderPath, { recursive: true, force: true })
+      console.log('Removed directory:', fileOrFolderPath)
     } else if (stats.isFile()) {
       await fsPromises.unlink(fileOrFolderPath)
+      console.log('Removed file:', fileOrFolderPath)
     }
 
     // Read and update the _meta.json file

@@ -137,12 +137,6 @@ export class EmbeddingsManager {
       }
     }
 
-    await this.writeToEmbeddingsJSON({
-      name: path.basename(filePath),
-      path: filePath,
-      indexDir: this.filePathToStoragePath(filePath),
-    })
-
     this.worker.postMessage({
       id: filePath,
       data: allData,
@@ -161,8 +155,10 @@ export class EmbeddingsManager {
         JSON.stringify(existingData, null, 2),
         'utf-8',
       )
+
+      console.log('Wrote embeddings meta to _meta.json')
     } catch (error) {
-      console.error('Error writing to embeddings.json:', error)
+      console.error('Error writing to _meta.json:', error)
     }
   }
 
@@ -191,6 +187,13 @@ export class EmbeddingsManager {
       .insertFileEmbeddings({
         originalFilePath: message.id,
         data: message.data,
+      })
+      .then(() => {
+        this.writeToEmbeddingsJSON({
+          name: path.basename(message.id),
+          path: message.id,
+          indexDir: this.filePathToStoragePath(message.id),
+        })
       })
       .then(() => {
         sendToRenderer(
