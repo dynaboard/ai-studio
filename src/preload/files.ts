@@ -14,12 +14,16 @@ contextBridge.exposeInMainWorld('files', {
   deleteFile(dir, filename) {
     return ipcRenderer.invoke(FileChannel.DeleteFile, dir, filename)
   },
+  openPath(filePath) {
+    ipcRenderer.send('open-path', filePath)
+  },
 } satisfies FilesAPI)
 
 export interface FilesAPI {
   listFilesInFolder: (folderName: string) => Promise<Dirent[]>
   readFile: (dir: string, filename: string) => Promise<EmbeddingMeta[]>
   deleteFile: (dir: string, filename: string) => Promise<void>
+  openPath: (filePath: string) => void
 }
 
 declare global {

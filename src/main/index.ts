@@ -1,5 +1,5 @@
 import { is } from '@electron-toolkit/utils'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
@@ -140,4 +140,8 @@ app.on('activate', () => {
 
 app.on('will-quit', () => {
   llamaServerManager.close()
+})
+
+ipcMain.on('open-path', (_, path) => {
+  shell.openPath(path)
 })
