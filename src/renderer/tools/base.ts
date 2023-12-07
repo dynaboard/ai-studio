@@ -31,6 +31,8 @@ export abstract class BaseTool {
   abstract requiredModels: string[]
   abstract parameters: ToolParameter[]
 
+  longDescription?: string
+
   constructor(readonly managers: BaseToolManagers) {
     // empty
   }

@@ -1,13 +1,12 @@
 import { Readability } from '@mozilla/readability'
 import { z } from 'zod'
 
-import { DEFAULT_MODEL } from '@/providers/models/manager'
 import { BaseTool, RunContext, ToolParameter } from '@/tools/base'
 
 export default class SummarizeArticleTool extends BaseTool {
   name = 'Summarize Article'
   description = 'Summarize an article from the internet'
-  requiredModels = [DEFAULT_MODEL]
+  requiredModels = ['Mistral 7B Instruct v0.1']
 
   parameters: ToolParameter[] = [
     {

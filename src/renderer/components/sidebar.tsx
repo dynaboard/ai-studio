@@ -1,4 +1,9 @@
-import { LucideFileBox, LucideIcon, LucideMessageCircle } from 'lucide-react'
+import {
+  LucideFileBox,
+  LucideIcon,
+  LucideMessageCircle,
+  LucideWrench,
+} from 'lucide-react'
 import React from 'react'
 import { Link as BaseLink, useMatches } from 'react-router-dom'
 
@@ -39,6 +44,9 @@ export function Sidebar() {
         </Link>
         <Link to="/models" icon={LucideFileBox}>
           <span className="select-none">Models</span>
+        </Link>
+        <Link to="/tools" icon={LucideWrench}>
+          <span className="select-none">Tools</span>
         </Link>
       </div>
     </nav>

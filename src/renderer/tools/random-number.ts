@@ -1,10 +1,9 @@
-import { DEFAULT_MODEL } from '@/providers/models/manager'
 import { BaseTool, ToolParameter } from '@/tools/base'
 
 export default class RandomNumberTool extends BaseTool {
   name = 'Random Number Generator'
   description = 'Generate a random number'
-  requiredModels = [DEFAULT_MODEL]
+  requiredModels = ['Mistral 7B Instruct v0.1']
 
   parameters: ToolParameter[] = []
 
