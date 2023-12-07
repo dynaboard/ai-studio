@@ -13,7 +13,7 @@ export enum ModelChannel {
 }
 
 export enum FileChannel {
-  ListFilesInFolder = 'files:listFilesInFolder',
+  ReadDir = 'files:readDir',
   ReadFile = 'files:readFile',
   DeleteFile = 'files:deleteFile',
 }

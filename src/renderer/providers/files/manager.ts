@@ -1,19 +1,35 @@
 import { EmbeddingMeta } from '@shared/meta'
+import { Dirent } from 'node:fs'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
 
 type FilesManagerState = {
-  availableFiles: EmbeddingMeta[]
+  embeddingsMeta: EmbeddingMeta[]
+  embeddingsIndexes: Dirent[]
 }
 
 export class FilesManager {
   private readonly _state = atom<FilesManagerState>('FilesManager._state', {
-    availableFiles: [], // should be available once app renders
+    embeddingsMeta: [],
+    embeddingsIndexes: [],
   })
 
   constructor() {
     void this.loadFiles()
+  }
+
+  async loadFiles() {
+    const indexes = await window.files.readDir('embeddings')
+    const files = await window.files.readFile('embeddings', '_meta.json')
+
+    this._state.update((state) => {
+      return {
+        ...state,
+        embeddingsMeta: files,
+        embeddingsIndexes: indexes,
+      }
+    })
   }
 
   async deleteFile(filename: string) {
@@ -21,28 +37,22 @@ export class FilesManager {
     await this.loadFiles()
   }
 
-  async loadFiles() {
-    const files = await window.files.readFile('embeddings', '_meta.json')
-
-    this._state.update((state) => {
-      return {
-        ...state,
-        availableFiles: files,
-      }
-    })
-  }
-
   get state() {
     return this._state.value
   }
 
   @computed
-  get availableFiles() {
-    return this.state.availableFiles
+  get embeddingsMeta() {
+    return this.state.embeddingsMeta
+  }
+
+  @computed
+  get embeddingsIndexes() {
+    return this.state.embeddingsIndexes
   }
 
   isFileNotArchived(filename: string) {
-    return !this.state.availableFiles.some((entry) => entry.name === filename)
+    return !this.state.embeddingsMeta.some((entry) => entry.name === filename)
   }
 }
 
@@ -52,10 +62,10 @@ export function useFilesManager() {
   return useContext(FilesManagerContext)
 }
 
-export function useAvailableFiles() {
+export function useEmbeddingsMeta() {
   const FilesManager = useFilesManager()
 
-  return useValue('useAvailableFiles', () => FilesManager.availableFiles, [
-    FilesManager.availableFiles,
+  return useValue('useEmbeddingsMeta', () => FilesManager.embeddingsMeta, [
+    FilesManager.embeddingsMeta,
   ])
 }

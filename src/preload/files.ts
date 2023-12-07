@@ -5,8 +5,8 @@ import { Dirent } from 'node:fs'
 import { FileChannel } from './events'
 
 contextBridge.exposeInMainWorld('files', {
-  listFilesInFolder(folderName) {
-    return ipcRenderer.invoke(FileChannel.ListFilesInFolder, folderName)
+  readDir(folderName) {
+    return ipcRenderer.invoke(FileChannel.ReadDir, folderName)
   },
   readFile(dir, filename) {
     return ipcRenderer.invoke(FileChannel.ReadFile, dir, filename)
@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('files', {
 } satisfies FilesAPI)
 
 export interface FilesAPI {
-  listFilesInFolder: (folderName: string) => Promise<Dirent[]>
+  readDir: (folderName: string) => Promise<Dirent[]>
   readFile: (dir: string, filename: string) => Promise<EmbeddingMeta[]>
   deleteFile: (dir: string, filename: string) => Promise<void>
   openPath: (filePath: string) => void

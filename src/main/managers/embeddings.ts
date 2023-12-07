@@ -157,7 +157,7 @@ export class EmbeddingsManager {
         'utf-8',
       )
 
-      console.log(`Wrote embeddings meta ${data.name} to _meta.json`)
+      console.log('Wrote embeddings meta to _meta.json', data.name)
     } catch (error) {
       console.error('Error writing to _meta.json:', error)
     }

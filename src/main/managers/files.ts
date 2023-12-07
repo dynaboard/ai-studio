@@ -6,36 +6,105 @@ import path, { join } from 'node:path'
 import { FileChannel } from '../../preload/events'
 
 export class ElectronFilesManager {
-  async listFilesInFolder(folderName: string) {
+  async readDir(folderName: string) {
     try {
       const files = await readdir(`${app.getPath('userData')}/${folderName}`, {
         withFileTypes: true,
       })
 
+      // Strictly return only directories that end with '-index'
       const filteredFiles = files.filter((file) => {
         return file.isDirectory() && file.name.endsWith('-index')
       })
 
       return filteredFiles
     } catch (error) {
-      console.error('Error listing files:', error)
+      // eslint-disable-next-line no-console
+      console.error('Error reading the directory:', error)
       return []
     }
   }
 
   async readFile(dir: string, filename: string) {
-    const embeddingsJsonPath = join(
+    const embeddingsMetaPath = join(
       path.join(app.getPath('userData'), dir),
       filename,
     )
 
-    if (!existsSync(embeddingsJsonPath)) {
-      await fsPromises.writeFile(embeddingsJsonPath, '[]', 'utf-8')
-      console.log('Created empty file:', embeddingsJsonPath)
+    const embeddingsIndexes = await this.readDir('embeddings')
+
+    if (!existsSync(embeddingsMetaPath)) {
+      await fsPromises.writeFile(embeddingsMetaPath, '[]', 'utf-8')
+      // eslint-disable-next-line no-console
+      console.log('Created empty file:', embeddingsMetaPath)
     }
 
-    const data = await fsPromises.readFile(embeddingsJsonPath, 'utf-8')
-    return JSON.parse(data)
+    const data = await fsPromises.readFile(embeddingsMetaPath, 'utf-8')
+    const metaArray = JSON.parse(data)
+
+    if (embeddingsIndexes.length !== metaArray.length) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Warning: Embeddings indexes count (${embeddingsIndexes.length}) does not match _meta.json items count (${metaArray.length}).`,
+      )
+
+      await this.reindexMeta(dir)
+    }
+
+    return metaArray
+  }
+
+  async reindexMeta(embeddingsDir: string) {
+    try {
+      const metaPath = join(
+        path.join(app.getPath('userData'), embeddingsDir),
+        '_meta.json',
+      )
+      const data = await fsPromises.readFile(metaPath, 'utf-8')
+      const metaArray = JSON.parse(data)
+
+      const embeddingsIndexes = await this.readDir(embeddingsDir)
+
+      const missingIndexes = embeddingsIndexes
+        .filter((index) => {
+          const indexName = index.name.replace('-index', '')
+          return !metaArray.some((metaItem) => metaItem.name === indexName)
+        })
+        .map((missingIndex) => {
+          const missingIndexName = missingIndex.name.replace('-index', '')
+          const missingIndexDir = join(
+            path.join(app.getPath('userData'), embeddingsDir),
+            missingIndexName,
+          )
+          return {
+            name: missingIndexName,
+            indexDir: missingIndexDir,
+          }
+        })
+
+      for (const missingIndex of missingIndexes) {
+        console.log(
+          `Adding missing embedding index to _meta.json: ${missingIndex.indexDir}`,
+        )
+        metaArray.push({
+          name: missingIndex.name,
+          // TODO: unable to start a new thread without knowing the original filepath
+          path: '',
+          indexDir: missingIndex.indexDir,
+        })
+      }
+
+      // Write the updated _meta.json back to the file
+      const updatedMetaJSON = JSON.stringify(metaArray, null, 2)
+      await fsPromises.writeFile(metaPath, updatedMetaJSON, 'utf-8')
+
+      // eslint-disable-next-line no-console
+      console.log('Reindexed _meta.json successfully.')
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error reindexing _meta.json:', error)
+      throw error
+    }
   }
 
   async deleteFileOrFolder(dir: string, file: string) {
@@ -77,8 +146,8 @@ export class ElectronFilesManager {
   }
 
   addClientEventHandlers() {
-    ipcMain.handle(FileChannel.ListFilesInFolder, async (_, folderName) => {
-      return this.listFilesInFolder(folderName)
+    ipcMain.handle(FileChannel.ReadDir, async (_, folderName) => {
+      return this.readDir(folderName)
     })
 
     ipcMain.handle(FileChannel.ReadFile, async (_, dir, filename) => {

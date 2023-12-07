@@ -9,7 +9,7 @@ import { Link as BaseLink, useMatches } from 'react-router-dom'
 
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useAvailableFiles } from '@/providers/files/manager'
+import { useEmbeddingsMeta } from '@/providers/files/manager'
 
 function Link({
   icon: Icon,
@@ -37,7 +37,7 @@ function Link({
 }
 
 export function Sidebar() {
-  const files = useAvailableFiles()
+  const files = useEmbeddingsMeta()
 
   const haveFiles = files.length > 0
 
