@@ -1,5 +1,9 @@
 <div align="center">
-  <img alt="Dynaboard AI Studio Logo" src="src/renderer/assets/logo-light.svg" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src/renderer/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="src/renderer/assets/logo-light.svg">
+    <img alt="Dynaboard AI Studio Logo" src="src/renderer/assets/logo-light.svg">
+  </picture>
   <p></p>
   <p>
     <sub>Run AI models, locally.</sub>
@@ -12,6 +16,15 @@ Dynaboard AI Studio is an interactive AI chat system that runs entirely within y
 
 All llama.cpp models are supported. Download as little or as many models as you need. We don't make assumptions about your requirements, use your imagination!
 
+<div align="center">
+  <img alt="Non-exhaustive list of models we support" src="static/screenshots/model-list.png" height="267px" />
+  <img alt="Many params to tweak for testing model performance" src="static/screenshots/customize-model.png" height="267px" />
+
+  <img alt="Support for multimodal models, describing images" src="static/screenshots/image-description.png" height="266px" />
+  <img alt="Tools augmenting the capabilities of an LLM" src="static/screenshots/summarizing-article.png" height="266px" />
+
+  <img alt="Using a model to help write code" src="static/screenshots/asking-about-code.png" height="265px" />
+</div>
 
 ## Installation
 Dynaboard AI is pre-packaged for Apple M-series operating systems. Simply download the installer and you are ready to get started.
