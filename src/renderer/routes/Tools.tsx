@@ -1,5 +1,6 @@
 import { Model } from '@shared/model-list'
 
+import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAvailableModels } from '@/providers/models/manager'
@@ -17,14 +18,13 @@ export function ToolsPage() {
           Tools
         </h1>
         <span className="sm:text-md text-md prose text-left text-muted-foreground">
-          Explore the tools available in Dynaboard AI Studio. Tools are intended
-          to augment the abilities of your AI assistant, providing a natural
-          language interface to a variety of tasks.
+          Choose your tools to augment the abilities of your AI assistant,
+          providing a natural language interface to a variety of tasks.
         </span>
       </div>
       <div className="h-full overflow-hidden bg-slate-50 p-4 dark:bg-slate-900">
         <ScrollArea className="h-full">
-          <div className="grid h-full grid-flow-row grid-cols-2 gap-8">
+          <div className="grid h-full grid-flow-row grid-cols-3 gap-4">
             {allTools.map((tool) => {
               return <ToolEntry key={tool.id} tool={tool} />
             })}
@@ -44,32 +44,36 @@ function ToolEntry({ tool }: { tool: BaseTool }) {
     })
     .filter((m) => !!m) as Model[]
 
+  const hasModelInstalled = tool.requiredModels.every((modelName) =>
+    localModels.some((model) => model.name === modelName),
+  )
+
   return (
     <div
       key={tool.id}
-      className="grid grid-rows-[min-content,_min-content,_min-content] gap-1 rounded-lg border bg-card p-2 text-card-foreground shadow-sm"
+      className="flex min-h-[7rem] flex-col justify-between gap-1 rounded-lg border bg-card p-3 text-card-foreground shadow-sm"
     >
-      <Label className="font-semibold leading-none tracking-tight">
-        {tool.name}
-      </Label>
-      <p className="mb-2 text-xs leading-normal text-muted-foreground">
-        {tool.longDescription ?? tool.description}
-      </p>
-      <div className="flex flex-col">
-        <p className="text-xs font-bold">Required models</p>
-        <p>
-          {requiredModels.map((model) => {
-            return (
-              <span
-                key={model.name}
-                className="rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground"
-              >
-                {model.name}
-              </span>
-            )
-          })}
+      <div>
+        <Label className="font-semibold leading-none tracking-tight">
+          {tool.name}
+        </Label>
+        <p className="truncate text-xs leading-normal text-muted-foreground">
+          {tool.longDescription ?? tool.description}
         </p>
       </div>
+      {hasModelInstalled && (
+        <div className="flex flex-col gap-1">
+          <span className="w-fit">
+            {requiredModels.map((model, _idx) => {
+              return (
+                <Badge key={model.name} variant="outline">
+                  {model.name}
+                </Badge>
+              )
+            })}
+          </span>
+        </div>
+      )}
     </div>
   )
 }
