@@ -12,8 +12,6 @@ Dynaboard AI Studio is an interactive AI chat system that runs entirely within y
 
 All llama.cpp models are supported. Download as little or as many models as you need. We don't make assumptions about your requirements, use your imagination!
 
-[small video here?]
-
 
 ## Installation
 Dynaboard AI is pre-packaged for Apple M-series operating systems. Simply download the installer and you are ready to get started.
@@ -29,13 +27,13 @@ Dynaboard AI is pre-packaged for Apple M-series operating systems. Simply downlo
 #### Minimum Requirements
 
 * macOS 13+ (Ventura)
-* M1 with 16GB of RAM
+* M-series chip with 16GB of RAM
 * 5GB of free disk space (for models)
 
 #### Recommended Requirements
 
 * macOS 14+ (Sonoma)
-* M1 Pro with 16GB of RAM
+* M1 Pro (or higher) with 16GB of RAM
 * 20GB+ of free disk space (for models)
 
 ## Development
