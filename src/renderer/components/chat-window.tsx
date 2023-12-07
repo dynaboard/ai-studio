@@ -7,6 +7,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -106,10 +107,13 @@ export function ChatWindow({ id }: { id?: string }) {
 
       if (file.name.endsWith('.pdf')) {
         setRunningEmbeddings(true)
+
         await transformersManager.embedDocument(file.path)
         await filesManager.loadFiles()
         historyManager.changeThreadFilePath(id, file.path)
+
         setRunningEmbeddings(false)
+        toast.success(`Embeddings generated for ${file.name}`)
       } else if (
         file.name.endsWith('.png') ||
         file.name.endsWith('.jpg') ||
@@ -213,19 +217,21 @@ export function ChatWindow({ id }: { id?: string }) {
     return undefined
   }, [currentThreadFilePath, selectedFile])
 
+  // Side effect for focusing textarea
   useEffect(() => {
-    if (id && !isCurrentThreadGenerating && textAreaInputRef.current) {
+    if (id && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
-  }, [isCurrentThreadGenerating, id])
+  }, [id])
 
+  // Side effect for scrolling to bottom
   useEffect(() => {
     if (id) {
       scrollToBottom('auto', true)
     }
   }, [id, messages, scrollToBottom])
 
-  // Unselect file when switching threads
+  // Side effect for resetting state when switching threads
   useEffect(() => {
     if (id) {
       setSelectedFile(null)
