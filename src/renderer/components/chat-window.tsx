@@ -301,7 +301,14 @@ export function ChatWindow({ id }: { id?: string }) {
           {fileName && !base64Image ? (
             <div className="flex h-8 w-full items-center border-b px-2 text-xs">
               <span>Current file:</span>&nbsp;
-              <span className="font-bold">{fileName}</span>
+              <span
+                className="cursor-copy font-bold"
+                onClick={() => {
+                  window.files.openPath(currentThreadFilePath!)
+                }}
+              >
+                {fileName}
+              </span>
               {filesManager.isFileNotArchived(fileName!) &&
                 !runningEmbeddings && <span className="ml-1">(removed)</span>}
             </div>
@@ -385,7 +392,8 @@ export function ChatWindow({ id }: { id?: string }) {
               disabled ||
               isCurrentThreadGenerating ||
               runningEmbeddings ||
-              filesManager.isFileNotArchived(fileName!)
+              (fileName !== undefined &&
+                filesManager.isFileNotArchived(fileName!))
             }
           />
           <Button
