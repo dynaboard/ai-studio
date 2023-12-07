@@ -1,14 +1,19 @@
 import { Model } from '@shared/model-list'
+import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 import { useAvailableModels } from '@/providers/models/manager'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
 
 export function ToolsPage() {
   const allTools = useAllTools()
+  const [selectedTools, setSelectedTools] = useState<string[]>([])
+
+  console.log('selectedTools: ', selectedTools)
 
   return (
     // 36px titlebar height
@@ -26,7 +31,14 @@ export function ToolsPage() {
         <ScrollArea className="h-full">
           <div className="grid h-full grid-flow-row grid-cols-3 gap-4">
             {allTools.map((tool) => {
-              return <ToolEntry key={tool.id} tool={tool} />
+              return (
+                <ToolEntry
+                  key={tool.id}
+                  tool={tool}
+                  selectedTools={selectedTools}
+                  setSelectedTools={setSelectedTools}
+                />
+              )
             })}
           </div>
         </ScrollArea>
@@ -35,7 +47,15 @@ export function ToolsPage() {
   )
 }
 
-function ToolEntry({ tool }: { tool: BaseTool }) {
+function ToolEntry({
+  tool,
+  selectedTools,
+  setSelectedTools,
+}: {
+  tool: BaseTool
+  selectedTools: string[]
+  setSelectedTools: (tools: string[]) => void
+}) {
   const localModels = useAvailableModels()
 
   const requiredModels = tool.requiredModels
@@ -51,7 +71,17 @@ function ToolEntry({ tool }: { tool: BaseTool }) {
   return (
     <div
       key={tool.id}
-      className="flex min-h-[7rem] flex-col justify-between gap-1 rounded-lg border bg-card p-3 text-card-foreground shadow-sm"
+      className={cn(
+        'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border bg-card p-3 text-card-foreground shadow-sm transition-all',
+        selectedTools.includes(tool.id) ? 'border-primary' : '',
+      )}
+      onClick={() => {
+        const newSelectedTools = selectedTools.includes(tool.id)
+          ? selectedTools.filter((selectedTool) => selectedTool !== tool.id)
+          : [...selectedTools, tool.id]
+
+        setSelectedTools(newSelectedTools)
+      }}
     >
       <div>
         <Label className="font-semibold leading-none tracking-tight">
