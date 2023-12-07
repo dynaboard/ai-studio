@@ -17,11 +17,13 @@ Dynaboard AI Studio is an interactive AI chat system that runs entirely within y
 All llama.cpp models are supported. Download as little or as many models as you need. We don't make assumptions about your requirements, use your imagination!
 
 <div align="center">
-  <img alt="Non-exhaustive list of models we support" src="static/screenshots/model-list.png" height="265px" />
+  <img alt="Non-exhaustive list of models we support" src="static/screenshots/model-list.png" height="267px" />
+  <img alt="Many params to tweak for testing model performance" src="static/screenshots/customize-model.png" height="267px" />
+
+  <img alt="Support for multimodal models, describing images" src="static/screenshots/image-description.png" height="266px" />
+  <img alt="Tools augmenting the capabilities of an LLM" src="static/screenshots/summarizing-article.png" height="266px" />
+
   <img alt="Using a model to help write code" src="static/screenshots/asking-about-code.png" height="265px" />
-  <img alt="Support for multimodal models, describing images" src="static/screenshots/image-description.png" height="265px" />
-  <img alt="Tools augmenting the capabilities of an LLM" src="static/screenshots/summarizing-article.png" height="265px" />
-  <img alt="Many params to tweak for testing model performance" src="static/screenshots/customize-model.png" height="265px" />
 </div>
 
 ## Installation
