@@ -16,7 +16,7 @@ All llama.cpp models are supported. Download as little or as many models as you 
 ## Installation
 Dynaboard AI is pre-packaged for Apple M-series operating systems. Simply download the installer and you are ready to get started.
 
-[Download](https://dynaboard.com/ai-studio/Dynaboard-AI-Studio-1.0.0.dmg)
+[Download](https://github.com/dynaboard/ai-studio/releases/download/v1.0.0-beta.1/Dynaboard.AI.Studio.1.0.0-beta.1.dmg)
 
 ### Getting Started
 
