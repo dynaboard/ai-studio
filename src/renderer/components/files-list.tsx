@@ -65,7 +65,7 @@ export function FilesList() {
                     <TableCell className="font-medium">{file.name}</TableCell>
                     <TableCell>
                       <span
-                        className="inline-flex h-5 items-center rounded border border-neutral-200 bg-neutral-50 p-[1px] font-mono text-xs leading-7 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+                        className="inline-flex h-5 cursor-copy items-center rounded border border-neutral-200 bg-neutral-50 p-[1px] font-mono text-xs leading-7 text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
                         onClick={() => {
                           window.files.openPath(file.path)
                         }}
