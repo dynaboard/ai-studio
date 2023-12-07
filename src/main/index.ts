@@ -1,15 +1,18 @@
 import { is } from '@electron-toolkit/utils'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 
 import { ElectronChatManager } from '@/managers/chats'
 import { EmbeddingsManager } from '@/managers/embeddings'
+import { ElectronFilesManager } from '@/managers/files'
 import { ElectronLlamaServerManager } from '@/managers/llama-server'
 import { ElectronModelManager } from '@/managers/models'
 import { SystemUsageManager } from '@/managers/usage'
 import { ElectronVectorStoreManager } from '@/managers/vector-store'
 import { update } from '@/update'
+
+import { sendToRenderer } from './webcontents'
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -26,6 +29,7 @@ let win: BrowserWindow | null = null
 let modelManager: ElectronModelManager | null = null
 let chatManager: ElectronChatManager | null = null
 let embeddingsManager: EmbeddingsManager | null = null
+let filesManager: ElectronFilesManager | null = null
 const vectorStoreManager = new ElectronVectorStoreManager()
 const llamaServerManager = new ElectronLlamaServerManager()
 
@@ -55,6 +59,7 @@ async function createWindow() {
 
   embeddingsManager = new EmbeddingsManager(win, vectorStoreManager)
   modelManager = new ElectronModelManager(win)
+  filesManager = new ElectronFilesManager()
   chatManager = new ElectronChatManager(
     win,
     embeddingsManager,
@@ -69,7 +74,13 @@ async function createWindow() {
 
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
+    if (win) {
+      sendToRenderer(
+        win.webContents,
+        'main-process-message',
+        new Date().toLocaleString(),
+      )
+    }
   })
 
   // Make all links open with the browser, not with the application
@@ -79,11 +90,15 @@ async function createWindow() {
   })
 
   win.on('enter-full-screen', () => {
-    win?.webContents.send('full-screen-change', true)
+    if (win) {
+      sendToRenderer(win.webContents, 'full-screen-change', true)
+    }
   })
 
   win.on('leave-full-screen', () => {
-    win?.webContents.send('full-screen-change', false)
+    if (win) {
+      sendToRenderer(win.webContents, 'full-screen-change', false)
+    }
   })
 
   // Apply electron-updater
@@ -92,6 +107,7 @@ async function createWindow() {
   modelManager.addClientEventHandlers()
   chatManager.addClientEventHandlers()
   embeddingsManager.addClientEventHandlers()
+  filesManager.addClientEventHandlers()
 }
 
 app.whenReady().then(createWindow)
@@ -124,4 +140,8 @@ app.on('activate', () => {
 
 app.on('will-quit', () => {
   llamaServerManager.close()
+})
+
+ipcMain.on('open-path', (_, path) => {
+  shell.openPath(path)
 })

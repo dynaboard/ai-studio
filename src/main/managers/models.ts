@@ -8,6 +8,8 @@ import {
 import { existsSync } from 'fs'
 import { access, constants, unlink } from 'fs/promises'
 
+import { sendToRenderer } from '@/webcontents'
+
 import { ModelChannel, ModelEvent } from '../../preload/events'
 
 export class ElectronModelManager {
@@ -27,7 +29,7 @@ export class ElectronModelManager {
       return
     }
     downloadItem.addListener('updated', () => {
-      this.window.webContents.send(ModelEvent.DownloadProgress, {
+      sendToRenderer(this.window.webContents, ModelEvent.DownloadProgress, {
         filename: downloadItem.getFilename(),
         receivedBytes: downloadItem.getReceivedBytes(),
         totalBytes: downloadItem.getTotalBytes(),
@@ -35,7 +37,7 @@ export class ElectronModelManager {
     })
 
     downloadItem.addListener('done', (_event, state) => {
-      this.window.webContents.send(ModelEvent.DownloadComplete, {
+      sendToRenderer(this.window.webContents, ModelEvent.DownloadComplete, {
         state,
         filename: downloadItem.getFilename(),
         savePath: downloadItem.getSavePath(),

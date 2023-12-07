@@ -20,6 +20,7 @@ import {
   useCurrentTopP,
   useIsCurrentThreadGenerating,
 } from '@/providers/chat/manager'
+import { useFilesManager } from '@/providers/files/manager'
 import {
   useHistoryManager,
   useThreadFilePath,
@@ -59,6 +60,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const chatManager = useChatManager()
   const historyManager = useHistoryManager()
   const transformersManager = useTransformersManager()
+  const filesManager = useFilesManager()
 
   const availableModels = useAvailableModels()
   const currentModel = useCurrentModel()
@@ -105,6 +107,7 @@ export function ChatWindow({ id }: { id?: string }) {
       if (file.name.endsWith('.pdf')) {
         setRunningEmbeddings(true)
         await transformersManager.embedDocument(file.path)
+        await filesManager.loadFiles()
         historyManager.changeThreadFilePath(id, file.path)
         setRunningEmbeddings(false)
       } else if (
@@ -120,7 +123,7 @@ export function ChatWindow({ id }: { id?: string }) {
         setBase64Image(image as string)
       }
     },
-    [id, historyManager, transformersManager],
+    [id, historyManager, transformersManager, filesManager],
   )
 
   const handleFilesChange = useCallback(
@@ -220,8 +223,9 @@ export function ChatWindow({ id }: { id?: string }) {
     if (id) {
       setSelectedFile(null)
       setBase64Image(null)
+      formRef.current?.reset()
     }
-  }, [id])
+  }, [id, formRef])
 
   return (
     // 36px - titlebar height
@@ -297,7 +301,16 @@ export function ChatWindow({ id }: { id?: string }) {
           {fileName && !base64Image ? (
             <div className="flex h-8 w-full items-center border-b px-2 text-xs">
               <span>Current file:</span>&nbsp;
-              <span className="font-bold">{fileName}</span>
+              <span
+                className="cursor-copy font-bold"
+                onClick={() => {
+                  window.files.openPath(currentThreadFilePath!)
+                }}
+              >
+                {fileName}
+              </span>
+              {filesManager.isFileNotArchived(fileName!) &&
+                !runningEmbeddings && <span className="ml-1">(removed)</span>}
             </div>
           ) : null}
 
@@ -376,7 +389,11 @@ export function ChatWindow({ id }: { id?: string }) {
             placeholder="Say something..."
             spellCheck={false}
             disabled={
-              disabled || isCurrentThreadGenerating || runningEmbeddings
+              disabled ||
+              isCurrentThreadGenerating ||
+              runningEmbeddings ||
+              (fileName !== undefined &&
+                filesManager.isFileNotArchived(fileName!))
             }
           />
           <Button

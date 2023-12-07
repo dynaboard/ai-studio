@@ -2,6 +2,7 @@ import './models'
 import './usage'
 import './embeddings'
 import './browser-window'
+import './files'
 
 import { PromptOptions } from '@shared/chats'
 import { type ChatMessage } from '@shared/message-list/base'

@@ -1,15 +1,22 @@
+import { EmbeddingMeta } from '@shared/meta'
 import { Tensor } from '@xenova/transformers'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { promises as fsPromises } from 'fs'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import fs, { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import path from 'path'
 import pdfParse from 'pdf-parse'
+
+import { sendToRenderer } from '@/webcontents'
 
 import embeddingsWorker from '../workers/embeddings?nodeWorker'
 import { ElectronVectorStoreManager } from './vector-store'
 
 export class EmbeddingsManager {
   worker = embeddingsWorker({})
+
+  private storagePath = path.join(app.getPath('userData'), 'embeddings')
 
   constructor(
     readonly window: BrowserWindow,
@@ -107,7 +114,7 @@ export class EmbeddingsManager {
       await this.vectorStoreManager.doesIndexExist(filePath)
     if (doesIndexExist) {
       console.log('Index already exists for:', filePath)
-      this.window.webContents.send('embeddings:embeddingsComplete', {
+      sendToRenderer(this.window.webContents, 'embeddings:embeddingsComplete', {
         filePath: filePath,
       })
       return
@@ -137,6 +144,35 @@ export class EmbeddingsManager {
     })
   }
 
+  async writeToEmbeddingsJSON(data: EmbeddingMeta) {
+    try {
+      const existingData = await this.readEmbeddingsJSON()
+
+      existingData.push(data)
+
+      const embeddingsJsonPath = join(this.storagePath, '_meta.json')
+      await fsPromises.writeFile(
+        embeddingsJsonPath,
+        JSON.stringify(existingData, null, 2),
+        'utf-8',
+      )
+
+      console.log('Wrote embeddings meta to _meta.json', data.name)
+    } catch (error) {
+      console.error('Error writing to _meta.json:', error)
+    }
+  }
+
+  async readEmbeddingsJSON() {
+    try {
+      const embeddingsJsonPath = join(this.storagePath, '_meta.json')
+      const data = await fsPromises.readFile(embeddingsJsonPath, 'utf-8')
+      return JSON.parse(data)
+    } catch (error) {
+      return []
+    }
+  }
+
   handleWorkerMessage = (message: {
     id: string
     data: {
@@ -154,9 +190,20 @@ export class EmbeddingsManager {
         data: message.data,
       })
       .then(() => {
-        this.window.webContents.send('embeddings:embeddingsComplete', {
-          filePath: message.id,
+        this.writeToEmbeddingsJSON({
+          name: path.basename(message.id),
+          path: message.id,
+          indexDir: this.filePathToStoragePath(message.id),
         })
+      })
+      .then(() => {
+        sendToRenderer(
+          this.window.webContents,
+          'embeddings:embeddingsComplete',
+          {
+            filePath: message.id,
+          },
+        )
       })
   }
 
@@ -229,5 +276,9 @@ export class EmbeddingsManager {
         query,
       })
     })
+  }
+
+  private filePathToStoragePath(filePath: string) {
+    return path.join(this.storagePath, `${path.basename(filePath)}-index`)
   }
 }
