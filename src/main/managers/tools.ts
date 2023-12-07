@@ -9,6 +9,7 @@ import {
 } from '@/managers/llama-server'
 
 import toolGrammar from '../../../resources/grammars/tools.gbnf?asset'
+import { Image, SearchApi } from '../tools/search'
 
 const SERVER_ID = 'TOOL_SERVER'
 
@@ -82,6 +83,17 @@ export class ElectronToolManager {
     }
   }
 
+  async crawlImages(query: string, limit: number) {
+    const searchApi = new SearchApi()
+
+    const results: Image[] = []
+    const images = searchApi.images({ keywords: query, limit })
+    for await (const image of images) {
+      results.push(image)
+    }
+    return results
+  }
+
   addClientEventHandlers() {
     ipcMain.handle(ToolChannel.GetTool, async (_, { prompt, tools }) => {
       return await this.getTool(prompt, tools)
@@ -93,5 +105,8 @@ export class ElectronToolManager {
         return await this.fetch(url, request, resultType)
       },
     )
+    ipcMain.handle(ToolChannel.CrawlImages, async (_, { query, limit }) => {
+      return await this.crawlImages(query, limit)
+    })
   }
 }

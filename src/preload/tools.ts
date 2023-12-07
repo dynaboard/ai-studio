@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
+import { Image } from '../main/tools/search'
 import { ToolChannel } from './events'
 
 contextBridge.exposeInMainWorld('tools', {
@@ -17,6 +18,13 @@ contextBridge.exposeInMainWorld('tools', {
   ) {
     return ipcRenderer.invoke(ToolChannel.Fetch, { url, request, resultType })
   },
+
+  async crawlImages(query: string, limit: number) {
+    return ipcRenderer.invoke(ToolChannel.CrawlImages, {
+      query,
+      limit,
+    })
+  },
 } satisfies ToolsAPI)
 
 export interface ToolsAPI {
@@ -27,6 +35,8 @@ export interface ToolsAPI {
     request: NodeJS.fetch.RequestInit,
     result: 'text' | 'json',
   ) => Promise<string | Record<string, unknown>>
+
+  crawlImages: (query: string, limit: number) => Promise<Image[]>
 }
 
 declare global {

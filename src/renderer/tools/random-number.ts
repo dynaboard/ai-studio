@@ -4,7 +4,7 @@ import { BaseTool, RunContext, ToolParameter } from '@/tools/base'
 
 export default class RandomNumberTool extends BaseTool {
   name = 'Random Number Generator'
-  description = 'Generate a random number given a min and max.'
+  description = 'Generate a random number given a min and max'
   requiredModels = ['Mistral 7B Instruct v0.1']
 
   parameters: ToolParameter[] = [
