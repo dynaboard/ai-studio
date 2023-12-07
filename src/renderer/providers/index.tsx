@@ -22,6 +22,7 @@ import {
   BrowserWindowManagerContext,
   useBrowserWindowManager,
 } from './browser-window'
+import { FilesManager, FilesManagerContext } from './files/manager'
 
 export function ChatManagerProvider({
   children,
@@ -162,5 +163,21 @@ export function ToolManagerProvider({
     <ToolManagerContext.Provider value={manager}>
       {children}
     </ToolManagerContext.Provider>
+  )
+}
+
+export function FilesManagerProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const manager = useMemo(() => {
+    return new FilesManager()
+  }, [])
+
+  return (
+    <FilesManagerContext.Provider value={manager}>
+      {children}
+    </FilesManagerContext.Provider>
   )
 }

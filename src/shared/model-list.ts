@@ -258,7 +258,7 @@ export const MODELS: Model[] = [
   {
     name: 'LLaVA-1.5 13B',
     description:
-      'An end-to-end trained large multimodal model that connects a vision encoder and LLM for general-purpose visual and language understanding',
+      'An end-to-end trained large multimodal model that connects a vision encoder and LLM for general-purpose visual and language understanding.',
     parameters: '13B',
     promptTemplate: 'general',
     capabilities: ['images'],

@@ -5,6 +5,8 @@ import {
   type UpdateDownloadedEvent,
 } from 'electron-updater'
 
+import { sendToRenderer } from './webcontents'
+
 export function update(win: Electron.BrowserWindow) {
   // When set to false, the update download will be triggered through the API
   autoUpdater.autoDownload = false
@@ -15,7 +17,7 @@ export function update(win: Electron.BrowserWindow) {
   autoUpdater.on('checking-for-update', function () {})
   // update available
   autoUpdater.on('update-available', (arg) => {
-    win.webContents.send('update-can-available', {
+    sendToRenderer(win.webContents, 'update-not-available', {
       update: true,
       version: app.getVersion(),
       newVersion: arg?.version,
@@ -23,7 +25,7 @@ export function update(win: Electron.BrowserWindow) {
   })
   // update not available
   autoUpdater.on('update-not-available', (arg) => {
-    win.webContents.send('update-can-available', {
+    sendToRenderer(win.webContents, 'update-not-available', {
       update: false,
       version: app.getVersion(),
       newVersion: arg?.version,

@@ -7,6 +7,7 @@ import { UsageChannel } from '../../preload/events'
 
 export class SystemUsageManager {
   constructor(readonly llamaServerManager: ElectronLlamaServerManager) {}
+  
   async getSystemUsage() {
     const memoryInfo = await process.getProcessMemoryInfo()
     const llamaMemoryBytes = await this.llamaServerManager.memoryUsage()

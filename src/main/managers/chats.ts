@@ -11,6 +11,7 @@ import {
   CompletionParams,
   ElectronLlamaServerManager,
 } from '@/managers/llama-server'
+import { sendToRenderer } from '@/webcontents'
 
 import {
   BasePromptWrapper,
@@ -455,7 +456,7 @@ export class ElectronChatManager {
           modelPath: fullPath,
           selectedFile,
           onToken: (token) => {
-            this.window.webContents.send('token', {
+            sendToRenderer(this.window.webContents, 'token', {
               token,
               messageID: assistantMessageID,
             })
@@ -492,7 +493,10 @@ export class ElectronChatManager {
           modelPath: fullPath,
           selectedFile,
           onToken: (token) => {
-            this.window.webContents.send('token', { token, messageID })
+            sendToRenderer(this.window.webContents, 'token', {
+              token,
+              messageID,
+            })
           },
         })
       },

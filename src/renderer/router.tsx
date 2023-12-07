@@ -8,6 +8,8 @@ import { ChatsIndex } from '@/routes/chats/Index'
 import { ModelsPage } from '@/routes/Models'
 import { ToolsPage } from '@/routes/Tools'
 
+import { FilesPage } from './routes/Documents'
+
 export const router = createHashRouter([
   {
     path: '/',
@@ -50,6 +52,10 @@ export const router = createHashRouter([
       {
         path: '/tools',
         element: <ToolsPage />,
+      },
+      {
+        path: '/files',
+        element: <FilesPage />,
       },
     ],
   },
