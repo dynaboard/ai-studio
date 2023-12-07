@@ -191,6 +191,12 @@ export class ChatManager {
         const possibleTool = await this.toolManager.getToolForPrompt(message)
         if (possibleTool) {
           console.log('Found a tool:', possibleTool)
+
+          console.log(
+            'params',
+            { assistantMessageID, threadID, modelPath, promptOptions },
+            ...(possibleTool.parameters as unknown[]),
+          )
           const result = await possibleTool.tool.run(
             { assistantMessageID, threadID, modelPath, promptOptions },
             ...(possibleTool.parameters as unknown[]),

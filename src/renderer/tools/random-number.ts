@@ -1,13 +1,47 @@
-import { BaseTool, ToolParameter } from '@/tools/base'
+import { z } from 'zod'
+
+import { BaseTool, RunContext, ToolParameter } from '@/tools/base'
 
 export default class RandomNumberTool extends BaseTool {
   name = 'Random Number Generator'
-  description = 'Generate a random number'
+  description = 'Generate a random number given a min and max.'
   requiredModels = ['Mistral 7B Instruct v0.1']
 
-  parameters: ToolParameter[] = []
+  parameters: ToolParameter[] = [
+    {
+      name: 'min',
+      description: 'The minimum number that can be generated',
+      type: 'number',
+    },
+    {
+      name: 'max',
+      description: 'The maximum number that can be generated',
+      type: 'number',
+    },
+  ]
 
-  async run() {
-    return crypto.getRandomValues(new Uint32Array(1))[0]
+  async run(_ctx: RunContext, min: unknown, max: unknown) {
+    const { value: minInput } = z
+      .object({
+        name: z.literal('min'),
+        value: z.coerce.number(),
+      })
+      .parse(min)
+
+    const { value: maxInput } = z
+      .object({
+        name: z.literal('max'),
+        value: z.coerce.number(),
+      })
+      .parse(max)
+
+    if (minInput >= maxInput) {
+      throw new Error('Min must be less than max')
+    }
+    const range = maxInput - minInput
+    const buffer = new Uint32Array(1)
+    crypto.getRandomValues(buffer)
+    const randomNumber = (buffer[0] / 0xffffffff) * range + minInput
+    return Math.floor(randomNumber)
   }
 }
