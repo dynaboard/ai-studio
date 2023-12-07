@@ -48,63 +48,10 @@ export class ElectronFilesManager {
         `Warning: Embeddings indexes count (${embeddingsIndexes.length}) does not match _meta.json items count (${metaArray.length}).`,
       )
 
-      await this.reindexMeta(dir)
+      await this.reindexEmbeddingsMeta()
     }
 
     return metaArray
-  }
-
-  async reindexMeta(embeddingsDir: string) {
-    try {
-      const metaPath = join(
-        path.join(app.getPath('userData'), embeddingsDir),
-        '_meta.json',
-      )
-      const data = await fsPromises.readFile(metaPath, 'utf-8')
-      const metaArray = JSON.parse(data)
-
-      const embeddingsIndexes = await this.readDir(embeddingsDir)
-
-      const missingIndexes = embeddingsIndexes
-        .filter((index) => {
-          const indexName = index.name.replace('-index', '')
-          return !metaArray.some((metaItem) => metaItem.name === indexName)
-        })
-        .map((missingIndex) => {
-          const missingIndexName = missingIndex.name.replace('-index', '')
-          const missingIndexDir = join(
-            path.join(app.getPath('userData'), embeddingsDir),
-            missingIndexName,
-          )
-          return {
-            name: missingIndexName,
-            indexDir: missingIndexDir,
-          }
-        })
-
-      for (const missingIndex of missingIndexes) {
-        console.log(
-          `Adding missing embedding index to _meta.json: ${missingIndex.indexDir}`,
-        )
-        metaArray.push({
-          name: missingIndex.name,
-          // TODO: unable to start a new thread without knowing the original filepath
-          path: '',
-          indexDir: missingIndex.indexDir,
-        })
-      }
-
-      // Write the updated _meta.json back to the file
-      const updatedMetaJSON = JSON.stringify(metaArray, null, 2)
-      await fsPromises.writeFile(metaPath, updatedMetaJSON, 'utf-8')
-
-      // eslint-disable-next-line no-console
-      console.log('Reindexed _meta.json successfully.')
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error reindexing _meta.json:', error)
-      throw error
-    }
   }
 
   async deleteFileOrFolder(dir: string, file: string) {
@@ -157,5 +104,58 @@ export class ElectronFilesManager {
     ipcMain.handle(FileChannel.DeleteFile, async (_, dir, filename) => {
       await this.deleteFileOrFolder(dir, filename)
     })
+  }
+
+  private async reindexEmbeddingsMeta() {
+    try {
+      const metaPath = join(
+        path.join(app.getPath('userData'), 'embeddings'),
+        '_meta.json',
+      )
+      const data = await fsPromises.readFile(metaPath, 'utf-8')
+      const metaArray = JSON.parse(data)
+
+      const embeddingsIndexes = await this.readDir('embeddings')
+
+      const missingIndexes = embeddingsIndexes
+        .filter((index) => {
+          const indexName = index.name.replace('-index', '')
+          return !metaArray.some((metaItem) => metaItem.name === indexName)
+        })
+        .map((missingIndex) => {
+          const missingIndexName = missingIndex.name.replace('-index', '')
+          const missingIndexDir = join(
+            path.join(app.getPath('userData'), 'embeddings'),
+            missingIndexName,
+          )
+          return {
+            name: missingIndexName,
+            indexDir: missingIndexDir,
+          }
+        })
+
+      for (const missingIndex of missingIndexes) {
+        // eslint-disable-next-line no-console
+        console.log(
+          `Adding missing embedding index to _meta.json: ${missingIndex.indexDir}`,
+        )
+        metaArray.push({
+          name: missingIndex.name,
+          path: '',
+          indexDir: missingIndex.indexDir,
+        })
+      }
+
+      // Write the updated _meta.json back to the file
+      const updatedMetaJSON = JSON.stringify(metaArray, null, 2)
+      await fsPromises.writeFile(metaPath, updatedMetaJSON, 'utf-8')
+
+      // eslint-disable-next-line no-console
+      console.log('Reindexed _meta.json successfully.')
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error reindexing _meta.json:', error)
+      throw error
+    }
   }
 }

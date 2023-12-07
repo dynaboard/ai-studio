@@ -64,23 +64,25 @@ export function FilesList() {
                       ) : null}
                     </TableCell>
                     <TableCell>
-                      <LucideMessageSquarePlus
-                        className="h-5 w-5 cursor-pointer text-muted-foreground"
-                        onClick={() => {
-                          const newThread = historyManager.addThread({
-                            modelID: DEFAULT_MODEL,
-                            title: 'New Thread',
-                            createdAt: new Date(),
-                            messages: [],
-                            temperature: DEFAULT_TEMP,
-                            topP: DEFAULT_TOP_P,
-                            systemPrompt: 'You are a helpful assistant.',
-                            filePath: file.path,
-                          })
+                      {file.path && (
+                        <LucideMessageSquarePlus
+                          className="h-5 w-5 cursor-pointer text-muted-foreground"
+                          onClick={() => {
+                            const newThread = historyManager.addThread({
+                              modelID: DEFAULT_MODEL,
+                              title: 'New Thread',
+                              createdAt: new Date(),
+                              messages: [],
+                              temperature: DEFAULT_TEMP,
+                              topP: DEFAULT_TOP_P,
+                              systemPrompt: 'You are a helpful assistant.',
+                              filePath: file.path,
+                            })
 
-                          navigate(`/chats/${newThread.id}`)
-                        }}
-                      />
+                            navigate(`/chats/${newThread.id}`)
+                          }}
+                        />
+                      )}
                     </TableCell>
                     <TableCell>
                       <LucideTrash
