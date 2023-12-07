@@ -139,11 +139,6 @@ export function FilesManagerProvider({
     return new FilesManager()
   }, [])
 
-  useEffect(() => {
-    manager.initialize()
-    return () => manager.destroy()
-  }, [manager])
-
   return (
     <FilesManagerContext.Provider value={manager}>
       {children}

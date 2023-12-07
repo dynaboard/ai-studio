@@ -1,3 +1,4 @@
+import { EmbeddingMeta } from '@shared/meta'
 import { Tensor } from '@xenova/transformers'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { promises as fsPromises } from 'fs'
@@ -143,7 +144,7 @@ export class EmbeddingsManager {
     })
   }
 
-  async writeToEmbeddingsJSON(data) {
+  async writeToEmbeddingsJSON(data: EmbeddingMeta) {
     try {
       const existingData = await this.readEmbeddingsJSON()
 
@@ -156,7 +157,7 @@ export class EmbeddingsManager {
         'utf-8',
       )
 
-      console.log('Wrote embeddings meta to _meta.json')
+      console.log(`Wrote embeddings meta ${data.name} to _meta.json`)
     } catch (error) {
       console.error('Error writing to _meta.json:', error)
     }

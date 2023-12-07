@@ -50,6 +50,7 @@ export function Sidebar() {
         <Link to="/models" icon={LucideFileBox}>
           <span className="select-none">Models</span>
         </Link>
+        {/* TODO: can remove when we allow indexing files in the Files tab */}
         {haveFiles ? (
           <Link to="/files" icon={LucideFiles}>
             <span className="select-none">Files</span>

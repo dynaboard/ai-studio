@@ -12,11 +12,9 @@ export class FilesManager {
     availableFiles: [], // should be available once app renders
   })
 
-  initialize() {
+  constructor() {
     void this.loadFiles()
   }
-
-  destroy() {}
 
   async deleteFile(filename: string) {
     await window.files.deleteFile('embeddings', filename)

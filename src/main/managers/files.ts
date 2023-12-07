@@ -1,5 +1,5 @@
 import { app, ipcMain } from 'electron'
-import { promises as fsPromises } from 'fs'
+import { existsSync, promises as fsPromises } from 'fs'
 import { readdir } from 'fs/promises'
 import path, { join } from 'node:path'
 
@@ -28,6 +28,12 @@ export class ElectronFilesManager {
       path.join(app.getPath('userData'), dir),
       filename,
     )
+
+    if (!existsSync(embeddingsJsonPath)) {
+      await fsPromises.writeFile(embeddingsJsonPath, '[]', 'utf-8')
+      console.log('Created empty file:', embeddingsJsonPath)
+    }
+
     const data = await fsPromises.readFile(embeddingsJsonPath, 'utf-8')
     return JSON.parse(data)
   }
