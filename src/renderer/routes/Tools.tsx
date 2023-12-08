@@ -1,4 +1,4 @@
-import { Model, MODELS } from '@shared/model-list'
+import { MODELS } from '@shared/model-list'
 import { LucideArrowRightCircle } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
@@ -49,7 +49,7 @@ export function ToolsPage() {
       </div>
       <div className="h-full overflow-hidden bg-slate-50 dark:bg-slate-900">
         <ScrollArea className="h-full">
-          <div className="grid h-full grid-flow-row grid-cols-3 gap-4 p-4">
+          <div className="grid h-full grid-flow-row grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3">
             {allTools.map((tool) => {
               return (
                 <ToolEntry
@@ -102,34 +102,24 @@ function ToolEntry({
   const [confirmDialog, setConfirmDialog] = useState<boolean>(false)
 
   const modelData = useMemo(() => {
-    let file: Model['files'][number] | undefined
-    let model: Model | undefined
-
-    downloads.some((download) => {
-      model = modelManager.allModels.find((m) => {
-        const foundFile = m.files.find((f) => f.name === download.filename)
-        if (foundFile) {
-          file = foundFile
-          return true
-        }
-        return false
-      })
-
-      return !!model
+    const model = modelManager.allModels.find((modelData) => {
+      return modelData.name === tool.requiredModels[0]
     })
 
-    return {
-      model,
-      file,
-    }
-  }, [modelManager, downloads])
+    return model
+  }, [modelManager.allModels, tool.requiredModels])
 
-  const isDownloading = !!downloads.find(
-    (download) => download.filename === modelData.file?.name,
+  const isDownloading = downloads.some(
+    (download) =>
+      modelData?.files.some((file) => file.name === download.filename),
   )
 
-  const hasRequiredToolModel = tool.requiredModels.every((modelName) =>
-    localModels.some((model) => model.name === modelName),
+  const hasRequiredToolModel = useMemo(
+    () =>
+      tool.requiredModels.every((modelName) =>
+        localModels.some((model) => model.name === modelName),
+      ),
+    [tool.requiredModels, localModels],
   )
 
   // Assuming there's only 1 model for now and downloading the first file's url

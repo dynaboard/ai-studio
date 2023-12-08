@@ -105,7 +105,18 @@ export class ModelManager {
         downloads,
       }
     })
+
+    await this.waitForFileDeletion()
     await this.loadAvailableModels()
+  }
+
+  // Workaround: there's a microsecond delay before electron truly removes the file from the fs
+  private waitForFileDeletion(): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve()
+      }, 100)
+    })
   }
 
   async pauseDownload(filename: string) {
