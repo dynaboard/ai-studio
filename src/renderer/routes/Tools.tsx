@@ -20,7 +20,6 @@ import {
   useDownloads,
   useModelManager,
 } from '@/providers/models/manager'
-import { useIsSidebarClosed } from '@/providers/sidebar'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
 
@@ -30,7 +29,6 @@ function getModelFiles(modelName: string) {
 
 export function ToolsPage() {
   const allTools = useAllTools()
-  const isSidebarClosed = useIsSidebarClosed()
 
   const [selectedTools, setSelectedTools] = useState<string[]>([])
 
