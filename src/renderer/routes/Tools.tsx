@@ -1,16 +1,31 @@
-import { Model } from '@shared/model-list'
+import { ModelFile, MODELS } from '@shared/model-list'
 import { LucideArrowRightCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { useIsLeftSidebarOpen } from '@/providers/browser-window'
-import { useAvailableModels } from '@/providers/models/manager'
+import { useAvailableModels, useDownloads } from '@/providers/models/manager'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
+
+function getModelFile(modelName: string) {
+  let modelFile: ModelFile | undefined
+  MODELS.forEach((m) => (modelFile = m.files.find((f) => f.name === modelName)))
+  return modelFile
+}
 
 export function ToolsPage() {
   const allTools = useAllTools()
@@ -79,33 +94,64 @@ function ToolEntry({
   setSelectedTools: (tools: string[]) => void
 }) {
   const localModels = useAvailableModels()
+  const downloads = useDownloads()
 
-  const requiredModels = tool.requiredModels
-    .map((modelName) => {
-      return localModels.find((model) => model.name === modelName)
-    })
-    .filter((m) => !!m) as Model[]
+  const [modelDownloadConfirmDialog, setModelDownloadConfirmDialog] =
+    useState<boolean>(false)
+
+  const isDownloading = !!downloads.find((download) =>
+    tool.requiredModels.includes(download.filename),
+  )
 
   const hasModelInstalled = tool.requiredModels.every((modelName) =>
     localModels.some((model) => model.name === modelName),
+  )
+
+  const handleToolClick = useCallback(() => {
+    if (!hasModelInstalled) {
+      // eslint-disable-next-line no-console
+      console.log(`Open download confirmation dialog: ${tool.requiredModels}`)
+      setModelDownloadConfirmDialog(true)
+    } else {
+      const newSelectedTools = selectedTools.includes(tool.id)
+        ? selectedTools.filter((selectedTool) => selectedTool !== tool.id)
+        : [...selectedTools, tool.id]
+
+      setSelectedTools(newSelectedTools)
+    }
+  }, [selectedTools, setSelectedTools, tool, hasModelInstalled])
+
+  const handleModelDownload = useCallback(
+    (e) => {
+      e.stopPropagation()
+
+      if (isDownloading) {
+        // eslint-disable-next-line no-console
+        console.log('Already downloading models:', tool.requiredModels)
+        setModelDownloadConfirmDialog(false)
+        return
+      }
+
+      // Assuming there's only 1 model for now
+      const toDownloadFile = getModelFile(tool.requiredModels[0])
+
+      // TODO: Start download process here
+      console.log('Downloading model:', toDownloadFile)
+
+      setModelDownloadConfirmDialog(false)
+    },
+    [isDownloading, tool.requiredModels],
   )
 
   return (
     <div
       key={tool.id}
       className={cn(
-        'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border bg-card p-3 text-card-foreground shadow-sm transition-all',
+        'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border-2 bg-card p-3 text-card-foreground shadow-sm transition-all',
         selectedTools.includes(tool.id) ? 'border-primary' : '',
-        // TODO: if not installed, show a download dialog for confirmation before installing
         !hasModelInstalled ? 'border-dashed' : '',
       )}
-      onClick={() => {
-        const newSelectedTools = selectedTools.includes(tool.id)
-          ? selectedTools.filter((selectedTool) => selectedTool !== tool.id)
-          : [...selectedTools, tool.id]
-
-        setSelectedTools(newSelectedTools)
-      }}
+      onClick={handleToolClick}
     >
       <div>
         <Label className="font-semibold leading-none tracking-tight">
@@ -115,17 +161,41 @@ function ToolEntry({
           {tool.longDescription ?? tool.description}
         </p>
       </div>
-      {hasModelInstalled && (
-        <div className="flex flex-col gap-1">
-          {requiredModels.map((model, _idx) => {
-            return (
-              <Badge key={model.name} variant="outline" className="w-fit">
-                {model.name}
-              </Badge>
-            )
-          })}
-        </div>
-      )}
+      <div className="flex flex-col gap-1">
+        {tool.requiredModels.map((model, _idx) => {
+          return (
+            <Badge key={model} variant="outline" className="w-fit">
+              {model}
+            </Badge>
+          )
+        })}
+      </div>
+
+      <AlertDialog open={modelDownloadConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Download</AlertDialogTitle>
+            <AlertDialogDescription>
+              This tool requires the following model(s):{' '}
+              {tool.requiredModels.join(', ')}. Do you want to proceed with the
+              installation?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={(e) => {
+                e.stopPropagation()
+                setModelDownloadConfirmDialog(false)
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <Button variant="default" onClick={handleModelDownload}>
+              Download
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
