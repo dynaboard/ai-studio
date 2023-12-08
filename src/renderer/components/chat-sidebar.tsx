@@ -116,7 +116,7 @@ const Cursor = React.memo(function Cursor({
 
 function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const historyManager = useHistoryManager()
-  // const chatManager = useChatManager()
+  const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
   const navigate = useNavigate()
 
@@ -128,7 +128,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
     const firstThread = historyManager.threads.find(
       (t) => t.id !== node.data.id,
     )
-    // await chatManager.cleanupChatSession(node.data.id)
+    await chatManager.cleanupChatSession(node.data.id)
     historyManager.deleteThread(node.data.id)
     navigate(`/chats/${firstThread?.id ?? ''}`, {
       replace: true,
@@ -142,7 +142,8 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
         style={style}
         className={cn(
           'group/node h-full items-center justify-between gap-2 rounded leading-3 transition hover:bg-secondary',
-          currentThreadID === node.data.id && 'bg-secondary',
+          currentThreadID === node.data.id &&
+            'bg-secondary outline outline-1 -outline-offset-1 outline-border',
         )}
         onDoubleClickCapture={(event) => {
           event.preventDefault()
