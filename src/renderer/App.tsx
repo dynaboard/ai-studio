@@ -16,29 +16,36 @@ import {
 import { Sidebar } from './components/sidebar'
 import { Titlebar } from './components/titlebar'
 import { useMatchMediaEffect } from './lib/hooks/use-match-media'
+import {
+  useBrowserWindowManager,
+  useIsLeftSidebarOpen,
+} from './providers/browser-window'
 
 export function App() {
   const modelManager = useModelManager()
   const historyManager = useHistoryManager()
   const localModals = useAvailableModels()
+  const browserWindowManager = useBrowserWindowManager()
+  const isLeftSideBarOpen = useIsLeftSidebarOpen()
 
   const navigate = useNavigate()
 
   const { needsSetup } = useLoaderData() as { needsSetup: boolean }
 
-  const [open, setOpen] = useState(false)
-
   const [needsLocalModels, setNeedsLocalModels] = useState(needsSetup)
 
   useMatchMediaEffect(
     '(min-width: 768px)',
-    useCallback((matches) => {
-      if (matches) {
-        setOpen(true)
-      } else {
-        setOpen(false)
-      }
-    }, []),
+    useCallback(
+      (matches) => {
+        if (matches) {
+          browserWindowManager.setIsLeftSidebarOpen(true)
+        } else {
+          browserWindowManager.setIsLeftSidebarOpen(false)
+        }
+      },
+      [browserWindowManager],
+    ),
   )
 
   suspend(async () => {
@@ -70,10 +77,15 @@ export function App() {
           ) : null}
           <div className="h-screen w-screen overflow-hidden">
             <div className="grid h-full grid-rows-[36px,auto,24px]">
-              <Titlebar open={open} setOpen={setOpen} />
+              <Titlebar
+                open={isLeftSideBarOpen}
+                setOpen={(open) =>
+                  browserWindowManager.setIsLeftSidebarOpen(open)
+                }
+              />
 
               <div className="grid min-h-full grid-cols-[min-content,_minmax(0,_1fr)]">
-                {open ? (
+                {isLeftSideBarOpen ? (
                   <div className="w-[175px] border-r">
                     <Sidebar />
                   </div>

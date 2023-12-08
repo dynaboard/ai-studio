@@ -4,11 +4,13 @@ import { useValue } from 'signia-react'
 
 type BrowserWindowState = {
   isFullScreen: boolean
+  isLeftSidebarOpen: boolean
 }
 
 export class BrowserWindowManager {
   private readonly _state = atom<BrowserWindowState>('BrowserWindowState', {
     isFullScreen: false,
+    isLeftSidebarOpen: false,
   })
 
   cleanupHandler: (() => void) | undefined
@@ -41,6 +43,13 @@ export class BrowserWindowManager {
       isFullScreen: isFullScreen,
     }))
   }
+
+  setIsLeftSidebarOpen(open: boolean) {
+    this._state.update((state) => ({
+      ...state,
+      isLeftSidebarOpen: open,
+    }))
+  }
 }
 
 export const BrowserWindowManagerContext = createContext(
@@ -56,4 +65,13 @@ export function useIsFullScreen() {
   return useValue('useIsFullScreen', () => manager.state.isFullScreen, [
     manager,
   ])
+}
+
+export function useIsLeftSidebarOpen() {
+  const manager = useBrowserWindowManager()
+  return useValue(
+    'useIsLeftSidebarOpen',
+    () => manager.state.isLeftSidebarOpen,
+    [manager],
+  )
 }

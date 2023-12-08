@@ -1,19 +1,22 @@
 import { Model } from '@shared/model-list'
+import { LucideArrowRightCircle } from 'lucide-react'
 import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { useIsLeftSidebarOpen } from '@/providers/browser-window'
 import { useAvailableModels } from '@/providers/models/manager'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
 
 export function ToolsPage() {
   const allTools = useAllTools()
-  const [selectedTools, setSelectedTools] = useState<string[]>([])
+  const isLeftSideBarOpen = useIsLeftSidebarOpen()
 
-  console.log('selectedTools: ', selectedTools)
+  const [selectedTools, setSelectedTools] = useState<string[]>([])
 
   return (
     // 36px titlebar height
@@ -27,9 +30,9 @@ export function ToolsPage() {
           providing a natural language interface to a variety of tasks.
         </span>
       </div>
-      <div className="h-full overflow-hidden bg-slate-50 p-4 dark:bg-slate-900">
+      <div className="h-full overflow-hidden bg-slate-50 dark:bg-slate-900">
         <ScrollArea className="h-full">
-          <div className="grid h-full grid-flow-row grid-cols-3 gap-4">
+          <div className="grid h-full grid-flow-row grid-cols-3 gap-4 p-4">
             {allTools.map((tool) => {
               return (
                 <ToolEntry
@@ -41,6 +44,25 @@ export function ToolsPage() {
               )
             })}
           </div>
+          {selectedTools.length > 0 && (
+            <div
+              className={cn(
+                'group fixed bottom-10 z-50 m-auto flex  items-center justify-center',
+                isLeftSideBarOpen ? 'w-[calc(100%-175px)]' : 'w-full',
+              )}
+            >
+              <Button
+                className="rounded-3xl drop-shadow-md"
+                onClick={() => {
+                  console.log('start chat with tools: ', selectedTools)
+                }}
+              >
+                Start chat with {selectedTools.length}{' '}
+                {selectedTools.length > 1 ? 'tools' : 'tool'}
+                <LucideArrowRightCircle className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </div>
+          )}
         </ScrollArea>
       </div>
     </div>
@@ -74,6 +96,8 @@ function ToolEntry({
       className={cn(
         'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border bg-card p-3 text-card-foreground shadow-sm transition-all',
         selectedTools.includes(tool.id) ? 'border-primary' : '',
+        // TODO: if not installed, show a download dialog for confirmation before installing
+        !hasModelInstalled ? 'border-dashed' : '',
       )}
       onClick={() => {
         const newSelectedTools = selectedTools.includes(tool.id)
@@ -93,15 +117,13 @@ function ToolEntry({
       </div>
       {hasModelInstalled && (
         <div className="flex flex-col gap-1">
-          <span className="w-fit">
-            {requiredModels.map((model, _idx) => {
-              return (
-                <Badge key={model.name} variant="outline">
-                  {model.name}
-                </Badge>
-              )
-            })}
-          </span>
+          {requiredModels.map((model, _idx) => {
+            return (
+              <Badge key={model.name} variant="outline" className="w-fit">
+                {model.name}
+              </Badge>
+            )
+          })}
         </div>
       )}
     </div>
