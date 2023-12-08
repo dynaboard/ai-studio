@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 
 import { ThreadsSidebar } from '@/components/chat-sidebar'
 import { ModelDownloader } from '@/components/downloads/model-downloader'
+import { ResizablePanel } from '@/components/panels'
 import { cn } from '@/lib/utils'
 import { useCurrentThreadID } from '@/providers/chat/manager'
 import { useThreads } from '@/providers/history/manager'
@@ -24,10 +25,10 @@ export function ChatsIndex() {
     >
       {haveModels ? (
         <>
-          <div className="h-full w-full overflow-hidden">
-            <div className="h-auto w-auto min-w-[150px] border-r">
+          <div className="h-full w-full">
+            <ResizablePanel defaultWidth={175} maxWidth={300} minWidth={175}>
               <ThreadsSidebar />
-            </div>
+            </ResizablePanel>
           </div>
           <div className="h-full w-full overflow-hidden">
             <Outlet />

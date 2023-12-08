@@ -1,5 +1,5 @@
 import { EmbeddingMeta } from '@shared/meta'
-import { Tensor } from '@xenova/transformers'
+import type { Tensor } from '@xenova/transformers'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { promises as fsPromises } from 'fs'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'

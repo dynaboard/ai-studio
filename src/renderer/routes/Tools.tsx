@@ -16,8 +16,8 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import { useIsLeftSidebarOpen } from '@/providers/browser-window'
 import { useAvailableModels, useDownloads } from '@/providers/models/manager'
+import { useIsSidebarClosed } from '@/providers/sidebar'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
 
@@ -27,7 +27,7 @@ function getModelFiles(modelName: string) {
 
 export function ToolsPage() {
   const allTools = useAllTools()
-  const isLeftSideBarOpen = useIsLeftSidebarOpen()
+  const isSidebarClosed = useIsSidebarClosed()
 
   const [selectedTools, setSelectedTools] = useState<string[]>([])
 
@@ -61,7 +61,7 @@ export function ToolsPage() {
             <div
               className={cn(
                 'group fixed bottom-10 z-50 m-auto flex  items-center justify-center',
-                isLeftSideBarOpen ? 'w-[calc(100%-175px)]' : 'w-full',
+                isSidebarClosed ? 'w-full' : 'w-[calc(100%-175px)]',
               )}
             >
               <Button

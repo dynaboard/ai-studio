@@ -101,7 +101,7 @@ export function FilesList() {
       ) : (
         // 23px statusbar
         // 36px titlebar
-        <div className="flex h-[calc(100vh-23px-36px)] flex-col items-center justify-center">
+        <div className="flex h-[calc(100vh-24px-36px)] flex-col items-center justify-center">
           <span className="text-md inline-flex select-none items-center font-medium text-muted-foreground">
             No files
           </span>

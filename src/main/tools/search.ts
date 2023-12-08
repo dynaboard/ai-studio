@@ -175,7 +175,7 @@ export class SearchApi {
       throw new Error('Error in getting vqd')
     }
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       q: keywords,
       kl: region,
       l: region,
@@ -250,7 +250,7 @@ export class SearchApi {
   private async _getUrl(
     method: string,
     url: string,
-    params: { [key: string]: any },
+    params: { [key: string]: unknown },
   ): Promise<AxiosResponse | null> {
     for (let i = 0; i < 3; i++) {
       try {
@@ -265,7 +265,8 @@ export class SearchApi {
         if (resp.status === 200) {
           return resp
         }
-      } catch (ex) {
+      } catch (e) {
+        const ex = e as Error
         this.logger.error(`_getUrl() ${url} ${ex.name} ${ex.message}`)
         if (i >= 2 || ex.message.includes('418')) {
           throw ex
