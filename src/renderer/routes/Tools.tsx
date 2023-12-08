@@ -1,6 +1,6 @@
-import { MODELS } from '@shared/model-list'
+import { Model, MODELS } from '@shared/model-list'
 import { LucideArrowRightCircle } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import {
   AlertDialog,
@@ -16,7 +16,11 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import { useAvailableModels, useDownloads } from '@/providers/models/manager'
+import {
+  useAvailableModels,
+  useDownloads,
+  useModelManager,
+} from '@/providers/models/manager'
 import { useIsSidebarClosed } from '@/providers/sidebar'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
@@ -92,24 +96,48 @@ function ToolEntry({
   setSelectedTools: (tools: string[]) => void
 }) {
   const localModels = useAvailableModels()
+  const modelManager = useModelManager()
   const downloads = useDownloads()
 
   const [confirmDialog, setConfirmDialog] = useState<boolean>(false)
 
-  // Assuming there's only 1 model for now and downloading the first file's url
-  const firstModelFile = getModelFiles(tool.requiredModels[0])
-  const fileSelection = firstModelFile?.[0]
+  const modelData = useMemo(() => {
+    let file: Model['files'][number] | undefined
+    let model: Model | undefined
+
+    downloads.some((download) => {
+      model = modelManager.allModels.find((m) => {
+        const foundFile = m.files.find((f) => f.name === download.filename)
+        if (foundFile) {
+          file = foundFile
+          return true
+        }
+        return false
+      })
+
+      return !!model
+    })
+
+    return {
+      model,
+      file,
+    }
+  }, [modelManager, downloads])
 
   const isDownloading = !!downloads.find(
-    (download) => download.filename === fileSelection?.name,
+    (download) => download.filename === modelData.file?.name,
   )
 
-  const hasModelInstalled = tool.requiredModels.every((modelName) =>
+  const hasRequiredToolModel = tool.requiredModels.every((modelName) =>
     localModels.some((model) => model.name === modelName),
   )
 
+  // Assuming there's only 1 model for now and downloading the first file's url
+  const firstRequiredModel = getModelFiles(tool.requiredModels[0])
+  const firstFile = hasRequiredToolModel ? null : firstRequiredModel?.[0]
+
   const handleToolClick = useCallback(() => {
-    if (!hasModelInstalled) {
+    if (!hasRequiredToolModel) {
       setConfirmDialog(true)
     } else {
       const newSelectedTools = selectedTools.includes(tool.id)
@@ -118,23 +146,16 @@ function ToolEntry({
 
       setSelectedTools(newSelectedTools)
     }
-  }, [selectedTools, setSelectedTools, tool, hasModelInstalled])
+  }, [selectedTools, setSelectedTools, tool, hasRequiredToolModel])
 
   const handleDownloadClick = useCallback(
     (e) => {
       e.stopPropagation()
 
-      if (isDownloading) {
-        // eslint-disable-next-line no-console
-        console.log('Already downloading models:', tool.requiredModels)
-        setConfirmDialog(false)
-        return
-      }
-
-      if (fileSelection) {
+      if (firstFile) {
         const anchorEl = document.createElement('a')
-        anchorEl.href = fileSelection.url as string
-        anchorEl.download = fileSelection.name as string
+        anchorEl.href = firstFile.url as string
+        anchorEl.download = firstFile.name as string
         document.body.appendChild(anchorEl)
         anchorEl.addEventListener('click', (e) => {
           e.stopPropagation()
@@ -142,12 +163,12 @@ function ToolEntry({
         anchorEl.click()
 
         // eslint-disable-next-line no-console
-        console.log('Downloading model file: ', fileSelection.url)
+        console.log('Downloading model file: ', firstFile.url)
       }
 
       setConfirmDialog(false)
     },
-    [fileSelection, isDownloading, setConfirmDialog, tool.requiredModels],
+    [firstFile, setConfirmDialog],
   )
 
   return (
@@ -156,7 +177,7 @@ function ToolEntry({
       className={cn(
         'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border-2 bg-card p-3 text-card-foreground shadow-sm transition-all',
         selectedTools.includes(tool.id) ? 'border-primary' : '',
-        !hasModelInstalled ? 'border-dashed' : '',
+        !hasRequiredToolModel || isDownloading ? 'border-dashed' : '',
         isDownloading ? 'cursor-not-allowed select-none' : '',
       )}
       onClick={isDownloading ? undefined : handleToolClick}
