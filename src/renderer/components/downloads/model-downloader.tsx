@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import {
+  DEFAULT_MODEL,
   useAvailableModels,
   useDownloads,
   useModelManager,
@@ -128,50 +129,52 @@ function FileEntry({ file }: { file: ModelFile }) {
         <div className="flex flex-col items-center justify-center">
           {hasLocalFile ? (
             <>
-              <AlertDialog open={showDeleteDialog}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="iconButton"
-                    className="block p-0 hover:text-destructive"
-                    onClick={() => {
-                      setShowDeleteDialog(true)
-                    }}
-                  >
-                    <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-red-600" />
-                  </Button>
-                </AlertDialogTrigger>
-
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you sure absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This model will no longer be
-                      accessible by you.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={() => {
-                        setShowDeleteDialog(false)
-                      }}
-                    >
-                      Cancel
-                    </AlertDialogCancel>
+              {file.name !== DEFAULT_MODEL ? (
+                <AlertDialog open={showDeleteDialog}>
+                  <AlertDialogTrigger asChild>
                     <Button
-                      variant="destructive"
+                      size="sm"
+                      variant="iconButton"
+                      className="block p-0 hover:text-destructive"
                       onClick={() => {
-                        modelManager.deleteModelFile(file.name)
-                        setShowDeleteDialog(false)
+                        setShowDeleteDialog(true)
                       }}
                     >
-                      Delete
+                      <LucideTrash className="h-4 w-4 text-muted-foreground group-hover:text-red-600" />
                     </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Are you sure absolutely sure?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This model will no longer
+                        be accessible by you.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel
+                        onClick={() => {
+                          setShowDeleteDialog(false)
+                        }}
+                      >
+                        Cancel
+                      </AlertDialogCancel>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          modelManager.deleteModelFile(file.name)
+                          setShowDeleteDialog(false)
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : null}
             </>
           ) : (
             <Button

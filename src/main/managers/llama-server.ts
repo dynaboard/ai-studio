@@ -5,22 +5,41 @@ import llamaServer from '../../../resources/llamacpp/server?asset&asarUnpack'
 
 const CONTEXT_SIZE = 4096
 
-export class ElectronLlamaServerManager {
-  processes = new Map<string, ChildProcess>()
+export type CompletionParams = {
+  prompt?: string
+  temperature?: number
+  top_k?: number
+  top_p?: number
+  min_p?: number
+  n_predict?: number
+  n_keep?: number
+  stop?: string[]
+  presence_penalty?: number
+  frequency_penalty?: number
+  grammar?: string
+  seed?: number
+  stream?: boolean
+  image_data?: { data: string; id: number }[]
+}
 
+type LaunchOptions = {
+  id: string
+  modelPath: string
+  multimodal?: boolean
+  mmprojPath?: string
+  port?: string
+}
+
+export class ElectronLlamaServerManager {
+  launchOptions = new Map<string, LaunchOptions>()
+  processes = new Map<string, ChildProcess>()
   loading = new Map<string, Promise<unknown>>()
 
-  async launchServer({
-    modelPath,
-    mmprojPath,
-    multimodal = false,
-  }: {
-    modelPath: string
-    multimodal?: boolean
-    mmprojPath?: string
-  }) {
-    if (this.loading.has(modelPath)) {
-      return this.loading.get(modelPath)
+  async launchServer(options: LaunchOptions) {
+    const { id, modelPath, mmprojPath, multimodal = false, port } = options
+
+    if (this.loading.has(id)) {
+      return this.loading.get(id)
     }
 
     const args = [
@@ -35,6 +54,9 @@ export class ElectronLlamaServerManager {
     ]
     if (multimodal && mmprojPath) {
       args.push('--mmproj', mmprojPath)
+    }
+    if (port) {
+      args.push('--port', port)
     }
 
     const promise = new Promise((resolve, reject) => {
@@ -56,6 +78,7 @@ export class ElectronLlamaServerManager {
             const message = JSON.parse(line)
             if (message.message == 'HTTP server listening') {
               process.stdout?.off('data', handler)
+              this.launchOptions.set(id, options)
               resolve(void undefined)
             }
           } catch {
@@ -65,19 +88,28 @@ export class ElectronLlamaServerManager {
       }
 
       process.stdout?.on('data', handler)
-      this.handleProcess(modelPath, process)
+      this.handleProcess(id, process)
     })
 
-    this.loading.set(modelPath, promise)
+    this.loading.set(id, promise)
 
     return promise
   }
 
-  private handleProcess(modelPath: string, process: ChildProcess) {
-    this.processes.set(modelPath, process)
+  private handleProcess(id: string, process: ChildProcess) {
+    this.processes.set(id, process)
 
-    process.on('close', () => {
-      this.processes.delete(modelPath)
+    process.on('close', (code, signal) => {
+      console.log(
+        `[LLAMACPP] Process ${process.pid} closed with code ${code}, ${signal}`,
+      )
+      this.processes.delete(id)
+      this.loading.delete(id)
+
+      if (signal === 'SIGSEGV' && this.launchOptions.get(id)) {
+        console.log(`[LLAMACPP] Restarting process ${process.pid}`)
+        this.launchServer(this.launchOptions.get(id)!)
+      }
     })
 
     process.stdout?.on('data', (data) => {
@@ -101,7 +133,7 @@ export class ElectronLlamaServerManager {
       })
     })
 
-    this.processes.set(modelPath, process)
+    this.processes.set(id, process)
   }
 
   async getModelParameters() {
@@ -127,15 +159,15 @@ export class ElectronLlamaServerManager {
     return data.tokens
   }
 
-  cleanupProcess(modelPath: string) {
-    const process = this.processes.get(modelPath)
+  cleanupProcess(id: string) {
+    const process = this.processes.get(id)
     if (process) {
       const killed = process.kill()
       if (!killed) {
         process.kill('SIGKILL')
       }
-      this.processes.delete(modelPath)
-      this.loading.delete(modelPath)
+      this.processes.delete(id)
+      this.loading.delete(id)
     }
   }
 

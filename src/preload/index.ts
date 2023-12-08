@@ -2,6 +2,7 @@ import './models'
 import './usage'
 import './embeddings'
 import './browser-window'
+import './tools'
 import './files'
 
 import { PromptOptions } from '@shared/chats'
@@ -58,6 +59,7 @@ export interface ChatsAPI {
     promptOptions?: PromptOptions
     modelPath: string
     selectedFile?: string
+    outOfBand?: boolean
   }) => Promise<string>
 
   regenerateMessage: (args: {

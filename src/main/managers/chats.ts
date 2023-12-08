@@ -7,7 +7,10 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { readFile } from 'fs/promises'
 import path from 'path'
 
-import { ElectronLlamaServerManager } from '@/managers/llama-server'
+import {
+  CompletionParams,
+  ElectronLlamaServerManager,
+} from '@/managers/llama-server'
 import { sendToRenderer } from '@/webcontents'
 
 import {
@@ -87,6 +90,7 @@ export class ElectronChatManager {
     }
 
     await this.llamaServerManager.launchServer({
+      id: modelPath,
       modelPath,
       mmprojPath: mmprojPath,
       multimodal: modelFile?.multimodal,
@@ -261,8 +265,8 @@ export class ElectronChatManager {
       prompt,
       {
         top_k: 20,
-        top_p: 0.3,
-        temperature: 0.5,
+        top_p: promptOptions?.topP ?? 0.3,
+        temperature: promptOptions?.temperature ?? 0.5,
         image_data: imageData ? [imageData] : undefined,
       },
       {
@@ -349,6 +353,67 @@ export class ElectronChatManager {
     return response
   }
 
+  async sendOutOfBandMessage({
+    systemPrompt,
+    message,
+    messageID,
+    assistantMessageID,
+    threadID,
+    promptOptions,
+    modelPath,
+    onToken,
+  }: {
+    systemPrompt: string
+    message: string
+    messageID: string
+    assistantMessageID: string
+    threadID: string
+    promptOptions?: PromptOptions
+    modelPath: string
+    selectedFile?: string
+    onToken: (token: string) => void
+  }) {
+    const abortController = this.getAbortController(threadID)
+
+    const { modelName } = await this.initializeSession({
+      modelPath,
+      threadID,
+    })
+
+    const promptWrapper = this.getPromptWrapper(modelName)
+    const messageList = new BasicMessageList({
+      promptWrapper,
+    })
+    messageList.add({ role: 'user', message, id: messageID })
+    const prompt = messageList.format({ systemPrompt })
+
+    let response = ''
+    for await (const chunk of this.llama(
+      prompt,
+      {
+        top_k: 20,
+        top_p: promptOptions?.topP ?? 0.3,
+        temperature: promptOptions?.temperature ?? 0.5,
+      },
+      {
+        controller: abortController,
+      },
+    )) {
+      if (chunk.data) {
+        onToken(chunk.data.content)
+        response += chunk.data.content
+      }
+    }
+
+    messageList.add({
+      role: 'assistant',
+      message: response,
+      id: assistantMessageID,
+    })
+
+    return response
+  }
+
   abort(threadID: string) {
     if (this.abortControllers.has(threadID)) {
       const controller = this.abortControllers.get(threadID)
@@ -376,10 +441,12 @@ export class ElectronChatManager {
           promptOptions,
           modelPath,
           selectedFile,
+          outOfBand,
         },
       ) => {
         const fullPath = path.join(app.getPath('userData'), 'models', modelPath)
-        return this.sendMessage({
+
+        const options = {
           systemPrompt,
           message,
           messageID,
@@ -394,7 +461,13 @@ export class ElectronChatManager {
               messageID: assistantMessageID,
             })
           },
-        })
+        }
+
+        if (outOfBand) {
+          return this.sendOutOfBandMessage(options)
+        }
+
+        return this.sendMessage(options)
       },
     )
 
@@ -526,20 +599,7 @@ Helpful Answer:
 
   async *llama(
     prompt: string,
-    params: {
-      temperature?: number
-      top_k?: number
-      top_p?: number
-      min_p?: number
-      n_predict?: number
-      n_keep?: number
-      stop?: string[]
-      presence_penalty?: number
-      frequency_penalty?: number
-      grammar?: string
-      seed?: number
-      image_data?: { data: string; id: number }[]
-    } = {},
+    params: CompletionParams = {},
     config: {
       controller?: AbortController
     } = {},

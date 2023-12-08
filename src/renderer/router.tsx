@@ -6,6 +6,7 @@ import { DEFAULT_MODEL } from '@/providers/models/manager'
 import { ChatThread } from '@/routes/chats/ChatThread'
 import { ChatsIndex } from '@/routes/chats/Index'
 import { ModelsPage } from '@/routes/Models'
+import { ToolsPage } from '@/routes/Tools'
 
 import { FilesPage } from './routes/Documents'
 
@@ -50,6 +51,10 @@ export const router = createHashRouter([
         path: '/models',
         id: 'models',
         element: <ModelsPage />,
+      },
+      {
+        path: '/tools',
+        element: <ToolsPage />,
       },
       {
         path: '/files',

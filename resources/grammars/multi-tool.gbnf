@@ -1,0 +1,9 @@
+ws ::= ([ \t\n] ws)?
+string ::=  "\"" (
+        [^"\\] |
+        "\\" (["\\/bfnrt] | "u" [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F])
+      )* "\"" ws
+item-parameters-item ::= "{" ws "\"name\"" ws ":" ws string "," ws "\"value\"" ws ":" ws string "}" ws
+item-parameters ::= "[" ws (item-parameters-item ("," ws item-parameters-item)*)? "]" ws
+item ::= "{" ws "\"id\"" ws ":" ws string "," ws "\"parameters\"" ws ":" ws item-parameters "}" ws
+root ::= "[" ws (item ("," ws item)*)? "]" ws

@@ -4,6 +4,7 @@ import {
   LucideIcon,
   LucideMessageCircle,
   LucidePanelLeft,
+  LucideWrench,
 } from 'lucide-react'
 import React, { useCallback } from 'react'
 import { Link as BaseLink, useMatches } from 'react-router-dom'
@@ -107,6 +108,9 @@ export function Sidebar() {
               </Link>
               <Link to="/models" icon={LucideFileBox}>
                 <span className="select-none">Models</span>
+              </Link>
+              <Link to="/tools" icon={LucideWrench}>
+                <span className="select-none">Tools</span>
               </Link>
               {/* TODO: can remove when we allow indexing files in the Files tab */}
               {haveFiles ? (

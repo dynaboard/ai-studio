@@ -1,0 +1,13 @@
+string ::=  "\"" (
+        [^"\\] |
+        "\\" (["\\/bfnrt] | "u" [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F] [0-9a-fA-F])
+      )* "\"" ws
+
+parameters-item ::= "{" ws "\"name\"" ws ":" ws string "," ws "\"value\"" ws ":" ws string "}" ws
+
+parameters ::= "[" ws (parameters-item ("," ws parameters-item)*)? "]" ws
+
+root ::= "{" ws "\"id\"" ws ":" ws string "," ws "\"parameters\"" ws ":" ws parameters "}" ws
+
+# Optional space: by convention, applied in this grammar after literal chars when allowed
+ws ::= ([ \t\n] ws)?

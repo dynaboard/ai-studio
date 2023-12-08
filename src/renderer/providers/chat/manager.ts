@@ -4,6 +4,7 @@ import { useValue } from 'signia-react'
 
 import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
+import { ToolManager } from '@/providers/tools/manager'
 
 type ModelState = {
   messages: Message[]
@@ -34,6 +35,8 @@ export class ChatManager {
   })
 
   cleanupHandler: (() => void) | undefined
+
+  declare toolManager: ToolManager
 
   constructor(
     readonly historyManager: HistoryManager,
@@ -119,6 +122,7 @@ export class ChatManager {
     model?: string
     promptOptions?: PromptOptions
     selectedFile?: string
+    addToHistory?: boolean
   }) {
     if (threadID) {
       this.setRunningPrompt(threadID, true)
@@ -182,22 +186,46 @@ export class ChatManager {
         message: newAssistantMessage,
       })
 
-      const response = await window.chats.sendMessage({
-        systemPrompt: currentSystemPrompt,
-        messageID: newUserMessage.id,
-        assistantMessageID,
-        message,
-        modelPath,
-        threadID,
-        promptOptions,
-        selectedFile,
-      })
+      if (this.toolManager.hasActiveTools) {
+        console.log('Checking if prompt can be handled by a tool')
+        const possibleTool = await this.toolManager.getToolForPrompt(message)
+        if (possibleTool) {
+          console.log('Found a tool:', possibleTool)
 
-      this.historyManager.editMessage({
-        threadID,
-        messageID: assistantMessageID,
-        contents: response,
-      })
+          console.log(
+            'params',
+            { assistantMessageID, threadID, modelPath, promptOptions },
+            ...(possibleTool.parameters as unknown[]),
+          )
+          const result = await possibleTool.tool.run(
+            { assistantMessageID, threadID, modelPath, promptOptions },
+            ...(possibleTool.parameters as unknown[]),
+          )
+          this.historyManager.editMessage({
+            threadID,
+            messageID: assistantMessageID,
+            contents: String(result),
+            state: 'sent',
+          })
+        }
+      } else {
+        const response = await window.chats.sendMessage({
+          systemPrompt: currentSystemPrompt,
+          messageID: newUserMessage.id,
+          assistantMessageID,
+          message,
+          modelPath,
+          threadID,
+          promptOptions,
+          selectedFile,
+        })
+
+        this.historyManager.editMessage({
+          threadID,
+          messageID: assistantMessageID,
+          contents: response,
+        })
+      }
     } catch (e) {
       const error = e as Error
       // eslint-disable-next-line no-console
@@ -418,6 +446,11 @@ export class ChatManager {
 
     const modelPath = thread.modelID
     await window.chats.cleanupSession({ modelPath, threadID: thread.id })
+  }
+
+  // kind of gross, but there is a cyclic dep at the moment that we need to break eventually
+  setToolManager(toolManager: ToolManager) {
+    this.toolManager = toolManager
   }
 
   @computed

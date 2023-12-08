@@ -21,3 +21,9 @@ export enum FileChannel {
 export enum UsageChannel {
   GetSystemUsage = 'usage:getSystemUsage',
 }
+
+export enum ToolChannel {
+  GetTool = 'tools:getTool',
+  Fetch = 'tools:fetch',
+  CrawlImages = 'tools:crawlImages',
+}
