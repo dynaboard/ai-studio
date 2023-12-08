@@ -364,16 +364,16 @@ export function ChatWindow({ id }: { id?: string }) {
         </div>
       )}
 
-      {isCurrentThreadGenerating && (
-        <div className="mb-2 flex h-fit items-center justify-center">
-          <Button size="sm" onClick={handleAbort}>
-            <LucideStopCircle size={14} className="mr-2" />
-            <span className="select-none">Stop generating</span>
-          </Button>
-        </div>
-      )}
+      <div className="relative flex h-fit items-center p-4 pt-2">
+        {isCurrentThreadGenerating ? (
+          <div className="absolute left-0 z-10 mb-2 flex h-fit w-full -translate-y-12 items-center justify-center">
+            <Button size="sm" onClick={handleAbort}>
+              <LucideStopCircle size={14} className="mr-2" />
+              <span className="select-none">Stop generating</span>
+            </Button>
+          </div>
+        ) : null}
 
-      <div className="flex h-fit items-center p-4 pt-2">
         <form
           className="relative w-full"
           onSubmit={handleMessage}
