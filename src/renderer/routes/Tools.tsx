@@ -110,8 +110,6 @@ function ToolEntry({
 
   const handleToolClick = useCallback(() => {
     if (!hasModelInstalled) {
-      // eslint-disable-next-line no-console
-      console.log(`Open download confirmation dialog: ${tool.requiredModels}`)
       setConfirmDialog(true)
     } else {
       const newSelectedTools = selectedTools.includes(tool.id)
@@ -187,8 +185,7 @@ function ToolEntry({
             <AlertDialogTitle>Confirm</AlertDialogTitle>
             <AlertDialogDescription>
               This tool requires the following model(s):{' '}
-              {tool.requiredModels.join(', ')}. Do you want to proceed with the
-              download?
+              {tool.requiredModels.join(', ')}. Do you want to proceed?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

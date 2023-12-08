@@ -13,6 +13,9 @@ import {
   useModelManager,
 } from '@/providers/models/manager'
 
+import { DownloadStatus } from './components/downloads/download-status'
+import { StatusBar } from './components/status-bar'
+
 export function App() {
   const modelManager = useModelManager()
   const historyManager = useHistoryManager()
@@ -61,6 +64,9 @@ export function App() {
                 <Outlet />
               </div>
             </div>
+
+            <StatusBar />
+            <DownloadStatus />
           </div>
         </div>
       </ToolManagerProvider>
