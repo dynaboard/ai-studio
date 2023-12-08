@@ -6,7 +6,7 @@ import {
   LucideTrash2,
   LucideUser2,
 } from 'lucide-react'
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import Textarea from 'react-textarea-autosize'
 import remarkGfm from 'remark-gfm'
@@ -46,7 +46,7 @@ export function ChatMessage({
     },
   })
 
-  const [editing, setEditing] = React.useState(false)
+  const [editing, setEditing] = useState(false)
 
   const { isCopied, copyToClipboard } = useCopyToClipboard({
     timeout: 1000,
@@ -60,7 +60,7 @@ export function ChatMessage({
     },
   })
 
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const message = possibleMessage.value
 
@@ -109,6 +109,14 @@ export function ChatMessage({
                 className="mb-1 flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50"
                 tabIndex={0}
                 onKeyDown={onKeyDown}
+                onBlur={() => {
+                  if (
+                    inputRef.current &&
+                    inputRef.current.value === message.message
+                  ) {
+                    setEditing(false)
+                  }
+                }}
                 rows={1}
                 spellCheck={false}
               />

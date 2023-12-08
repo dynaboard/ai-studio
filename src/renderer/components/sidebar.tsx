@@ -14,13 +14,15 @@ import { useEmbeddingsMeta } from '@/providers/files/manager'
 function Link({
   icon: Icon,
   children,
+  to,
   ...props
-}: { icon: LucideIcon } & React.ComponentProps<typeof BaseLink>) {
+}: React.ComponentProps<typeof BaseLink> & { icon: LucideIcon; to: string }) {
   const matches = useMatches()
-  const active = matches[matches.length - 1]?.pathname === props.to
+  const active = matches[1]?.pathname === to
 
   return (
     <BaseLink
+      to={to}
       className={cn(
         buttonVariants({
           variant: 'ghost',

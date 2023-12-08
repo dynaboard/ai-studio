@@ -36,9 +36,11 @@ export const router = createHashRouter([
       { index: true, element: <></>, loader: () => redirect('/chats') },
       {
         path: '/chats',
+        id: 'chats',
         element: <ChatsIndex />,
         children: [
           {
+            id: 'thread',
             path: '/chats/:threadID',
             element: <ChatThread />,
           },
@@ -46,10 +48,12 @@ export const router = createHashRouter([
       },
       {
         path: '/models',
+        id: 'models',
         element: <ModelsPage />,
       },
       {
         path: '/files',
+        id: 'files',
         element: <FilesPage />,
       },
     ],

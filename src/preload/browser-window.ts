@@ -11,10 +11,22 @@ contextBridge.exposeInMainWorld('browserWindow', {
       ipcRenderer.off('full-screen-change', cb)
     }
   },
+
+  onActiveWindowChange: (callback: (isActive: boolean) => void) => {
+    const cb = (_: IpcRendererEvent, isActive: boolean) => {
+      callback(isActive)
+    }
+
+    ipcRenderer.on('window-active', cb)
+    return () => {
+      ipcRenderer.off('window-active', cb)
+    }
+  },
 } satisfies UsageAPI)
 
 export interface UsageAPI {
   onFullScreenChange: (callback: (isFullScreen: boolean) => void) => () => void
+  onActiveWindowChange: (callback: (isActive: boolean) => void) => () => void
 }
 
 declare global {

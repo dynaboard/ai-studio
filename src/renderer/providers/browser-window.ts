@@ -4,14 +4,16 @@ import { useValue } from 'signia-react'
 
 type BrowserWindowState = {
   isFullScreen: boolean
+  isActive: boolean
 }
 
 export class BrowserWindowManager {
   private readonly _state = atom<BrowserWindowState>('BrowserWindowState', {
     isFullScreen: false,
+    isActive: true,
   })
 
-  cleanupHandler: (() => void) | undefined
+  handlers: (() => void)[] = []
 
   constructor() {
     this.initialize()
@@ -25,20 +27,36 @@ export class BrowserWindowManager {
     this.setIsFullScreen(isFullScreen)
   }
 
+  handleActiveWindowChange = (isActive: boolean) => {
+    this.setIsActive(isActive)
+  }
+
   initialize() {
-    this.cleanupHandler = window.browserWindow.onFullScreenChange(
-      this.handleFullScreenChange,
+    this.handlers.push(
+      window.browserWindow.onFullScreenChange(this.handleFullScreenChange),
+    )
+    this.handlers.push(
+      window.browserWindow.onActiveWindowChange(this.handleActiveWindowChange),
     )
   }
 
   destroy() {
-    this.cleanupHandler?.()
+    this.handlers.forEach((handler) => handler())
+    this.handlers = []
   }
 
   setIsFullScreen(isFullScreen: boolean) {
     this._state.update((state) => ({
       ...state,
       isFullScreen: isFullScreen,
+    }))
+  }
+
+  setIsActive(isActive: boolean) {
+    if (isActive === this.state.isActive) return
+    this._state.update((state) => ({
+      ...state,
+      isActive: isActive,
     }))
   }
 }
@@ -54,6 +72,13 @@ export function useBrowserWindowManager() {
 export function useIsFullScreen() {
   const manager = useBrowserWindowManager()
   return useValue('useIsFullScreen', () => manager.state.isFullScreen, [
-    manager,
+    manager.state,
+  ])
+}
+
+export function useIsActiveWindow() {
+  const manager = useBrowserWindowManager()
+  return useValue('useIsActiveWindow', () => manager.state.isActive, [
+    manager.state,
   ])
 }

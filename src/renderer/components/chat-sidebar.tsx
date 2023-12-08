@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { LucidePlusCircle, LucideTrash } from 'lucide-react'
 import React from 'react'
 import { NodeRendererProps, Tree } from 'react-arborist'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useMatches, useNavigate } from 'react-router-dom'
 import { useValue } from 'signia-react'
 import useResizeObserver from 'use-resize-observer'
 
@@ -116,9 +116,13 @@ const Cursor = React.memo(function Cursor({
 
 function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const historyManager = useHistoryManager()
-  // const chatManager = useChatManager()
+  const chatManager = useChatManager()
   const currentThreadID = useCurrentThreadID()
   const navigate = useNavigate()
+
+  const matches = useMatches()
+
+  const active = matches[matches.length - 1]?.id === 'thread'
 
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
 
@@ -128,7 +132,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
     const firstThread = historyManager.threads.find(
       (t) => t.id !== node.data.id,
     )
-    // await chatManager.cleanupChatSession(node.data.id)
+    await chatManager.cleanupChatSession(node.data.id)
     historyManager.deleteThread(node.data.id)
     navigate(`/chats/${firstThread?.id ?? ''}`, {
       replace: true,
@@ -142,7 +146,9 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
         style={style}
         className={cn(
           'group/node h-full items-center justify-between gap-2 rounded leading-3 transition hover:bg-secondary',
-          currentThreadID === node.data.id && 'bg-secondary',
+          currentThreadID === node.data.id && active
+            ? 'bg-secondary outline outline-1 -outline-offset-1 outline-border'
+            : null,
         )}
         onDoubleClickCapture={(event) => {
           event.preventDefault()
