@@ -94,14 +94,14 @@ function ToolEntry({
   const localModels = useAvailableModels()
   const downloads = useDownloads()
 
-  const [modelDownloadConfirmDialog, setModelDownloadConfirmDialog] =
-    useState<boolean>(false)
+  const [confirmDialog, setConfirmDialog] = useState<boolean>(false)
 
   // Assuming there's only 1 model for now and downloading the first file's url
-  const downloadItem = getModelFiles(tool.requiredModels[0])?.[0]
+  const firstModelFile = getModelFiles(tool.requiredModels[0])
+  const fileSelection = firstModelFile?.[0]
 
   const isDownloading = !!downloads.find(
-    (download) => download.filename === downloadItem?.name,
+    (download) => download.filename === fileSelection?.name,
   )
 
   const hasModelInstalled = tool.requiredModels.every((modelName) =>
@@ -112,7 +112,7 @@ function ToolEntry({
     if (!hasModelInstalled) {
       // eslint-disable-next-line no-console
       console.log(`Open download confirmation dialog: ${tool.requiredModels}`)
-      setModelDownloadConfirmDialog(true)
+      setConfirmDialog(true)
     } else {
       const newSelectedTools = selectedTools.includes(tool.id)
         ? selectedTools.filter((selectedTool) => selectedTool !== tool.id)
@@ -122,31 +122,34 @@ function ToolEntry({
     }
   }, [selectedTools, setSelectedTools, tool, hasModelInstalled])
 
-  const handleModelDownload = useCallback(
+  const handleDownloadClick = useCallback(
     (e) => {
       e.stopPropagation()
 
       if (isDownloading) {
         // eslint-disable-next-line no-console
         console.log('Already downloading models:', tool.requiredModels)
-        setModelDownloadConfirmDialog(false)
+        setConfirmDialog(false)
         return
       }
 
-      const anchor = document.createElement('a')
-      anchor.href = String(downloadItem?.url)
-      anchor.download = String(downloadItem?.name)
-      document.body.appendChild(anchor)
-      anchor.addEventListener('click', (e) => {
-        e.stopPropagation()
-        console.log('anchor clickde')
-      })
+      if (fileSelection) {
+        const anchorEl = document.createElement('a')
+        anchorEl.href = fileSelection.url as string
+        anchorEl.download = fileSelection.name as string
+        document.body.appendChild(anchorEl)
+        anchorEl.addEventListener('click', (e) => {
+          e.stopPropagation()
+        })
+        anchorEl.click()
 
-      console.log('Downloading file:', downloadItem?.url)
+        // eslint-disable-next-line no-console
+        console.log('Downloading model file: ', fileSelection.url)
+      }
 
-      setModelDownloadConfirmDialog(false)
+      setConfirmDialog(false)
     },
-    [isDownloading, tool.requiredModels, downloadItem],
+    [fileSelection, isDownloading, setConfirmDialog, tool.requiredModels],
   )
 
   return (
@@ -156,8 +159,9 @@ function ToolEntry({
         'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border-2 bg-card p-3 text-card-foreground shadow-sm transition-all',
         selectedTools.includes(tool.id) ? 'border-primary' : '',
         !hasModelInstalled ? 'border-dashed' : '',
+        isDownloading ? 'cursor-not-allowed select-none' : '',
       )}
-      onClick={handleToolClick}
+      onClick={isDownloading ? undefined : handleToolClick}
     >
       <div>
         <Label className="font-semibold leading-none tracking-tight">
@@ -177,7 +181,7 @@ function ToolEntry({
         })}
       </div>
 
-      <AlertDialog open={modelDownloadConfirmDialog}>
+      <AlertDialog open={confirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm</AlertDialogTitle>
@@ -191,12 +195,12 @@ function ToolEntry({
             <AlertDialogCancel
               onClick={(e) => {
                 e.stopPropagation()
-                setModelDownloadConfirmDialog(false)
+                setConfirmDialog(false)
               }}
             >
               Cancel
             </AlertDialogCancel>
-            <Button variant="default" onClick={handleModelDownload}>
+            <Button variant="default" onClick={handleDownloadClick}>
               Download
             </Button>
           </AlertDialogFooter>
