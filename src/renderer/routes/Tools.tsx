@@ -1,5 +1,4 @@
 import { MODELS } from '@shared/model-list'
-import { LucideArrowRightCircle } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 
 import {
@@ -61,7 +60,8 @@ export function ToolsPage() {
               )
             })}
           </div>
-          {selectedTools.length > 0 && (
+          {/* TODO: re-add when the codepath to start a thread with tools */}
+          {/* {selectedTools.length > 0 && (
             <div
               className={cn(
                 'group fixed bottom-10 z-50 m-auto flex  items-center justify-center',
@@ -79,7 +79,7 @@ export function ToolsPage() {
                 <LucideArrowRightCircle className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
-          )}
+          )} */}
         </ScrollArea>
       </div>
     </div>
@@ -165,8 +165,9 @@ function ToolEntry({
     <div
       key={tool.id}
       className={cn(
-        'flex min-h-[7rem] cursor-pointer flex-col justify-between gap-1 rounded-lg border-2 bg-card p-3 text-card-foreground shadow-sm transition-all',
-        selectedTools.includes(tool.id) ? 'border-primary' : '',
+        'flex min-h-[7rem] flex-col justify-between gap-1 rounded-lg border-2 bg-card p-3 text-card-foreground shadow-sm transition-all',
+        // TODO: re-add when the codepath to start a thread with tools
+        // selectedTools.includes(tool.id) ? 'border-primary' : 'cursor-pointer',
         !hasRequiredToolModel || isDownloading ? 'border-dashed' : '',
         isDownloading ? 'cursor-not-allowed select-none' : '',
       )}
