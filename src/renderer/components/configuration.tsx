@@ -59,10 +59,11 @@ export function ParametersConfig({ fileName }: { fileName?: string }) {
                 <div className="flex items-start">
                   <div className="space-y-1 pr-2">
                     <div className="font-semibold leading-none tracking-tight">
-                      Active Tools
+                      Active Tools (alpha)
                     </div>
                     <div className="prose text-xs text-muted-foreground">
-                      Tools help augment an LLM&rsquo;s capabilities.
+                      Tools help augment an LLM&rsquo;s capabilities. Tools are
+                      currently in alpha and might not work as expected.
                     </div>
                   </div>
                 </div>
