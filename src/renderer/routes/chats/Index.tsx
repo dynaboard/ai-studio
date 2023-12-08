@@ -20,7 +20,7 @@ export function ChatsIndex() {
     <div
       className={cn(
         'grid h-full w-full',
-        haveModels ? 'grid-cols-[175px,_minmax(0,_1fr)]' : 'grid-cols-1',
+        haveModels ? 'grid-cols-[auto,_minmax(0,_1fr)]' : 'grid-cols-1',
       )}
     >
       {haveModels ? (
