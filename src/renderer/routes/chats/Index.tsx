@@ -30,7 +30,7 @@ export function ChatsIndex() {
               <ThreadsSidebar />
             </ResizablePanel>
           </div>
-          <div className="h-full w-full overflow-hidden">
+          <div className="h-screen w-full overflow-hidden">
             <Outlet />
 
             {!currentThreadID && (
