@@ -27,7 +27,7 @@ export class ToolManager {
         }
       })
 
-      console.log('Tools loaded:', this.toolJSON)
+      // console.log('Tools loaded:', this.toolJSON)
     })
   }
 
