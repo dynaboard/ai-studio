@@ -39,11 +39,11 @@ export function ChatsIndex() {
                   <ThreadsSidebar />
                 </ResizablePanel>
               </div>
-              <div className="h-full w-full overflow-hidden">
+              <div className="h-screen w-full overflow-hidden">
                 <Outlet />
 
                 {!currentThreadID && (
-                  <div className="flex h-full flex-col items-center justify-center">
+                  <div className="flex h-[calc(100vh-36px-24px)] flex-col items-center justify-center">
                     <span className="inline-flex select-none items-center rounded-lg bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
                       {haveThreads
                         ? 'Select a thread or start a new thread'
