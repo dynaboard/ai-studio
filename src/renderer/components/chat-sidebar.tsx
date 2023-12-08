@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { LucidePlusCircle, LucideTrash } from 'lucide-react'
 import React from 'react'
 import { NodeRendererProps, Tree } from 'react-arborist'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useMatches, useNavigate } from 'react-router-dom'
 import { useValue } from 'signia-react'
 import useResizeObserver from 'use-resize-observer'
 
@@ -120,6 +120,10 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const currentThreadID = useCurrentThreadID()
   const navigate = useNavigate()
 
+  const matches = useMatches()
+
+  const active = matches[matches.length - 1]?.id === 'thread'
+
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
 
   const deleteThread = async (event: React.MouseEvent) => {
@@ -142,8 +146,9 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
         style={style}
         className={cn(
           'group/node h-full items-center justify-between gap-2 rounded leading-3 transition hover:bg-secondary',
-          currentThreadID === node.data.id &&
-            'bg-secondary outline outline-1 -outline-offset-1 outline-border',
+          currentThreadID === node.data.id && active
+            ? 'bg-secondary outline outline-1 -outline-offset-1 outline-border'
+            : null,
         )}
         onDoubleClickCapture={(event) => {
           event.preventDefault()

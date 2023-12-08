@@ -1,8 +1,14 @@
 import { PanelLeft } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { useIsFullScreen } from '@/providers/browser-window'
+import { useIsActiveWindow, useIsFullScreen } from '@/providers/browser-window'
 import { useThread } from '@/providers/history/manager'
 
 function toCapitalize(str: string) {
@@ -22,6 +28,7 @@ export function Titlebar({
   const currentThreadTitle = currentThread?.title
 
   const isFullScreen = useIsFullScreen()
+  const isWindowActive = useIsActiveWindow()
 
   return (
     <div
@@ -30,18 +37,31 @@ export function Titlebar({
         isFullScreen ? 'px-2' : 'pl-[76px]',
       )}
     >
-      <div
-        className={cn(
-          'col-start-1 col-end-3 mt-[3px] flex items-center justify-end',
-        )}
-        id="drag"
-      >
-        <PanelLeft
-          className="h-4 w-4 cursor-pointer text-muted-foreground"
-          id="no-drag"
-          onClick={() => setOpen(!open)}
-        />
-      </div>
+      {isWindowActive ? (
+        <TooltipProvider>
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <div
+                className={cn(
+                  'col-start-1 col-end-3 mt-[3px] flex items-center justify-end',
+                )}
+                id="drag"
+              >
+                <PanelLeft
+                  className="h-4 w-4 cursor-pointer text-muted-foreground"
+                  id="no-drag"
+                  onClick={() => setOpen(!open)}
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="px-2 py-1">
+              <span className="text-xs font-medium">Toggle sidebar</span>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <div className="w-4" />
+      )}
       <div
         className={cn(
           'col-span-10 grid flex-1 place-items-center text-sm font-medium',

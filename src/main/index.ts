@@ -101,6 +101,16 @@ async function createWindow() {
     }
   })
 
+  const windowActiveListener = () =>
+    win ? sendToRenderer(win.webContents, 'window-active', true) : null
+  const windowInactiveListener = () =>
+    win ? sendToRenderer(win.webContents, 'window-active', false) : null
+
+  win.on('hide', windowInactiveListener)
+  win.on('blur', windowInactiveListener)
+  win.on('show', windowActiveListener)
+  win.on('focus', windowActiveListener)
+
   // Apply electron-updater
   update(win)
 
