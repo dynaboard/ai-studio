@@ -1,4 +1,4 @@
-import { ModelFile, MODELS } from '@shared/model-list'
+import { MODELS } from '@shared/model-list'
 import { LucideArrowRightCircle } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
@@ -21,10 +21,8 @@ import { useAvailableModels, useDownloads } from '@/providers/models/manager'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
 
-function getModelFile(modelName: string) {
-  let modelFile: ModelFile | undefined
-  MODELS.forEach((m) => (modelFile = m.files.find((f) => f.name === modelName)))
-  return modelFile
+function getModelFiles(modelName: string) {
+  return MODELS.find((model) => model.name === modelName)?.files
 }
 
 export function ToolsPage() {
@@ -99,8 +97,11 @@ function ToolEntry({
   const [modelDownloadConfirmDialog, setModelDownloadConfirmDialog] =
     useState<boolean>(false)
 
-  const isDownloading = !!downloads.find((download) =>
-    tool.requiredModels.includes(download.filename),
+  // Assuming there's only 1 model for now and downloading the first file's url
+  const downloadItem = getModelFiles(tool.requiredModels[0])?.[0]
+
+  const isDownloading = !!downloads.find(
+    (download) => download.filename === downloadItem?.name,
   )
 
   const hasModelInstalled = tool.requiredModels.every((modelName) =>
@@ -132,15 +133,20 @@ function ToolEntry({
         return
       }
 
-      // Assuming there's only 1 model for now
-      const toDownloadFile = getModelFile(tool.requiredModels[0])
+      const anchor = document.createElement('a')
+      anchor.href = String(downloadItem?.url)
+      anchor.download = String(downloadItem?.name)
+      document.body.appendChild(anchor)
+      anchor.addEventListener('click', (e) => {
+        e.stopPropagation()
+        console.log('anchor clickde')
+      })
 
-      // TODO: Start download process here
-      console.log('Downloading model:', toDownloadFile)
+      console.log('Downloading file:', downloadItem?.url)
 
       setModelDownloadConfirmDialog(false)
     },
-    [isDownloading, tool.requiredModels],
+    [isDownloading, tool.requiredModels, downloadItem],
   )
 
   return (
@@ -174,11 +180,11 @@ function ToolEntry({
       <AlertDialog open={modelDownloadConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Download</AlertDialogTitle>
+            <AlertDialogTitle>Confirm</AlertDialogTitle>
             <AlertDialogDescription>
               This tool requires the following model(s):{' '}
               {tool.requiredModels.join(', ')}. Do you want to proceed with the
-              installation?
+              download?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
