@@ -11,6 +11,7 @@ import { DEFAULT_MODEL, useModelManager } from '@/providers/models/manager'
 import { Sidebar } from './components/sidebar'
 import { Titlebar } from './components/titlebar'
 import { useMatchMediaEffect } from './lib/hooks/use-match-media'
+import { ResizablePanel } from './components/panels'
 
 export function App() {
   const modelManager = useModelManager()
@@ -66,9 +67,9 @@ export function App() {
 
           <div className="grid min-h-full grid-cols-[min-content,_minmax(0,_1fr)]">
             {open ? (
-              <div className="w-[175px] border-r">
+              <ResizablePanel defaultWidth={175} minWidth={175} maxWidth={250}>
                 <Sidebar />
-              </div>
+              </ResizablePanel>
             ) : (
               <div />
             )}
