@@ -1,16 +1,15 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { Outlet, useLoaderData, useNavigate } from 'react-router-dom'
 import { suspend } from 'suspend-react'
 
 import { DownloadStatus } from '@/components/downloads/download-status'
 import { Setup } from '@/components/setup'
 import { StatusBar } from '@/components/status-bar'
+import { Titlebar } from '@/components/titlebar'
 import { useHistoryManager } from '@/providers/history/manager'
 import { DEFAULT_MODEL, useModelManager } from '@/providers/models/manager'
 
 import { Sidebar } from './components/sidebar'
-import { Titlebar } from './components/titlebar'
-import { useMatchMediaEffect } from './lib/hooks/use-match-media'
 
 export function App() {
   const modelManager = useModelManager()
@@ -20,20 +19,7 @@ export function App() {
 
   const { needsSetup } = useLoaderData() as { needsSetup: boolean }
 
-  const [open, setOpen] = useState(false)
-
   const [needsLocalModels, setNeedsLocalModels] = useState(needsSetup)
-
-  useMatchMediaEffect(
-    '(min-width: 768px)',
-    useCallback((matches) => {
-      if (matches) {
-        setOpen(true)
-      } else {
-        setOpen(false)
-      }
-    }, []),
-  )
 
   suspend(async () => {
     await modelManager.loadAvailableModels()
@@ -61,19 +47,13 @@ export function App() {
         </div>
       ) : null}
       <div className="h-screen w-screen overflow-hidden">
-        <div className="grid h-full grid-rows-[36px,auto,24px]">
-          <Titlebar open={open} setOpen={setOpen} />
-
+        <div className="grid h-full grid-rows-[auto,24px]">
           <div className="grid min-h-full grid-cols-[min-content,_minmax(0,_1fr)]">
-            {open ? (
-              <div className="w-[175px] border-r">
-                <Sidebar />
-              </div>
-            ) : (
-              <div />
-            )}
+            <Sidebar />
 
-            <div className="h-full w-full">
+            <div className="grid h-full w-full grid-rows-[36px,_minmax(0,_1fr)]">
+              <Titlebar />
+
               <Outlet />
             </div>
           </div>

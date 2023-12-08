@@ -40,7 +40,7 @@ export function ThreadsSidebar() {
   ])
 
   return (
-    <div className="threads-sidebar flex h-screen flex-col gap-2 p-2">
+    <div className="threads-sidebar flex h-full flex-col gap-2 p-2">
       <div className="flex w-full items-center gap-2">
         <Button
           size="sm"
