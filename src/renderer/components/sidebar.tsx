@@ -78,7 +78,7 @@ export function Sidebar() {
     >
       <div className="grid h-full w-full grid-rows-[36px,_1fr] bg-primary/5">
         <div
-          id="no-drag"
+          id="drag"
           className={cn(
             'mr-2 mt-[3px] flex items-center justify-end',
             isClosed ? 'fixed z-20 ml-20 translate-y-1/2' : null,
