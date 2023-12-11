@@ -8,7 +8,7 @@ import {
   ElectronLlamaServerManager,
 } from '@/managers/llama-server'
 
-import toolGrammar from '../../../resources/grammars/tools.gbnf?asset'
+import multiToolGrammar from '../../../resources/grammars/multi-tool.gbnf?asset'
 import { Image, SearchApi } from '../tools/search'
 
 const SERVER_ID = 'TOOL_SERVER'
@@ -31,12 +31,12 @@ export class ElectronToolManager {
   async getTool(prompt: string, tools: Record<string, unknown>[]) {
     await this.serverReady
 
-    const systemPrompt = `You are an AI assistant. You call tools on behalf of a user. Tools have parameters. You must extract those parameters from the user's request. You have access to the following tools, and only these tools:
+    const systemPrompt = `[INST]You are an AI assistant. You call tools on behalf of a user. Tools have parameters. You must extract those parameters from the user's request. You have access to the following tools, and only these tools:
     ${JSON.stringify(tools)}
 
     Never call a tool that does not exist. If you cannot find a tool to call, respond with: { "id": "invalid-tool", parameters: [] }`
 
-    const finalPrompt = `${systemPrompt}\n\nUSER: ${prompt}}\nASSISTANT:`
+    const finalPrompt = `${systemPrompt}\n\nUSER: ${prompt}}[/INST]\nASSISTANT:`
 
     const paramDefaults = {
       stream: true,
@@ -45,7 +45,7 @@ export class ElectronToolManager {
       stop: ['</s>', 'USER:', 'ASSISTANT:'],
     }
 
-    const grammar = readFileSync(toolGrammar, 'utf-8')
+    const grammar = readFileSync(multiToolGrammar, 'utf-8')
 
     const params: CompletionParams = {
       temperature: 0.3,

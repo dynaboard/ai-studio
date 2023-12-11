@@ -31,24 +31,28 @@ export class ToolManager {
     })
   }
 
-  async getToolForPrompt(
+  async getToolsForPrompt(
     prompt: string,
-  ): Promise<{ tool: BaseTool; parameters: unknown } | null> {
+  ): Promise<{ tool: BaseTool; parameters: unknown }[] | null> {
     const response = await window.tools.getTool(prompt, this.activeToolJSON)
     try {
-      const possibleTool = JSON.parse(response)
-      if (possibleTool.id === 'invalid-tool') {
+      const possibleTools = JSON.parse(response) as {
+        id: string
+        parameters: Record<string, unknown>
+      }[]
+      if (!Array.isArray(possibleTools)) {
         return null
       }
-      const tool = this.state.tools.find((tool) => tool.id === possibleTool.id)
-      if (!tool) {
+      const ids = possibleTools.map((tool) => tool.id)
+      const tools = this.state.tools.filter((tool) => ids.includes(tool.id))
+      if (!tools.length) {
         return null
       }
 
-      return {
-        tool: tool,
-        parameters: possibleTool.parameters,
-      }
+      return possibleTools.map(({ id, parameters }) => ({
+        tool: tools.find((tool) => tool.id === id)!,
+        parameters,
+      }))
     } catch (err) {
       console.error('Could not parse tool response:', err)
       return null
@@ -79,6 +83,10 @@ export class ToolManager {
         ),
       }
     })
+  }
+
+  getToolByID(toolID: string) {
+    return this.state.tools.find((tool) => tool.id === toolID)
   }
 
   get toolJSON() {

@@ -320,6 +320,10 @@ export class HistoryManager {
     })
   }
 
+  getMessage(messageID: string) {
+    return this.state.messages.get(messageID)
+  }
+
   editMessage({
     threadID,
     messageID,

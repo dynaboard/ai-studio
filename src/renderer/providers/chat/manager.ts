@@ -186,29 +186,94 @@ export class ChatManager {
         message: newAssistantMessage,
       })
 
+      let sendMessage = !this.toolManager.hasActiveTools
       if (this.toolManager.hasActiveTools) {
         console.log('Checking if prompt can be handled by a tool')
-        const possibleTool = await this.toolManager.getToolForPrompt(message)
-        if (possibleTool) {
-          console.log('Found a tool:', possibleTool)
+        const possibleTools = await this.toolManager.getToolsForPrompt(message)
+        if (possibleTools) {
+          console.log('Found a tools:', possibleTools)
 
-          console.log(
-            'params',
-            { assistantMessageID, threadID, modelPath, promptOptions },
-            ...(possibleTool.parameters as unknown[]),
-          )
-          const result = await possibleTool.tool.run(
-            { assistantMessageID, threadID, modelPath, promptOptions },
-            ...(possibleTool.parameters as unknown[]),
-          )
+          let result: unknown
+          const previousToolCalls: { id: string; result: unknown }[] = []
+
+          for (const [idx, possibleTool] of possibleTools.entries()) {
+            console.log(
+              'running tool:',
+              possibleTool.tool.id,
+              possibleTool.parameters,
+            )
+            const ctx = {
+              assistantMessageID,
+              threadID,
+              modelPath,
+              promptOptions,
+              previousToolCalls,
+            }
+
+            const message = this.historyManager.getMessage(assistantMessageID)
+
+            if (possibleTools.length > 1 && message) {
+              this.historyManager.editMessage({
+                threadID,
+                messageID: assistantMessageID,
+                contents:
+                  message.message.length > 0
+                    ? `${message.message}\n\n${possibleTool.tool.name}:`
+                    : `${possibleTool.tool.name}:`,
+                state:
+                  idx === possibleTools.length - 1 ? 'sent' : 'running-tools',
+              })
+            }
+
+            result = await possibleTool.tool.run(
+              ctx,
+              ...(possibleTool.parameters as unknown[]),
+            )
+
+            let newContents = ''
+            if (possibleTools.length === 1) {
+              newContents = String(result)
+            } else {
+              newContents = `${possibleTool.tool.name}:\n${String(result)}\n\n`
+            }
+
+            this.historyManager.editMessage({
+              threadID,
+              messageID: assistantMessageID,
+              contents: newContents,
+              state: possibleTools.length === 1 ? 'sent' : 'running-tools',
+            })
+
+            previousToolCalls.push({
+              id: possibleTool.tool.id,
+              result,
+            })
+          }
+
+          if (previousToolCalls.length > 1) {
+            result = ''
+            previousToolCalls.forEach((toolCall) => {
+              const tool = this.toolManager.getToolByID(toolCall.id)
+              result += `\n\n${tool?.name || toolCall.id}:\n${String(
+                toolCall.result,
+              )}`
+            })
+          }
+
           this.historyManager.editMessage({
             threadID,
             messageID: assistantMessageID,
             contents: String(result),
             state: 'sent',
           })
+        } else {
+          sendMessage = true
         }
-      } else {
+      }
+
+      // If something fails during the tool run, we still want to send the message so the user
+      // isnt stuck
+      if (sendMessage) {
         const response = await window.chats.sendMessage({
           systemPrompt: currentSystemPrompt,
           messageID: newUserMessage.id,

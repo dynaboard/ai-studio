@@ -16,6 +16,7 @@ export type RunContext = {
   assistantMessageID: string
   threadID: string
   modelPath: string
+  previousToolCalls: { id: string; result: unknown }[]
   promptOptions?: PromptOptions
 }
 

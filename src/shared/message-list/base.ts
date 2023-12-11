@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ChatMessage = {
-  role: 'user' | 'assistant' | 'system'
+  role: 'user' | 'assistant' | 'system' | 'tool'
   id: string
   // TODO: Currently store messages as string, but maybe use rich text implementation
   // text, entities: { offset, length, value } or {{ }} impl could work as well
