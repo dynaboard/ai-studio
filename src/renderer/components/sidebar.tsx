@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useMatchMediaEffect } from '@/lib/hooks/use-match-media'
 import { cn } from '@/lib/utils'
-import { useIsFullScreen } from '@/providers/browser-window'
+import { useIsActiveWindow, useIsFullScreen } from '@/providers/browser-window'
 import { useEmbeddingsMeta } from '@/providers/files/manager'
 import { useIsSidebarClosed, useSidebarManager } from '@/providers/sidebar'
 
@@ -54,6 +54,7 @@ export function Sidebar() {
   const sidebarManager = useSidebarManager()
   const files = useEmbeddingsMeta()
   const isFullScreen = useIsFullScreen()
+  const isWindowActive = useIsActiveWindow()
 
   const isClosed = useIsSidebarClosed()
 
@@ -77,29 +78,33 @@ export function Sidebar() {
       isClosed={isClosed}
     >
       <div className="grid h-full w-full grid-rows-[36px,_1fr] bg-primary/5">
-        <div
-          id="drag"
-          className={cn(
-            'mr-2 mt-[3px] flex items-center justify-end',
-            isClosed ? 'fixed z-20 ml-20 translate-y-1/2' : null,
-            isClosed && isFullScreen ? 'ml-2' : null,
-          )}
-        >
-          <TooltipProvider>
-            <Tooltip delayDuration={300}>
-              <TooltipTrigger asChild>
-                <LucidePanelLeft
-                  className="relative h-4 w-4 cursor-pointer text-muted-foreground"
-                  id="no-drag"
-                  onClick={() => sidebarManager.toggle()}
-                />
-              </TooltipTrigger>
-              <TooltipContent side="right" className="px-2 py-1">
-                <span className="text-xs font-medium">Toggle sidebar</span>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        {isWindowActive ? (
+          <div
+            id="drag"
+            className={cn(
+              'mr-2 mt-[3px] flex items-center justify-end',
+              isClosed ? 'fixed z-20 ml-20 translate-y-1/2' : null,
+              isClosed && isFullScreen ? 'ml-2' : null,
+            )}
+          >
+            <TooltipProvider>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <LucidePanelLeft
+                    className="relative h-4 w-4 cursor-pointer text-muted-foreground"
+                    id="no-drag"
+                    onClick={() => sidebarManager.toggle()}
+                  />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="px-2 py-1">
+                  <span className="text-xs font-medium">Toggle sidebar</span>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        ) : (
+          <div id="drag" />
+        )}
         {!isClosed ? (
           <nav className="h-full w-full">
             <div className={cn('space-y-[1px] p-2')}>
