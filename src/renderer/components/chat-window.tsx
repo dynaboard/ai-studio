@@ -382,7 +382,7 @@ export function ChatWindow({ id }: { id?: string }) {
 
       <div className="relative flex h-fit items-center p-4 pt-2">
         {isCurrentThreadGenerating ? (
-          <div className="absolute left-0 z-10 mb-2 flex h-fit w-full -translate-y-20 items-center justify-center">
+          <div className="absolute left-0 z-10 mb-2 flex h-fit w-full -translate-y-16 items-center justify-center">
             <Button size="sm" onClick={handleAbort}>
               <LucideStopCircle size={14} className="mr-2" />
               <span className="select-none">Stop generating</span>
