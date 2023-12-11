@@ -172,36 +172,40 @@ export class ChatManager {
         this.historyManager.addMessage({ threadID, message: newUserMessage })
       }
 
-      const assistantMessageID = crypto.randomUUID()
-      const newAssistantMessage: Message = {
-        id: assistantMessageID,
-        role: 'assistant',
-        message: '',
-        state: 'pending',
-        date: new Date().toISOString(),
-      }
-
-      this.historyManager.addMessage({
-        threadID,
-        message: newAssistantMessage,
-      })
-
       let sendMessage = !this.toolManager.hasActiveTools
       if (this.toolManager.hasActiveTools) {
         console.log('Checking if prompt can be handled by a tool')
         const possibleTools = await this.toolManager.getToolsForPrompt(message)
-        if (possibleTools) {
+        if (possibleTools && possibleTools.length > 0) {
           console.log('Found a tools:', possibleTools)
 
           let result: unknown
           const previousToolCalls: { id: string; result: unknown }[] = []
 
-          for (const [idx, possibleTool] of possibleTools.entries()) {
+          let assistantMessageID: string
+
+          for (const [_idx, possibleTool] of possibleTools.entries()) {
             console.log(
               'running tool:',
               possibleTool.tool.id,
               possibleTool.parameters,
             )
+
+            assistantMessageID = crypto.randomUUID()
+            const newAssistantMessage: Message = {
+              id: assistantMessageID,
+              role: 'tool',
+              message: '',
+              state: 'pending',
+              toolID: possibleTool.tool.id,
+              date: new Date().toISOString(),
+            }
+
+            this.historyManager.addMessage({
+              threadID,
+              message: newAssistantMessage,
+            })
+
             const ctx = {
               assistantMessageID,
               threadID,
@@ -210,38 +214,24 @@ export class ChatManager {
               previousToolCalls,
             }
 
-            const message = this.historyManager.getMessage(assistantMessageID)
-
-            if (possibleTools.length > 1 && message) {
-              this.historyManager.editMessage({
-                threadID,
-                messageID: assistantMessageID,
-                contents:
-                  message.message.length > 0
-                    ? `${message.message}\n\n${possibleTool.tool.name}:`
-                    : `${possibleTool.tool.name}:`,
-                state:
-                  idx === possibleTools.length - 1 ? 'sent' : 'running-tools',
-              })
-            }
-
             result = await possibleTool.tool.run(
               ctx,
               ...(possibleTool.parameters as unknown[]),
             )
 
-            let newContents = ''
-            if (possibleTools.length === 1) {
-              newContents = String(result)
-            } else {
-              newContents = `${possibleTool.tool.name}:\n${String(result)}\n\n`
-            }
+            this.historyManager.addToolCall({
+              threadID,
+              toolID: possibleTool.tool.id,
+              parameters: possibleTool.parameters as Record<string, unknown>[],
+              messageID: assistantMessageID,
+            })
 
             this.historyManager.editMessage({
               threadID,
+              role: 'tool',
               messageID: assistantMessageID,
-              contents: newContents,
-              state: possibleTools.length === 1 ? 'sent' : 'running-tools',
+              contents: String(result),
+              state: 'sent',
             })
 
             previousToolCalls.push({
@@ -249,23 +239,6 @@ export class ChatManager {
               result,
             })
           }
-
-          if (previousToolCalls.length > 1) {
-            result = ''
-            previousToolCalls.forEach((toolCall) => {
-              const tool = this.toolManager.getToolByID(toolCall.id)
-              result += `\n\n${tool?.name || toolCall.id}:\n${String(
-                toolCall.result,
-              )}`
-            })
-          }
-
-          this.historyManager.editMessage({
-            threadID,
-            messageID: assistantMessageID,
-            contents: String(result),
-            state: 'sent',
-          })
         } else {
           sendMessage = true
         }
@@ -274,6 +247,20 @@ export class ChatManager {
       // If something fails during the tool run, we still want to send the message so the user
       // isnt stuck
       if (sendMessage) {
+        const assistantMessageID = crypto.randomUUID()
+        const newAssistantMessage: Message = {
+          id: assistantMessageID,
+          role: 'assistant',
+          message: '',
+          state: 'pending',
+          date: new Date().toISOString(),
+        }
+
+        this.historyManager.addMessage({
+          threadID,
+          message: newAssistantMessage,
+        })
+
         const response = await window.chats.sendMessage({
           systemPrompt: currentSystemPrompt,
           messageID: newUserMessage.id,
