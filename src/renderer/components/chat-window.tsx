@@ -238,7 +238,9 @@ export function ChatWindow({ id }: { id?: string }) {
     disabled ||
     isCurrentThreadGenerating ||
     runningEmbeddings ||
-    (fileName !== undefined && filesManager.isFileNotArchived(fileName!))
+    (fileName !== undefined &&
+      !base64Image &&
+      filesManager.isFileArchived(fileName!))
 
   return (
     // 36px - titlebar height
@@ -322,8 +324,9 @@ export function ChatWindow({ id }: { id?: string }) {
               >
                 {fileName}
               </span>
-              {filesManager.isFileNotArchived(fileName!) &&
-                !runningEmbeddings && <span className="ml-1">(removed)</span>}
+              {filesManager.isFileArchived(fileName!) && !runningEmbeddings && (
+                <span className="ml-1">(removed)</span>
+              )}
             </div>
           ) : null}
 
