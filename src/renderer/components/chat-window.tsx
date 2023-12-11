@@ -137,7 +137,10 @@ export function ChatWindow({ id }: { id?: string }) {
   )
 
   const handleFilesAttach = useCallback(() => {
-    console.log('handleFilesAttach')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+      fileInputRef.current.click()
+    }
   }, [])
 
   const { draggedOver, setTargetElement } = useDragAndDrop({
@@ -230,6 +233,12 @@ export function ChatWindow({ id }: { id?: string }) {
       formRef.current?.reset()
     }
   }, [id, formRef])
+
+  const isFormDisabled =
+    disabled ||
+    isCurrentThreadGenerating ||
+    runningEmbeddings ||
+    (fileName !== undefined && filesManager.isFileNotArchived(fileName!))
 
   return (
     // 36px - titlebar height
@@ -386,34 +395,32 @@ export function ChatWindow({ id }: { id?: string }) {
           <Textarea
             name="message"
             ref={textAreaInputRef}
-            // ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-            className="relative flex min-h-[60px] w-full flex-1 resize-none bg-background p-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="relative flex min-h-[40px] w-full flex-1 resize-none bg-background p-2 px-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
             rows={1}
             placeholder="Say something..."
             spellCheck={false}
-            disabled={
-              disabled ||
-              isCurrentThreadGenerating ||
-              runningEmbeddings ||
-              (fileName !== undefined &&
-                filesManager.isFileNotArchived(fileName!))
-            }
+            disabled={isFormDisabled}
           />
-          <div className="flex items-center justify-end gap-3 p-2">
-            <LucidePaperclip
-              className="h-4 w-4 cursor-pointer text-muted-foreground"
-              onClick={handleFilesAttach}
-            />
+          <div className="flex items-center justify-end gap-1 p-2">
+            {messages.length === 0 && (
+              <Button
+                variant="iconButton"
+                size="sm"
+                type="button"
+                disabled={isFormDisabled}
+                onClick={handleFilesAttach}
+              >
+                <LucidePaperclip className="h-4 w-4 cursor-pointer text-muted-foreground" />
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
               className="group hover:bg-transparent"
               type="submit"
-              disabled={
-                disabled || isCurrentThreadGenerating || runningEmbeddings
-              }
+              disabled={isFormDisabled}
             >
               Submit
             </Button>
