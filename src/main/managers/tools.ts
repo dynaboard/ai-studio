@@ -94,6 +94,20 @@ export class ElectronToolManager {
     return results
   }
 
+  async crawlWebsites(query: string, limit: number) {
+    const searchApi = new SearchApi()
+
+    const results: unknown[] = []
+    const websites = searchApi.text({
+      keywords: query,
+      limit,
+    })
+    for await (const website of websites) {
+      results.push(website)
+    }
+    return results
+  }
+
   addClientEventHandlers() {
     ipcMain.handle(ToolChannel.GetTool, async (_, { prompt, tools }) => {
       return await this.getTool(prompt, tools)
@@ -107,6 +121,9 @@ export class ElectronToolManager {
     )
     ipcMain.handle(ToolChannel.CrawlImages, async (_, { query, limit }) => {
       return await this.crawlImages(query, limit)
+    })
+    ipcMain.handle(ToolChannel.CrawlWebsites, async (_, { query, limit }) => {
+      return await this.crawlWebsites(query, limit)
     })
   }
 }
