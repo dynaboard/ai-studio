@@ -258,6 +258,27 @@ export class HistoryManager {
     })
   }
 
+  updateThreadTools(threadID: string, toolIDs: string[]) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID && thread.activeToolIDs !== toolIDs) {
+          return {
+            ...thread,
+            activeToolIDs: toolIDs,
+          } as Thread
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
   addMessage({ threadID, message }: { threadID: string; message: Message }) {
     this._state.update((state) => {
       const threads = state.threads.map((thread) => {
@@ -458,6 +479,13 @@ export function useThreadMessages(threadID?: string) {
 export function useThreadFilePath(threadID?: string) {
   const thread = useThread(threadID)
   return useValue('threadFilePath', () => thread?.filePath ?? null, [thread])
+}
+
+export function useThreadActiveToolIDs(threadID?: string) {
+  const thread = useThread(threadID)
+  return useValue('threadFilePath', () => thread?.activeToolIDs ?? null, [
+    thread,
+  ])
 }
 
 export function useMessage(messageID: string) {

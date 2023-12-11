@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import { atom } from 'signia'
 import { useValue } from 'signia-react'
 
+import { useHistoryManager } from '@/providers/history/manager'
 import { BaseTool, BaseToolManagers, IBaseTool } from '@/tools/base'
 
 type ToolManagerState = {
@@ -33,8 +34,12 @@ export class ToolManager {
 
   async getToolsForPrompt(
     prompt: string,
+    toolIDs: string[],
   ): Promise<{ tool: BaseTool; parameters: unknown }[] | null> {
-    const response = await window.tools.getTool(prompt, this.activeToolJSON)
+    const response = await window.tools.getTool(
+      prompt,
+      this.getToolJSON(toolIDs),
+    )
     try {
       const possibleTools = JSON.parse(response) as {
         id: string
@@ -59,37 +64,34 @@ export class ToolManager {
     }
   }
 
-  enableTool(toolID: string) {
-    this._state.update((state) => {
-      if (state.activeToolIDs.has(toolID)) {
-        return state
-      }
-      return {
-        ...state,
-        activeToolIDs: new Set([...state.activeToolIDs, toolID]),
-      }
-    })
+  enableTool(threadID: string, toolID: string) {
+    const thread = this.managers.historyManager.getThread(threadID)
+    if (!thread) {
+      return
+    }
+    this.managers.historyManager.updateThreadTools(threadID, [
+      ...(thread.activeToolIDs ?? []),
+      toolID,
+    ])
   }
 
-  disableTool(toolID: string) {
-    this._state.update((state) => {
-      if (!state.activeToolIDs.has(toolID)) {
-        return state
-      }
-      return {
-        ...state,
-        activeToolIDs: new Set(
-          Array.from(state.activeToolIDs).filter((id) => id !== toolID),
-        ),
-      }
-    })
+  disableTool(threadID: string, toolID: string) {
+    const thread = this.managers.historyManager.getThread(threadID)
+    if (!thread) {
+      return
+    }
+    const existingTools = thread.activeToolIDs ?? []
+    this.managers.historyManager.updateThreadTools(
+      threadID,
+      existingTools.filter((id) => id !== toolID),
+    )
   }
 
   getToolByID(toolID: string) {
     return this.state.tools.find((tool) => tool.id === toolID)
   }
 
-  get toolJSON() {
+  get allToolJSON() {
     return this.state.tools.map((tool) => ({
       name: tool.name,
       id: tool.id,
@@ -98,9 +100,9 @@ export class ToolManager {
     }))
   }
 
-  get activeToolJSON() {
+  getToolJSON(toolIDs: string[]) {
     return this.state.tools
-      .filter((tool) => this.state.activeToolIDs.has(tool.id))
+      .filter((tool) => toolIDs.includes(tool.id))
       .map((tool) => ({
         name: tool.name,
         id: tool.id,
@@ -145,14 +147,16 @@ export function useAllTools() {
   ])
 }
 
-export function useActiveTools() {
+export function useActiveTools(threadID?: string) {
   const toolManager = useToolManager()
+  const historyManager = useHistoryManager()
+
   return useValue(
     'useActiveTools',
-    () =>
-      toolManager.state.tools.filter((tool) =>
-        toolManager.state.activeToolIDs.has(tool.id),
-      ),
-    [toolManager.state],
+    () => {
+      const ids = historyManager.getThread(threadID)?.activeToolIDs ?? []
+      return toolManager.state.tools.filter((tool) => ids.includes(tool.id))
+    },
+    [threadID, toolManager.state, historyManager.state],
   )
 }

@@ -4,6 +4,7 @@ import { useValue } from 'signia-react'
 
 import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
+import { Thread } from '@/providers/history/types'
 import { ToolManager } from '@/providers/tools/manager'
 
 type ModelState = {
@@ -146,9 +147,10 @@ export class ChatManager {
         date: new Date().toISOString(),
       }
 
+      let thread: Thread
       // You always message on a thread, so we are starting a new one if its not provided
       if (!threadID) {
-        const thread = this.historyManager.addThread({
+        thread = this.historyManager.addThread({
           systemPrompt: currentSystemPrompt,
           createdAt: new Date(),
           modelID: modelPath,
@@ -159,7 +161,13 @@ export class ChatManager {
         })
         threadID = thread.id
       } else {
-        const thread = this.historyManager.getThread(threadID)
+        thread = this.historyManager.getThread(threadID)!
+        if (!thread) {
+          console.error(
+            'Not able to send message on existing thread... this shouldnt happen',
+          )
+          return
+        }
         if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
         // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
         const isUnnamedThread =
@@ -172,10 +180,14 @@ export class ChatManager {
         this.historyManager.addMessage({ threadID, message: newUserMessage })
       }
 
-      let sendMessage = !this.toolManager.hasActiveTools
-      if (this.toolManager.hasActiveTools) {
+      let sendMessage =
+        !thread.activeToolIDs || thread.activeToolIDs.length === 0
+      if (thread.activeToolIDs && thread.activeToolIDs.length > 0) {
         console.log('Checking if prompt can be handled by a tool')
-        const possibleTools = await this.toolManager.getToolsForPrompt(message)
+        const possibleTools = await this.toolManager.getToolsForPrompt(
+          message,
+          thread.activeToolIDs,
+        )
         if (possibleTools && possibleTools.length > 0) {
           console.log('Found a tools:', possibleTools)
 

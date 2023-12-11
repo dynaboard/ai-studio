@@ -10,6 +10,7 @@ export type Thread = {
   temperature: number
   systemPrompt: string
   filePath?: string
+  activeToolIDs?: string[]
   toolCalls?: {
     toolID: string
     messageID: string
