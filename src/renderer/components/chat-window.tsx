@@ -1,8 +1,8 @@
 import {
   LucideLoader2,
+  LucidePaperclip,
   LucideStopCircle,
   LucideTrash2,
-  SendHorizonal,
 } from 'lucide-react'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Textarea from 'react-textarea-autosize'
@@ -93,7 +93,7 @@ export function ChatWindow({ id }: { id?: string }) {
     ? ['application/pdf', 'image/png', 'image/jpeg']
     : ['application/pdf']
 
-  const handleFiles = useCallback(
+  const handleFilesDrop = useCallback(
     async (files: File[]) => {
       if (!id) {
         return
@@ -130,15 +130,19 @@ export function ChatWindow({ id }: { id?: string }) {
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files ?? [])
       if (files && files.length > 0) {
-        void handleFiles(files)
+        void handleFilesDrop(files)
       }
     },
-    [handleFiles],
+    [handleFilesDrop],
   )
+
+  const handleFilesAttach = useCallback(() => {
+    console.log('handleFilesAttach')
+  }, [])
 
   const { draggedOver, setTargetElement } = useDragAndDrop({
     fileTypes,
-    onDrop: handleFiles,
+    onDrop: handleFilesDrop,
   })
 
   const scrollToBottom = useCallback(
@@ -366,7 +370,7 @@ export function ChatWindow({ id }: { id?: string }) {
 
       <div className="relative flex h-fit items-center p-4 pt-2">
         {isCurrentThreadGenerating ? (
-          <div className="absolute left-0 z-10 mb-2 flex h-fit w-full -translate-y-12 items-center justify-center">
+          <div className="absolute left-0 z-10 mb-2 flex h-fit w-full -translate-y-20 items-center justify-center">
             <Button size="sm" onClick={handleAbort}>
               <LucideStopCircle size={14} className="mr-2" />
               <span className="select-none">Stop generating</span>
@@ -375,14 +379,15 @@ export function ChatWindow({ id }: { id?: string }) {
         ) : null}
 
         <form
-          className="relative w-full"
+          className="relative w-full overflow-hidden rounded-md border border-input"
           onSubmit={handleMessage}
           ref={formRef}
         >
           <Textarea
             name="message"
             ref={textAreaInputRef}
-            className="flex min-h-[60px] w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            // ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+            className="relative flex min-h-[60px] w-full flex-1 resize-none bg-background p-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             tabIndex={0}
             onKeyDown={onKeyDown}
             rows={1}
@@ -396,16 +401,23 @@ export function ChatWindow({ id }: { id?: string }) {
                 filesManager.isFileNotArchived(fileName!))
             }
           />
-          <Button
-            variant="ghost"
-            className="group absolute right-0 top-0 hover:bg-transparent"
-            type="submit"
-            disabled={
-              disabled || isCurrentThreadGenerating || runningEmbeddings
-            }
-          >
-            <SendHorizonal size={16} className="group-hover:text-primary" />
-          </Button>
+          <div className="flex items-center justify-end gap-3 p-2">
+            <LucidePaperclip
+              className="h-4 w-4 cursor-pointer text-muted-foreground"
+              onClick={handleFilesAttach}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="group hover:bg-transparent"
+              type="submit"
+              disabled={
+                disabled || isCurrentThreadGenerating || runningEmbeddings
+              }
+            >
+              Submit
+            </Button>
+          </div>
         </form>
       </div>
     </div>
