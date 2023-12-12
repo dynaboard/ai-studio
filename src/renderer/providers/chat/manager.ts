@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
+import { toast } from 'sonner'
 
 import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
@@ -125,6 +126,8 @@ export class ChatManager {
     selectedFile?: string
     addToHistory?: boolean
   }) {
+    toast.dismiss()
+
     if (threadID) {
       this.setRunningPrompt(threadID, true)
     }
@@ -292,8 +295,7 @@ export class ChatManager {
       }
     } catch (e) {
       const error = e as Error
-      // eslint-disable-next-line no-console
-      console.error('Error sending message:', error)
+      toast.error(error.message)
     } finally {
       if (threadID) {
         this.setRunningPrompt(threadID, false)
@@ -308,6 +310,8 @@ export class ChatManager {
     threadID: string
     messageID: string
   }) {
+    toast.dismiss()
+
     if (threadID) {
       this.setRunningPrompt(threadID, true)
     }
@@ -343,8 +347,7 @@ export class ChatManager {
       })
     } catch (e) {
       const error = e as Error
-      // eslint-disable-next-line no-console
-      console.error('Error regenerating message:', error)
+      toast.error(error.message)
     } finally {
       if (threadID) {
         this.setRunningPrompt(threadID, false)
@@ -579,6 +582,13 @@ export function useCurrentSystemPrompt() {
     () => chatManager.state.currentSystemPrompt,
     [chatManager],
   )
+}
+
+export function useRunningPrompts() {
+  const chatManager = useChatManager()
+  return useValue('useRunningPrompts', () => chatManager.state.runningPrompts, [
+    chatManager,
+  ])
 }
 
 export function useIsCurrentThreadGenerating(threadID?: string) {
