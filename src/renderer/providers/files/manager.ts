@@ -51,7 +51,7 @@ export class FilesManager {
     return this.state.embeddingsIndexes
   }
 
-  isFileNotArchived(filename: string) {
+  isFileArchived(filename: string) {
     return !this.state.embeddingsMeta.some((entry) => entry.name === filename)
   }
 }
