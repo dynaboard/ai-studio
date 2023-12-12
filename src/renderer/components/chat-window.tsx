@@ -4,7 +4,14 @@ import {
   LucideStopCircle,
   LucideTrash2,
 } from 'lucide-react'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
 import { toast } from 'sonner'
@@ -80,6 +87,7 @@ export function ChatWindow({ id }: { id?: string }) {
 
   const [userScrolled, setUserScrolled] = useState(false)
   const [runningEmbeddings, setRunningEmbeddings] = useState(false)
+  const [shouldRefocusTextarea, setShouldRefocusTextarea] = useState(false)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [base64Image, setBase64Image] = useState<string | null>(null)
@@ -114,6 +122,9 @@ export function ChatWindow({ id }: { id?: string }) {
 
         setRunningEmbeddings(false)
         toast.success(`Embeddings generated for ${file.name}`)
+
+        // Rely on useState to refocus the textarea
+        setShouldRefocusTextarea(true)
       } else if (
         file.name.endsWith('.png') ||
         file.name.endsWith('.jpg') ||
@@ -217,11 +228,18 @@ export function ChatWindow({ id }: { id?: string }) {
     return undefined
   }, [currentThreadFilePath, selectedFile])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (id && !isCurrentThreadGenerating && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
   }, [isCurrentThreadGenerating, id])
+
+  useLayoutEffect(() => {
+    if (shouldRefocusTextarea && textAreaInputRef.current) {
+      textAreaInputRef.current.focus()
+      setShouldRefocusTextarea(false)
+    }
+  }, [shouldRefocusTextarea])
 
   useEffect(() => {
     if (id) {
