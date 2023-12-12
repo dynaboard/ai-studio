@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useCurrentThreadID } from '@/providers/chat/manager'
 import {
   useActiveTools,
   useAllTools,
@@ -18,8 +19,9 @@ import { TemperatureSelector } from './parameters/temperature'
 import { TopPSelector } from './parameters/top-p'
 
 export function ParametersConfig({ fileName }: { fileName?: string }) {
+  const threadID = useCurrentThreadID()
   const allTools = useAllTools()
-  const activeTools = useActiveTools()
+  const activeTools = useActiveTools(threadID)
   const toolManager = useToolManager()
 
   return (
@@ -73,12 +75,15 @@ export function ParametersConfig({ fileName }: { fileName?: string }) {
                       <div className="flex gap-2">
                         <Checkbox
                           id={`tool-${tool.id}`}
-                          defaultChecked={activeTools.includes(tool)}
+                          // defaultChecked={activeTools.includes(tool)}
+                          checked={activeTools.includes(tool)}
                           onCheckedChange={(checked: boolean) => {
-                            if (checked) {
-                              toolManager.enableTool(tool.id)
-                            } else {
-                              toolManager.disableTool(tool.id)
+                            if (threadID) {
+                              if (checked) {
+                                toolManager.enableTool(threadID, tool.id)
+                              } else {
+                                toolManager.disableTool(threadID, tool.id)
+                              }
                             }
                           }}
                         />

@@ -4,6 +4,7 @@ import { useValue } from 'signia-react'
 
 import { Message } from '@/providers/chat/types'
 import { HistoryManager, useThread } from '@/providers/history/manager'
+import { Thread } from '@/providers/history/types'
 import { ToolManager } from '@/providers/tools/manager'
 
 type ModelState = {
@@ -146,9 +147,10 @@ export class ChatManager {
         date: new Date().toISOString(),
       }
 
+      let thread: Thread
       // You always message on a thread, so we are starting a new one if its not provided
       if (!threadID) {
-        const thread = this.historyManager.addThread({
+        thread = this.historyManager.addThread({
           systemPrompt: currentSystemPrompt,
           createdAt: new Date(),
           modelID: modelPath,
@@ -159,7 +161,13 @@ export class ChatManager {
         })
         threadID = thread.id
       } else {
-        const thread = this.historyManager.getThread(threadID)
+        thread = this.historyManager.getThread(threadID)!
+        if (!thread) {
+          console.error(
+            'Not able to send message on existing thread... this shouldnt happen',
+          )
+          return
+        }
         if (thread?.systemPrompt) currentSystemPrompt = thread.systemPrompt
         // If the thread's title is 'New Thread' or a new thread, we rename it using the last message's text
         const isUnnamedThread =
@@ -172,43 +180,99 @@ export class ChatManager {
         this.historyManager.addMessage({ threadID, message: newUserMessage })
       }
 
-      const assistantMessageID = crypto.randomUUID()
-      const newAssistantMessage: Message = {
-        id: assistantMessageID,
-        role: 'assistant',
-        message: '',
-        state: 'pending',
-        date: new Date().toISOString(),
+      let sendMessage =
+        !thread.activeToolIDs || thread.activeToolIDs.length === 0
+      if (thread.activeToolIDs && thread.activeToolIDs.length > 0) {
+        console.log('Checking if prompt can be handled by a tool')
+        const possibleTools = await this.toolManager.getToolsForPrompt(
+          message,
+          thread.activeToolIDs,
+        )
+        if (possibleTools && possibleTools.length > 0) {
+          console.log('Found a tools:', possibleTools)
+
+          let result: unknown
+          const previousToolCalls: { id: string; result: unknown }[] = []
+
+          let assistantMessageID: string
+
+          for (const [_idx, possibleTool] of possibleTools.entries()) {
+            console.log(
+              'running tool:',
+              possibleTool.tool.id,
+              possibleTool.parameters,
+            )
+
+            assistantMessageID = crypto.randomUUID()
+            const newAssistantMessage: Message = {
+              id: assistantMessageID,
+              role: 'tool',
+              message: '',
+              state: 'pending',
+              toolID: possibleTool.tool.id,
+              date: new Date().toISOString(),
+            }
+
+            this.historyManager.addMessage({
+              threadID,
+              message: newAssistantMessage,
+            })
+
+            const ctx = {
+              assistantMessageID,
+              threadID,
+              modelPath,
+              promptOptions,
+              previousToolCalls,
+            }
+
+            result = await possibleTool.tool.run(
+              ctx,
+              ...(possibleTool.parameters as unknown[]),
+            )
+
+            this.historyManager.addToolCall({
+              threadID,
+              toolID: possibleTool.tool.id,
+              parameters: possibleTool.parameters as Record<string, unknown>[],
+              messageID: assistantMessageID,
+            })
+
+            this.historyManager.editMessage({
+              threadID,
+              role: 'tool',
+              messageID: assistantMessageID,
+              contents: String(result),
+              state: 'sent',
+            })
+
+            previousToolCalls.push({
+              id: possibleTool.tool.id,
+              result,
+            })
+          }
+        } else {
+          sendMessage = true
+        }
       }
 
-      this.historyManager.addMessage({
-        threadID,
-        message: newAssistantMessage,
-      })
-
-      if (this.toolManager.hasActiveTools) {
-        console.log('Checking if prompt can be handled by a tool')
-        const possibleTool = await this.toolManager.getToolForPrompt(message)
-        if (possibleTool) {
-          console.log('Found a tool:', possibleTool)
-
-          console.log(
-            'params',
-            { assistantMessageID, threadID, modelPath, promptOptions },
-            ...(possibleTool.parameters as unknown[]),
-          )
-          const result = await possibleTool.tool.run(
-            { assistantMessageID, threadID, modelPath, promptOptions },
-            ...(possibleTool.parameters as unknown[]),
-          )
-          this.historyManager.editMessage({
-            threadID,
-            messageID: assistantMessageID,
-            contents: String(result),
-            state: 'sent',
-          })
+      // If something fails during the tool run, we still want to send the message so the user
+      // isnt stuck
+      if (sendMessage) {
+        const assistantMessageID = crypto.randomUUID()
+        const newAssistantMessage: Message = {
+          id: assistantMessageID,
+          role: 'assistant',
+          message: '',
+          state: 'pending',
+          date: new Date().toISOString(),
         }
-      } else {
+
+        this.historyManager.addMessage({
+          threadID,
+          message: newAssistantMessage,
+        })
+
         const response = await window.chats.sendMessage({
           systemPrompt: currentSystemPrompt,
           messageID: newUserMessage.id,

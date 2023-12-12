@@ -258,6 +258,27 @@ export class HistoryManager {
     })
   }
 
+  updateThreadTools(threadID: string, toolIDs: string[]) {
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID && thread.activeToolIDs !== toolIDs) {
+          return {
+            ...thread,
+            activeToolIDs: toolIDs,
+          } as Thread
+        }
+        return thread
+      })
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
   addMessage({ threadID, message }: { threadID: string; message: Message }) {
     this._state.update((state) => {
       const threads = state.threads.map((thread) => {
@@ -320,16 +341,22 @@ export class HistoryManager {
     })
   }
 
+  getMessage(messageID: string) {
+    return this.state.messages.get(messageID)
+  }
+
   editMessage({
     threadID,
     messageID,
     contents,
     state: messageState,
+    role,
   }: {
     threadID: string
     messageID: string
     contents: string
     state?: Message['state']
+    role?: Message['role']
   }) {
     const thread = this.getThread(threadID)
     if (!thread) {
@@ -340,6 +367,7 @@ export class HistoryManager {
       if (message.id === messageID) {
         message.message = contents
         message.state = messageState ?? message.state
+        message.role = role ?? message.role
         break
       }
     }
@@ -359,7 +387,50 @@ export class HistoryManager {
       if (currentMessage) {
         currentMessage.message = contents
         currentMessage.state = messageState ?? currentMessage.state
+        currentMessage.role = role ?? currentMessage.role
       }
+
+      localStorage.setItem('threads', JSON.stringify(threads))
+
+      return {
+        ...state,
+        threads,
+      }
+    })
+  }
+
+  addToolCall({
+    threadID,
+    messageID,
+    toolID,
+    parameters,
+  }: {
+    threadID: string
+    messageID: string
+    toolID: string
+    parameters: Record<string, unknown>[]
+  }) {
+    const thread = this.getThread(threadID)
+    if (!thread) {
+      return
+    }
+
+    this._state.update((state) => {
+      const threads = state.threads.map((thread) => {
+        if (thread.id === threadID) {
+          const toolCalls = thread.toolCalls ?? []
+          toolCalls.push({
+            toolID,
+            messageID,
+            parameters,
+          })
+          return {
+            ...thread,
+            toolCalls,
+          }
+        }
+        return thread
+      })
 
       localStorage.setItem('threads', JSON.stringify(threads))
 
@@ -408,6 +479,13 @@ export function useThreadMessages(threadID?: string) {
 export function useThreadFilePath(threadID?: string) {
   const thread = useThread(threadID)
   return useValue('threadFilePath', () => thread?.filePath ?? null, [thread])
+}
+
+export function useThreadActiveToolIDs(threadID?: string) {
+  const thread = useThread(threadID)
+  return useValue('threadFilePath', () => thread?.activeToolIDs ?? null, [
+    thread,
+  ])
 }
 
 export function useMessage(messageID: string) {

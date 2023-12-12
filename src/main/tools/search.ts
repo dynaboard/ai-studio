@@ -41,6 +41,12 @@ export type Image = {
   source: string
 }
 
+export type Text = {
+  title: string
+  href: string
+  body: string
+}
+
 // Simulating the main class
 export class SearchApi {
   private logger: Console
@@ -156,16 +162,19 @@ export class SearchApi {
     }
   }
 
-  async *text(
-    keywords: string,
-    region: string = 'wt-wt',
-    safesearch: string = 'moderate',
-    timelimit: string | null = null,
-  ): AsyncGenerator<{
-    title: string
-    href: string
-    body: string
-  }> {
+  async *text({
+    keywords,
+    region = 'wt-wt',
+    safesearch = 'moderate',
+    timelimit = null,
+    limit = 5,
+  }: {
+    keywords: string
+    region?: string
+    safesearch?: string
+    timelimit?: string | null
+    limit?: number
+  }): AsyncGenerator<Text> {
     if (!keywords) {
       throw new Error('Keywords are mandatory')
     }
@@ -218,7 +227,7 @@ export class SearchApi {
         }
 
         let resultExists = false
-        for (const row of pageData.slice(0, 2)) {
+        for (const row of pageData.slice(0, limit)) {
           const href = row.u
           if (
             href &&

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-import { Image } from '../main/tools/search'
+import { Image, Text } from '../main/tools/search'
 import { ToolChannel } from './events'
 
 contextBridge.exposeInMainWorld('tools', {
@@ -25,6 +25,13 @@ contextBridge.exposeInMainWorld('tools', {
       limit,
     })
   },
+
+  async crawlWebsites(query: string, limit: number) {
+    return ipcRenderer.invoke(ToolChannel.CrawlWebsites, {
+      query,
+      limit,
+    })
+  },
 } satisfies ToolsAPI)
 
 export interface ToolsAPI {
@@ -37,6 +44,7 @@ export interface ToolsAPI {
   ) => Promise<string | Record<string, unknown>>
 
   crawlImages: (query: string, limit: number) => Promise<Image[]>
+  crawlWebsites: (query: string, limit: number) => Promise<Text[]>
 }
 
 declare global {
