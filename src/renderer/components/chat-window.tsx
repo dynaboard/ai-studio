@@ -88,6 +88,7 @@ export function ChatWindow({ id }: { id?: string }) {
   const [userScrolled, setUserScrolled] = useState(false)
   const [runningEmbeddings, setRunningEmbeddings] = useState(false)
   const [shouldRefocusTextarea, setShouldRefocusTextarea] = useState(false)
+  const [hasMessage, setHasMessage] = useState(false)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [base64Image, setBase64Image] = useState<string | null>(null)
@@ -180,7 +181,7 @@ export function ChatWindow({ id }: { id?: string }) {
     [userScrolled],
   )
 
-  const handleMessage = useCallback(
+  const handleFormSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault()
       const data = new FormData(event.currentTarget)
@@ -211,6 +212,18 @@ export function ChatWindow({ id }: { id?: string }) {
       selectedFile,
     ],
   )
+
+  const handleFormChange = useCallback((e) => {
+    const data = new FormData(e.currentTarget)
+    const message = data.get('message') as string | undefined
+    setHasMessage(!!message)
+  }, [])
+
+  const handleFormClick = useCallback(() => {
+    if (textAreaInputRef.current) {
+      textAreaInputRef.current.focus()
+    }
+  }, [])
 
   const handleAbort = useCallback(() => {
     if (id) {
@@ -412,7 +425,8 @@ export function ChatWindow({ id }: { id?: string }) {
 
         <form
           className="relative w-full overflow-hidden rounded-md border border-input"
-          onSubmit={handleMessage}
+          onSubmit={handleFormSubmit}
+          onChange={handleFormChange}
           ref={formRef}
         >
           <Textarea
@@ -426,7 +440,10 @@ export function ChatWindow({ id }: { id?: string }) {
             spellCheck={false}
             disabled={isFormDisabled}
           />
-          <div className="flex items-center justify-end gap-1 p-2">
+          <div
+            className="flex cursor-text items-center justify-end gap-1 p-2"
+            onClick={handleFormClick}
+          >
             {messages.length === 0 && (
               <Button
                 variant="iconButton"
@@ -443,7 +460,7 @@ export function ChatWindow({ id }: { id?: string }) {
               size="sm"
               className="group hover:bg-transparent"
               type="submit"
-              disabled={isFormDisabled}
+              disabled={isFormDisabled || !hasMessage}
             >
               Submit
             </Button>
