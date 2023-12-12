@@ -1,5 +1,7 @@
 import { MODELS } from '@shared/model-list'
+import { LucideArrowRightCircle } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import {
   AlertDialog,
@@ -15,11 +17,15 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { DEFAULT_TEMP, DEFAULT_TOP_P } from '@/providers/chat/manager'
+import { useHistoryManager } from '@/providers/history/manager'
 import {
+  DEFAULT_MODEL,
   useAvailableModels,
   useDownloads,
   useModelManager,
 } from '@/providers/models/manager'
+import { useIsSidebarClosed } from '@/providers/sidebar'
 import { useAllTools } from '@/providers/tools/manager'
 import { BaseTool } from '@/tools/base'
 
@@ -29,6 +35,9 @@ function getModelFiles(modelName: string) {
 
 export function ToolsPage() {
   const allTools = useAllTools()
+  const historyManager = useHistoryManager()
+  const navigate = useNavigate()
+  const isClosed = useIsSidebarClosed()
 
   const [selectedTools, setSelectedTools] = useState<string[]>([])
 
@@ -58,18 +67,28 @@ export function ToolsPage() {
               )
             })}
           </div>
-          {/* TODO: re-add when the codepath to start a thread with tools */}
-          {/* {selectedTools.length > 0 && (
+          {selectedTools.length > 0 && (
             <div
               className={cn(
                 'group fixed bottom-10 z-50 m-auto flex  items-center justify-center',
-                isSidebarClosed ? 'w-full' : 'w-[calc(100%-175px)]',
+                isClosed ? 'w-full' : 'w-[calc(100%-175px)]',
               )}
             >
               <Button
                 className="rounded-3xl drop-shadow-md"
                 onClick={() => {
-                  console.log('start chat with tools: ', selectedTools)
+                  const newThread = historyManager.addThread({
+                    modelID: DEFAULT_MODEL,
+                    title: 'New Thread',
+                    createdAt: new Date(),
+                    messages: [],
+                    temperature: DEFAULT_TEMP,
+                    topP: DEFAULT_TOP_P,
+                    systemPrompt: 'You are a helpful assistant.',
+                    activeToolIDs: selectedTools,
+                  })
+
+                  navigate(`/chats/${newThread.id}`)
                 }}
               >
                 Start chat with {selectedTools.length}{' '}
@@ -77,7 +96,7 @@ export function ToolsPage() {
                 <LucideArrowRightCircle className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </div>
-          )} */}
+          )}
         </ScrollArea>
       </div>
     </div>
@@ -164,8 +183,7 @@ function ToolEntry({
       key={tool.id}
       className={cn(
         'flex min-h-[7rem] flex-col justify-between gap-1 rounded-lg border-2 bg-card p-3 text-card-foreground shadow-sm transition-all',
-        // TODO: re-add when the codepath to start a thread with tools
-        // selectedTools.includes(tool.id) ? 'border-primary' : 'cursor-pointer',
+        selectedTools.includes(tool.id) ? 'border-primary' : 'cursor-pointer',
         !hasRequiredToolModel || isDownloading ? 'border-dashed' : '',
         isDownloading ? 'cursor-not-allowed select-none' : '',
       )}
