@@ -245,14 +245,11 @@ export function ChatWindow({ id }: { id?: string }) {
     if (id && !isCurrentThreadGenerating && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
-  }, [isCurrentThreadGenerating, id])
-
-  useLayoutEffect(() => {
     if (shouldRefocusTextarea && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
       setShouldRefocusTextarea(false)
     }
-  }, [shouldRefocusTextarea])
+  }, [isCurrentThreadGenerating, id, shouldRefocusTextarea])
 
   useEffect(() => {
     if (id) {
