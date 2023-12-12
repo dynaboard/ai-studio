@@ -85,8 +85,8 @@ export function ChatWindow({ id }: { id?: string }) {
   const [base64Image, setBase64Image] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const textAreaInputRef = React.useRef<HTMLTextAreaElement>(null)
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null)
+  const textAreaInputRef = useRef<HTMLTextAreaElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const supportsImages = modelData?.capabilities?.includes('images') ?? false
 
@@ -217,21 +217,18 @@ export function ChatWindow({ id }: { id?: string }) {
     return undefined
   }, [currentThreadFilePath, selectedFile])
 
-  // Side effect for focusing textarea
   useEffect(() => {
-    if (id && textAreaInputRef.current) {
+    if (id && !isCurrentThreadGenerating && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
-  }, [id])
+  }, [isCurrentThreadGenerating, id])
 
-  // Side effect for scrolling to bottom
   useEffect(() => {
     if (id) {
       scrollToBottom('auto', true)
     }
   }, [id, messages, scrollToBottom])
 
-  // Side effect for resetting state when switching threads
   useEffect(() => {
     if (id) {
       setSelectedFile(null)
@@ -246,7 +243,7 @@ export function ChatWindow({ id }: { id?: string }) {
     runningEmbeddings ||
     (fileName !== undefined &&
       !base64Image &&
-      filesManager.isFileArchived(fileName!))
+      filesManager.isFileNotArchived(fileName!))
 
   return (
     // 36px - titlebar height
@@ -330,9 +327,8 @@ export function ChatWindow({ id }: { id?: string }) {
               >
                 {fileName}
               </span>
-              {filesManager.isFileArchived(fileName!) && !runningEmbeddings && (
-                <span className="ml-1">(removed)</span>
-              )}
+              {filesManager.isFileNotArchived(fileName!) &&
+                !runningEmbeddings && <span className="ml-1">(removed)</span>}
             </div>
           ) : null}
 
