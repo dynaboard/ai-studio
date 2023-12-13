@@ -4,9 +4,17 @@ import {
   LucideStopCircle,
   LucideTrash2,
 } from 'lucide-react'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import Textarea from 'react-textarea-autosize'
 import { useValue } from 'signia-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -79,13 +87,15 @@ export function ChatWindow({ id }: { id?: string }) {
 
   const [userScrolled, setUserScrolled] = useState(false)
   const [runningEmbeddings, setRunningEmbeddings] = useState(false)
+  const [shouldRefocusTextarea, setShouldRefocusTextarea] = useState(false)
+  const [hasMessage, setHasMessage] = useState(false)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [base64Image, setBase64Image] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const textAreaInputRef = React.useRef<HTMLTextAreaElement>(null)
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null)
+  const textAreaInputRef = useRef<HTMLTextAreaElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const supportsImages = modelData?.capabilities?.includes('images') ?? false
 
@@ -106,10 +116,16 @@ export function ChatWindow({ id }: { id?: string }) {
 
       if (file.name.endsWith('.pdf')) {
         setRunningEmbeddings(true)
+
         await transformersManager.embedDocument(file.path)
         await filesManager.loadFiles()
         historyManager.changeThreadFilePath(id, file.path)
+
         setRunningEmbeddings(false)
+        toast.success(`Embeddings generated for ${file.name}`)
+
+        // Rely on useState to refocus the textarea
+        setShouldRefocusTextarea(true)
       } else if (
         file.name.endsWith('.png') ||
         file.name.endsWith('.jpg') ||
@@ -165,7 +181,7 @@ export function ChatWindow({ id }: { id?: string }) {
     [userScrolled],
   )
 
-  const handleMessage = useCallback(
+  const handleFormSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault()
       const data = new FormData(event.currentTarget)
@@ -197,6 +213,18 @@ export function ChatWindow({ id }: { id?: string }) {
     ],
   )
 
+  const handleFormChange = useCallback((e) => {
+    const data = new FormData(e.currentTarget)
+    const message = data.get('message') as string | undefined
+    setHasMessage(!!message)
+  }, [])
+
+  const handleFormClick = useCallback(() => {
+    if (textAreaInputRef.current) {
+      textAreaInputRef.current.focus()
+    }
+  }, [])
+
   const handleAbort = useCallback(() => {
     if (id) {
       chatManager.abort(id)
@@ -213,11 +241,15 @@ export function ChatWindow({ id }: { id?: string }) {
     return undefined
   }, [currentThreadFilePath, selectedFile])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (id && !isCurrentThreadGenerating && textAreaInputRef.current) {
       textAreaInputRef.current.focus()
     }
-  }, [isCurrentThreadGenerating, id])
+    if (shouldRefocusTextarea && textAreaInputRef.current) {
+      textAreaInputRef.current.focus()
+      setShouldRefocusTextarea(false)
+    }
+  }, [isCurrentThreadGenerating, id, shouldRefocusTextarea])
 
   useEffect(() => {
     if (id) {
@@ -225,7 +257,6 @@ export function ChatWindow({ id }: { id?: string }) {
     }
   }, [id, messages, scrollToBottom])
 
-  // Unselect file when switching threads
   useEffect(() => {
     if (id) {
       setSelectedFile(null)
@@ -392,7 +423,8 @@ export function ChatWindow({ id }: { id?: string }) {
 
         <form
           className="relative w-full overflow-hidden rounded-md border border-input"
-          onSubmit={handleMessage}
+          onSubmit={handleFormSubmit}
+          onChange={handleFormChange}
           ref={formRef}
         >
           <Textarea
@@ -406,7 +438,10 @@ export function ChatWindow({ id }: { id?: string }) {
             spellCheck={false}
             disabled={isFormDisabled}
           />
-          <div className="flex items-center justify-end gap-1 p-2">
+          <div
+            className="flex cursor-text items-center justify-end gap-1 p-2"
+            onClick={handleFormClick}
+          >
             {messages.length === 0 && (
               <Button
                 variant="iconButton"
@@ -423,7 +458,7 @@ export function ChatWindow({ id }: { id?: string }) {
               size="sm"
               className="group hover:bg-transparent"
               type="submit"
-              disabled={isFormDisabled}
+              disabled={isFormDisabled || !hasMessage}
             >
               Submit
             </Button>

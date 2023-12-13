@@ -52,7 +52,7 @@ export class FilesManager {
   }
 
   isFileArchived(filename: string) {
-    return this.state.embeddingsMeta.some((entry) => entry.name === filename)
+    return !this.state.embeddingsMeta.some((entry) => entry.name === filename)
   }
 }
 

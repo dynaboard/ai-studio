@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Outlet, useLoaderData, useNavigate } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import { suspend } from 'suspend-react'
 
 import { Setup } from '@/components/setup'
@@ -69,6 +70,8 @@ export function App() {
             <DownloadStatus />
           </div>
         </div>
+
+        <Toaster />
       </ToolManagerProvider>
     </ChatManagerProvider>
   )

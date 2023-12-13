@@ -112,6 +112,9 @@ async function createWindow() {
   win.on('blur', windowInactiveListener)
   win.on('show', windowActiveListener)
   win.on('focus', windowActiveListener)
+  win.on('closed', () => {
+    win = null
+  })
 
   // Apply electron-updater
   update(win)

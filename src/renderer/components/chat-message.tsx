@@ -24,7 +24,11 @@ import {
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { cn } from '@/lib/utils'
-import { useChatManager, useCurrentThreadID } from '@/providers/chat/manager'
+import {
+  useChatManager,
+  useCurrentThreadID,
+  useIsCurrentThreadGenerating,
+} from '@/providers/chat/manager'
 import { useMessage } from '@/providers/history/manager'
 import { useAllTools } from '@/providers/tools/manager'
 
@@ -41,6 +45,8 @@ export function ChatMessage({
   const chatManager = useChatManager()
   const possibleMessage = useMessage(messageID)
   const currentThreadID = useCurrentThreadID()
+  const isCurrentThreadGenerating =
+    useIsCurrentThreadGenerating(currentThreadID)
 
   const { ref } = useResizeObserver({
     onResize() {
@@ -126,7 +132,9 @@ export function ChatMessage({
               />
             </form>
           ) : (message.role === 'assistant' || message.role === 'tool') &&
-            message.state === 'pending' ? (
+            message.state === 'pending' &&
+            // Safety check from the actual message's process
+            isCurrentThreadGenerating ? (
             <p className="mb-2 inline-block text-sm leading-relaxed text-gray-900 after:inline-block after:w-0 after:animate-ellipsis after:overflow-hidden after:align-bottom after:content-['…'] last:mb-0">
               Thinking
             </p>

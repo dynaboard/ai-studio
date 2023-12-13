@@ -25,7 +25,10 @@ import {
   useChatManager,
   useCurrentThreadID,
 } from '@/providers/chat/manager'
-import { useHistoryManager } from '@/providers/history/manager'
+import {
+  useHistoryManager,
+  useThreadMessages,
+} from '@/providers/history/manager'
 import { Thread } from '@/providers/history/types'
 
 export function ThreadsSidebar() {
@@ -120,11 +123,13 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
   const currentThreadID = useCurrentThreadID()
   const navigate = useNavigate()
 
-  const matches = useMatches()
-
-  const active = matches[matches.length - 1]?.id === 'thread'
-
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+
+  const messages = useThreadMessages(currentThreadID)
+  const haveMessages = messages.length > 0
+
+  const matches = useMatches()
+  const active = matches[matches.length - 1]?.id === 'thread'
 
   const deleteThread = async (event: React.MouseEvent) => {
     event.preventDefault()
@@ -190,7 +195,13 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
               <Button
                 variant="iconButton"
                 className="hidden h-full w-0 p-0 hover:text-destructive group-hover/node:block group-hover/node:w-auto"
-                onClick={() => setShowDeleteDialog(true)}
+                onClick={async (e) => {
+                  if (!haveMessages) {
+                    await deleteThread(e)
+                  } else {
+                    setShowDeleteDialog(true)
+                  }
+                }}
               >
                 <LucideTrash size={14} />
               </Button>
