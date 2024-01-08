@@ -1,5 +1,5 @@
-import { parseArgs } from 'https://deno.land/std/cli/parse_args.ts'
-import * as path from 'https://deno.land/std/path/mod.ts'
+import { parseArgs } from 'https://deno.land/std@0.208.0/cli/parse_args.ts'
+import * as path from 'https://deno.land/std@0.208.0/path/mod.ts'
 
 const args = parseArgs(Deno.args)
 
@@ -9,7 +9,6 @@ export class DynaboardAIStudio {
   manifest: { name: string }
 
   constructor() {
-    console.log('import', Deno.mainModule)
     const dirname = path.dirname(path.fromFileUrl(Deno.mainModule))
     const manifest = JSON.parse(
       Deno.readTextFileSync(path.join(dirname, 'manifest.json')),
@@ -28,6 +27,7 @@ export class DynaboardAIStudio {
     }
     this.connection = await Deno.connect({
       path: args.socket,
+      // @ts-expect-error for some reason, the unstable typings arent picking this up
       transport: 'unix',
     })
     return this.connection
@@ -35,6 +35,14 @@ export class DynaboardAIStudio {
 
   private getID() {
     return this.manifest.name.replace(/\s+/g, '-').toLowerCase()
+  }
+
+  getParams() {
+    return args.params
+  }
+
+  getContext() {
+    return args.context
   }
 
   async send(message: Record<string, unknown>) {

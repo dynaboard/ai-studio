@@ -137,7 +137,7 @@ export class ElectronToolManager {
     return existsSync(path.join(app.getPath('userData'), 'tools', 'deno'))
   }
 
-  async spawnTool(toolName: string) {
+  async spawnTool(toolName: string, params: Record<string, unknown>) {
     const socketPath = path.join(tmpdir(), 'dynaboard.sock')
 
     const tools = [
@@ -158,6 +158,10 @@ export class ElectronToolManager {
       path.join(tool.path, tool.main),
       '--socket',
       socketPath,
+      '--params',
+      JSON.stringify(params),
+      '--context',
+      JSON.stringify({}),
     ])
 
     process.stderr.on('data', (data) => {
@@ -228,8 +232,8 @@ export class ElectronToolManager {
       return this.hasToolRunner()
     })
 
-    ipcMain.handle(ToolChannel.SpawnTool, async (_, { toolName }) => {
-      return this.spawnTool(toolName)
+    ipcMain.handle(ToolChannel.SpawnTool, async (_, { toolName, params }) => {
+      return this.spawnTool(toolName, params)
     })
   }
 }

@@ -8,5 +8,6 @@
     }
   ],
   "deno.enablePaths": ["resources/base-tools"],
-  "deno.unstable": true
+  "deno.unstable": true,
+  "deno.cacheOnSave": true
 }

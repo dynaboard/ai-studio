@@ -1,6 +1,6 @@
 {
   "name": "Article Summarizer",
-  "description": "Summarize an article",
+  "description": "Summarize an article from the internet",
   "requiredModels": ["Mistral 7B Instruct v0.1"],
   "main": "main.ts"
 }
