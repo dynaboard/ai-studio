@@ -1,6 +1,10 @@
 import { ToolChannel } from '@preload/events'
+import { spawn } from 'child_process'
 import { app, ipcMain } from 'electron'
-import { readFileSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
+import { readdir, readFile, stat } from 'fs/promises'
+import { createServer, Server } from 'net'
+import { tmpdir } from 'os'
 import path from 'path'
 
 import {
@@ -16,6 +20,8 @@ const SERVER_ID = 'TOOL_SERVER'
 export class ElectronToolManager {
   private serverReady: Promise<unknown>
 
+  private conn: Server
+
   constructor(readonly llamaServerManager: ElectronLlamaServerManager) {
     this.serverReady = llamaServerManager.launchServer({
       id: SERVER_ID,
@@ -26,6 +32,24 @@ export class ElectronToolManager {
       ),
       port: '8001',
     })
+
+    this.conn = createServer(
+      {
+        keepAlive: true,
+      },
+      (socket) => {
+        socket.on('data', (data) => {
+          try {
+            const json = JSON.parse(data.toString())
+            console.log(json)
+          } catch {
+            // ignore invalid JSON for now
+          }
+        })
+      },
+    )
+
+    this.conn.listen(path.join(tmpdir(), 'dynaboard.sock'))
   }
 
   async getTool(prompt: string, tools: Record<string, unknown>[]) {
@@ -108,6 +132,60 @@ export class ElectronToolManager {
     return results
   }
 
+  async hasToolRunner() {
+    return existsSync(path.join(app.getPath('userData'), 'tools', 'deno'))
+  }
+
+  async spawnTool(toolName: string) {
+    const socketPath = path.join(tmpdir(), 'dynaboard.sock')
+
+    const tools = await this.findLocalTools()
+
+    const tool = tools.find((t) => t.name === toolName)
+
+    if (!tool) {
+      throw new Error(`Tool "${toolName}" not found`)
+    }
+
+    const process = spawn(path.join(app.getPath('userData'), 'tools', 'deno'), [
+      'run',
+      '-A',
+      '--unstable',
+      path.join(tool.path, tool.main),
+      '--socket',
+      socketPath,
+    ])
+
+    process.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`)
+    })
+  }
+
+  private async findLocalTools() {
+    const dir = await readdir(path.join(app.getPath('userData'), 'tools'))
+    const tools: { name: string; path: string; main: string }[] = []
+
+    for (const entry of dir) {
+      const entryPath = path.join(app.getPath('userData'), 'tools', entry)
+      const stats = await stat(entryPath)
+      if (stats.isDirectory()) {
+        // check for manifest.json
+        if (existsSync(path.join(entryPath, 'manifest.json'))) {
+          const manifest = JSON.parse(
+            await readFile(path.join(entryPath, 'manifest.json'), 'utf-8'),
+          )
+          tools.push({
+            name: manifest.name,
+            path: entryPath,
+            main: manifest.main,
+          })
+        }
+      }
+    }
+
+    return tools
+  }
+
   addClientEventHandlers() {
     ipcMain.handle(ToolChannel.GetTool, async (_, { prompt, tools }) => {
       return await this.getTool(prompt, tools)
@@ -119,11 +197,20 @@ export class ElectronToolManager {
         return await this.fetch(url, request, resultType)
       },
     )
+
     ipcMain.handle(ToolChannel.CrawlImages, async (_, { query, limit }) => {
       return await this.crawlImages(query, limit)
     })
     ipcMain.handle(ToolChannel.CrawlWebsites, async (_, { query, limit }) => {
       return await this.crawlWebsites(query, limit)
+    })
+
+    ipcMain.handle(ToolChannel.HasToolRunner, async () => {
+      return this.hasToolRunner()
+    })
+
+    ipcMain.handle(ToolChannel.SpawnTool, async (_, { toolName }) => {
+      return this.spawnTool(toolName)
     })
   }
 }

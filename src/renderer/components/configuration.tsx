@@ -1,4 +1,5 @@
 import { LucideSettings } from 'lucide-react'
+import { useEffect } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -11,6 +12,7 @@ import { useCurrentThreadID } from '@/providers/chat/manager'
 import {
   useActiveTools,
   useAllTools,
+  useIsSettingUpTools,
   useToolManager,
 } from '@/providers/tools/manager'
 
@@ -23,6 +25,15 @@ export function ParametersConfig({ fileName }: { fileName?: string }) {
   const allTools = useAllTools()
   const activeTools = useActiveTools(threadID)
   const toolManager = useToolManager()
+
+  const settingUpTools = useIsSettingUpTools()
+
+  useEffect(() => {
+    // this is weird... but it works
+    setTimeout(() => void toolManager.setupTools(), 500)
+  }, [toolManager])
+
+  console.log('SETTING UP TOOLS', settingUpTools)
 
   return (
     <div className="flex items-center space-x-2">
@@ -70,37 +81,48 @@ export function ParametersConfig({ fileName }: { fileName?: string }) {
                   </div>
                 </div>
                 <div className="mt-6 flex flex-1 flex-col gap-4">
-                  {allTools.map((tool) => (
-                    <div key={tool.id} className="flex flex-col">
-                      <div className="flex gap-2">
-                        <Checkbox
-                          id={`tool-${tool.id}`}
-                          // defaultChecked={activeTools.includes(tool)}
-                          checked={activeTools.includes(tool)}
-                          onCheckedChange={(checked: boolean) => {
-                            if (threadID) {
-                              if (checked) {
-                                toolManager.enableTool(threadID, tool.id)
-                              } else {
-                                toolManager.disableTool(threadID, tool.id)
-                              }
-                            }
-                          }}
-                        />
-                        <div className="flex flex-col leading-none">
-                          <label
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed"
-                            htmlFor={`tool-${tool.id}`}
-                          >
-                            {tool.name}
-                          </label>
-                          <p className="text-xs text-muted-foreground">
-                            {tool.description}
-                          </p>
-                        </div>
+                  {settingUpTools ? (
+                    <div className="flex flex-col">
+                      <div className="text-sm  leading-normal tracking-tight">
+                        Setting up tools...
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        This might take a few seconds.
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    allTools.map((tool) => (
+                      <div key={tool.id} className="flex flex-col">
+                        <div className="flex gap-2">
+                          <Checkbox
+                            id={`tool-${tool.id}`}
+                            // defaultChecked={activeTools.includes(tool)}
+                            checked={activeTools.includes(tool)}
+                            onCheckedChange={(checked: boolean) => {
+                              if (threadID) {
+                                if (checked) {
+                                  toolManager.enableTool(threadID, tool.id)
+                                } else {
+                                  toolManager.disableTool(threadID, tool.id)
+                                }
+                              }
+                            }}
+                          />
+                          <div className="flex flex-col leading-none">
+                            <label
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed"
+                              htmlFor={`tool-${tool.id}`}
+                            >
+                              {tool.name}
+                            </label>
+                            <p className="text-xs text-muted-foreground">
+                              {tool.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

@@ -8,13 +8,17 @@ import { BaseTool, BaseToolManagers, IBaseTool } from '@/tools/base'
 type ToolManagerState = {
   tools: BaseTool[]
   activeToolIDs: Set<string>
+  settingUpTools: boolean
 }
 
 export class ToolManager {
   private readonly _state = atom<ToolManagerState>('ModelManager._state', {
     tools: [],
     activeToolIDs: new Set(),
+    settingUpTools: false,
   })
+
+  private downloadingTools = false
 
   constructor(readonly managers: Omit<BaseToolManagers, 'toolManager'>) {
     this.getAllTools({
@@ -91,6 +95,38 @@ export class ToolManager {
     return this.state.tools.find((tool) => tool.id === toolID)
   }
 
+  async hasToolRunner() {
+    return window.tools.hasToolRunner()
+  }
+
+  async setupTools() {
+    if (this.downloadingTools) {
+      return
+    }
+    const haveToolRunner = await this.hasToolRunner()
+    if (haveToolRunner) {
+      return
+    }
+
+    this._state.update((state) => {
+      return {
+        ...state,
+        settingUpTools: true,
+      }
+    })
+    this.downloadingTools = true
+
+    await window.downloads.downloadDeno()
+
+    this.downloadingTools = false
+    this._state.update((state) => {
+      return {
+        ...state,
+        settingUpTools: false,
+      }
+    })
+  }
+
   get allToolJSON() {
     return this.state.tools.map((tool) => ({
       name: tool.name,
@@ -158,5 +194,15 @@ export function useActiveTools(threadID?: string) {
       return toolManager.state.tools.filter((tool) => ids.includes(tool.id))
     },
     [threadID, toolManager.state, historyManager.state],
+  )
+}
+
+export function useIsSettingUpTools() {
+  const toolManager = useToolManager()
+
+  return useValue(
+    'useIsSettingUpTools',
+    () => toolManager.state.settingUpTools,
+    [toolManager.state],
   )
 }

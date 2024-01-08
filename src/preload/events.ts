@@ -26,5 +26,14 @@ export enum ToolChannel {
   GetTool = 'tools:getTool',
   Fetch = 'tools:fetch',
   CrawlImages = 'tools:crawlImages',
-  CrawlWebsites = 'tools.crawlWebsites',
+  CrawlWebsites = 'tools:crawlWebsites',
+  HasToolRunner = 'tools:hasToolRunner',
+  SpawnTool = 'tools:spawnTool',
+}
+
+export enum DownloadsChannel {
+  DownloadComplete = 'downloads:downloadComplete',
+  DownloadFile = 'downloads:downloadFile',
+  UnzipDownload = 'downloads:unzipDownload',
+  UnzipDownloadComplete = 'downloads:unzipDownloadComplete',
 }

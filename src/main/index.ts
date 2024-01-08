@@ -4,6 +4,7 @@ import { release } from 'node:os'
 import { join } from 'node:path'
 
 import { ElectronChatManager } from '@/managers/chats'
+import { ElectronDownloadsManager } from '@/managers/downloads'
 import { EmbeddingsManager } from '@/managers/embeddings'
 import { ElectronFilesManager } from '@/managers/files'
 import { ElectronLlamaServerManager } from '@/managers/llama-server'
@@ -31,6 +32,7 @@ let modelManager: ElectronModelManager | null = null
 let chatManager: ElectronChatManager | null = null
 let embeddingsManager: EmbeddingsManager | null = null
 let filesManager: ElectronFilesManager | null = null
+let downloadManager: ElectronDownloadsManager | null = null
 const vectorStoreManager = new ElectronVectorStoreManager()
 const llamaServerManager = new ElectronLlamaServerManager()
 const toolManager = new ElectronToolManager(llamaServerManager)
@@ -67,6 +69,7 @@ async function createWindow() {
     embeddingsManager,
     llamaServerManager,
   )
+  downloadManager = new ElectronDownloadsManager(win)
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -124,6 +127,7 @@ async function createWindow() {
   embeddingsManager.addClientEventHandlers()
   toolManager.addClientEventHandlers()
   filesManager.addClientEventHandlers()
+  downloadManager.addClientEventHandlers()
 }
 
 app.whenReady().then(createWindow)

@@ -54,7 +54,7 @@ export function App() {
             />
           </div>
         ) : null}
-        <div className="h-screen w-screen overflow-hidden">
+        <div className="h-[calc(100vh-24px)] w-screen overflow-hidden">
           <div className="grid h-full grid-rows-[auto,24px]">
             <div className="grid min-h-full grid-cols-[min-content,_minmax(0,_1fr)]">
               <Sidebar />

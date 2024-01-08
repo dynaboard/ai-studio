@@ -32,6 +32,14 @@ contextBridge.exposeInMainWorld('tools', {
       limit,
     })
   },
+
+  async hasToolRunner() {
+    return ipcRenderer.invoke(ToolChannel.HasToolRunner)
+  },
+
+  async spawnTool(toolName: string) {
+    return ipcRenderer.invoke(ToolChannel.SpawnTool, { toolName })
+  },
 } satisfies ToolsAPI)
 
 export interface ToolsAPI {
@@ -45,6 +53,10 @@ export interface ToolsAPI {
 
   crawlImages: (query: string, limit: number) => Promise<Image[]>
   crawlWebsites: (query: string, limit: number) => Promise<Text[]>
+
+  hasToolRunner: () => Promise<boolean>
+
+  spawnTool: (toolName: string) => Promise<void>
 }
 
 declare global {
