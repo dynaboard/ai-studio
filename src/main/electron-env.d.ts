@@ -1,4 +1,3 @@
-/// <reference types="vite-electron-plugin/electron-env" />
 /// <reference types="electron-vite/node" />
 
 declare namespace NodeJS {
@@ -9,4 +8,10 @@ declare namespace NodeJS {
     /** /dist/ or /public/ */
     VITE_PUBLIC: string
   }
+}
+
+// node asset, but we don't want vite to see it as something to parse (useful for JSON)
+declare module '*?asset&url' {
+  const src: string
+  export default src
 }

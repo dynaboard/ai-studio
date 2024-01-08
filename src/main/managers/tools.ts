@@ -13,6 +13,7 @@ import {
 } from '@/managers/llama-server'
 
 import multiToolGrammar from '../../../resources/grammars/multi-tool.gbnf?asset'
+import { BASE_TOOL_PATHS } from '../tools/base-tools'
 import { Image, SearchApi } from '../tools/search'
 
 const SERVER_ID = 'TOOL_SERVER'
@@ -139,7 +140,10 @@ export class ElectronToolManager {
   async spawnTool(toolName: string) {
     const socketPath = path.join(tmpdir(), 'dynaboard.sock')
 
-    const tools = await this.findLocalTools()
+    const tools = [
+      ...(await this.findLocalTools()),
+      ...(await this.loadBaseTools()),
+    ]
 
     const tool = tools.find((t) => t.name === toolName)
 
@@ -181,6 +185,21 @@ export class ElectronToolManager {
           })
         }
       }
+    }
+
+    return tools
+  }
+
+  private async loadBaseTools() {
+    const tools: { name: string; path: string; main: string }[] = []
+
+    for (const tool of BASE_TOOL_PATHS) {
+      const manifest = JSON.parse(await readFile(tool.manifestPath, 'utf-8'))
+      tools.push({
+        name: manifest.name,
+        path: path.dirname(tool.toolPath),
+        main: manifest.main,
+      })
     }
 
     return tools
