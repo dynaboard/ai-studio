@@ -27,7 +27,6 @@ export class DynaboardAIStudio {
     }
     this.connection = await Deno.connect({
       path: args.socket,
-      // @ts-expect-error for some reason, the unstable typings arent picking this up
       transport: 'unix',
     })
     return this.connection
@@ -38,18 +37,19 @@ export class DynaboardAIStudio {
   }
 
   getParams() {
-    return args.params
+    return JSON.parse(args.params)
   }
 
   getContext() {
-    return args.context
+    return JSON.parse(args.context)
   }
 
-  async send(message: Record<string, unknown>) {
+  async send(message: unknown) {
     const messageWithID = {
-      ...message,
+      message,
       type: 'message',
       id: this.getID(),
+      resolverID: args.resolverID,
     }
     const contents = JSON.stringify(messageWithID)
 

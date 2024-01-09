@@ -2,5 +2,17 @@
   "name": "Random Number Generator",
   "description": "Generate a random number given a min and max",
   "requiredModels": ["Mistral 7B Instruct v0.1"],
-  "main": "main.ts"
+  "main": "main.ts",
+  "parameters": [
+    {
+      "name": "min",
+      "description": "The minimum number that can be generated",
+      "type": "number"
+    },
+    {
+      "name": "max",
+      "description": "The maximum number that can be generated",
+      "type": "number"
+    }
+  ]
 }

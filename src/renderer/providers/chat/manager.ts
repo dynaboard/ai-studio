@@ -1,3 +1,4 @@
+import { ToolParameter } from '@shared/tools'
 import { createContext, useContext } from 'react'
 import { atom, computed } from 'signia'
 import { useValue } from 'signia-react'
@@ -229,9 +230,10 @@ export class ChatManager {
               previousToolCalls,
             }
 
-            result = await possibleTool.tool.run(
+            result = await this.toolManager.runTool(
+              possibleTool.tool,
               ctx,
-              ...(possibleTool.parameters as unknown[]),
+              possibleTool.parameters as unknown as ToolParameter[],
             )
 
             this.historyManager.addToolCall({

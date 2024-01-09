@@ -1,12 +1,13 @@
+import { Tool, ToolCallingContext, ToolParameter } from '@shared/tools'
 import { createContext, useContext } from 'react'
 import { atom } from 'signia'
 import { useValue } from 'signia-react'
 
 import { useHistoryManager } from '@/providers/history/manager'
-import { BaseTool, BaseToolManagers, IBaseTool } from '@/tools/base'
+import { BaseToolManagers } from '@/tools/base'
 
 type ToolManagerState = {
-  tools: BaseTool[]
+  tools: Tool[]
   activeToolIDs: Set<string>
   settingUpTools: boolean
 }
@@ -21,25 +22,20 @@ export class ToolManager {
   private downloadingTools = false
 
   constructor(readonly managers: Omit<BaseToolManagers, 'toolManager'>) {
-    this.getAllTools({
-      ...managers,
-      toolManager: this,
-    }).then((tools) => {
+    window.tools.getAvailableTools().then((tools) => {
       this._state.update((state) => {
         return {
           ...state,
           tools,
         }
       })
-
-      // console.log('Tools loaded:', this.toolJSON)
     })
   }
 
   async getToolsForPrompt(
     prompt: string,
     toolIDs: string[],
-  ): Promise<{ tool: BaseTool; parameters: unknown }[] | null> {
+  ): Promise<{ tool: Tool; parameters: unknown }[] | null> {
     const response = await window.tools.getTool(
       prompt,
       this.getToolJSON(toolIDs),
@@ -66,6 +62,19 @@ export class ToolManager {
       console.error('Could not parse tool response:', err)
       return null
     }
+  }
+
+  async runTool(
+    tool: Tool,
+    context: ToolCallingContext,
+    parameters: ToolParameter[],
+  ) {
+    const response = await window.tools.spawnTool(
+      tool.name,
+      context,
+      parameters,
+    )
+    return response
   }
 
   enableTool(threadID: string, toolID: string) {
@@ -153,20 +162,6 @@ export class ToolManager {
 
   get state() {
     return this._state.value
-  }
-
-  private async getAllTools(managers: BaseToolManagers) {
-    const result = await Promise.all(
-      Object.entries(
-        import.meta.glob<false, 'default', { default: IBaseTool }>([
-          '../../tools/*.ts',
-        ]),
-      )
-        .filter(([k]) => !k.endsWith('base.ts'))
-        .map(([_, v]) => v()),
-    )
-
-    return result.map((r) => new r.default(managers))
   }
 }
 

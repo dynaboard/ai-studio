@@ -1,9 +1,14 @@
+import { Tool, ToolCallingContext, ToolParameter } from '@shared/tools'
 import { contextBridge, ipcRenderer } from 'electron'
 
 import { Image, Text } from '../main/tools/search'
 import { ToolChannel } from './events'
 
 contextBridge.exposeInMainWorld('tools', {
+  getAvailableTools() {
+    return ipcRenderer.invoke(ToolChannel.GetAvailableTools)
+  },
+
   getTool(prompt: string, tools: Record<string, unknown>[]) {
     return ipcRenderer.invoke(ToolChannel.GetTool, {
       prompt,
@@ -37,12 +42,22 @@ contextBridge.exposeInMainWorld('tools', {
     return ipcRenderer.invoke(ToolChannel.HasToolRunner)
   },
 
-  async spawnTool(toolName: string) {
-    return ipcRenderer.invoke(ToolChannel.SpawnTool, { toolName })
+  async spawnTool(
+    toolName: string,
+    context: ToolCallingContext,
+    parameters: ToolParameter[],
+  ) {
+    return ipcRenderer.invoke(ToolChannel.SpawnTool, {
+      toolName,
+      context,
+      parameters,
+    })
   },
 } satisfies ToolsAPI)
 
 export interface ToolsAPI {
+  getAvailableTools: () => Promise<Tool[]>
+
   getTool: (prompt: string, tools: Record<string, unknown>[]) => Promise<string>
 
   fetch: (
@@ -56,7 +71,11 @@ export interface ToolsAPI {
 
   hasToolRunner: () => Promise<boolean>
 
-  spawnTool: (toolName: string) => Promise<void>
+  spawnTool: (
+    toolID: string,
+    context: ToolCallingContext,
+    parameters: ToolParameter[],
+  ) => Promise<unknown>
 }
 
 declare global {

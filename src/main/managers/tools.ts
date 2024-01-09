@@ -1,5 +1,7 @@
 import { ToolChannel } from '@preload/events'
-import { spawn } from 'child_process'
+import { Tool, ToolCallingContext } from '@shared/tools'
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import { randomUUID } from 'crypto'
 import { app, ipcMain } from 'electron'
 import { existsSync, readFileSync } from 'fs'
 import { readdir, readFile, stat } from 'fs/promises'
@@ -23,6 +25,14 @@ export class ElectronToolManager {
 
   private conn: Server
 
+  toolCalls = new Map<
+    string,
+    {
+      resolver: (...args: unknown[]) => void
+      process: ChildProcessWithoutNullStreams
+    }
+  >()
+
   constructor(readonly llamaServerManager: ElectronLlamaServerManager) {
     this.serverReady = llamaServerManager.launchServer({
       id: SERVER_ID,
@@ -42,7 +52,19 @@ export class ElectronToolManager {
         socket.on('data', (data) => {
           try {
             const json = JSON.parse(data.toString())
-            console.log(json)
+
+            if (json.type === 'message') {
+              const call = this.toolCalls.get(json.resolverID)
+              if (!call) {
+                console.error('Unknown tool call:', json)
+              } else {
+                call.resolver(json.message)
+                call.process.kill()
+                this.toolCalls.delete(json.resolverID)
+              }
+            } else {
+              console.error('Unknown message type:', json)
+            }
           } catch {
             // ignore invalid JSON for now
           }
@@ -137,7 +159,11 @@ export class ElectronToolManager {
     return existsSync(path.join(app.getPath('userData'), 'tools', 'deno'))
   }
 
-  async spawnTool(toolName: string, params: Record<string, unknown>) {
+  async spawnTool(
+    toolName: string,
+    context: ToolCallingContext,
+    params: Record<string, unknown>,
+  ) {
     const socketPath = path.join(tmpdir(), 'dynaboard.sock')
 
     const tools = [
@@ -151,27 +177,44 @@ export class ElectronToolManager {
       throw new Error(`Tool "${toolName}" not found`)
     }
 
-    const process = spawn(path.join(app.getPath('userData'), 'tools', 'deno'), [
-      'run',
-      '-A',
-      '--unstable',
-      path.join(tool.path, tool.main),
-      '--socket',
-      socketPath,
-      '--params',
-      JSON.stringify(params),
-      '--context',
-      JSON.stringify({}),
-    ])
+    return new Promise((resolve) => {
+      const id = randomUUID()
+      const process = spawn(
+        path.join(app.getPath('userData'), 'tools', 'deno'),
+        [
+          'run',
+          '-A',
+          '--unstable',
+          path.join(tool.path, tool.main),
+          '--socket',
+          socketPath,
+          '--params',
+          JSON.stringify(params),
+          '--context',
+          JSON.stringify(context),
+          '--resolverID',
+          id,
+        ],
+      )
 
-    process.stderr.on('data', (data) => {
-      console.error(`stderr: ${data}`)
+      process.stdout.on('data', (data) => {
+        console.log(`${data}`)
+      })
+
+      process.stderr.on('data', (data) => {
+        console.error(`stderr: ${data}`)
+      })
+
+      this.toolCalls.set(id, {
+        resolver: resolve,
+        process,
+      })
     })
   }
 
   private async findLocalTools() {
     const dir = await readdir(path.join(app.getPath('userData'), 'tools'))
-    const tools: { name: string; path: string; main: string }[] = []
+    const tools: Tool[] = []
 
     for (const entry of dir) {
       const entryPath = path.join(app.getPath('userData'), 'tools', entry)
@@ -183,9 +226,13 @@ export class ElectronToolManager {
             await readFile(path.join(entryPath, 'manifest.json'), 'utf-8'),
           )
           tools.push({
+            id: manifest.name.replace(/\s/g, '-').toLowerCase(),
             name: manifest.name,
+            description: manifest.description,
             path: entryPath,
             main: manifest.main,
+            requiredModels: manifest.requiredModels,
+            parameters: manifest.parameters,
           })
         }
       }
@@ -195,18 +242,26 @@ export class ElectronToolManager {
   }
 
   private async loadBaseTools() {
-    const tools: { name: string; path: string; main: string }[] = []
+    const tools: Tool[] = []
 
     for (const tool of BASE_TOOL_PATHS) {
       const manifest = JSON.parse(await readFile(tool.manifestPath, 'utf-8'))
       tools.push({
+        id: manifest.name.replace(/\s/g, '-').toLowerCase(),
         name: manifest.name,
         path: path.dirname(tool.toolPath),
+        description: manifest.description,
         main: manifest.main,
+        requiredModels: manifest.requiredModels,
+        parameters: manifest.parameters,
       })
     }
 
     return tools
+  }
+
+  async getAvailableTools() {
+    return [...(await this.findLocalTools()), ...(await this.loadBaseTools())]
   }
 
   addClientEventHandlers() {
@@ -232,8 +287,15 @@ export class ElectronToolManager {
       return this.hasToolRunner()
     })
 
-    ipcMain.handle(ToolChannel.SpawnTool, async (_, { toolName, params }) => {
-      return this.spawnTool(toolName, params)
+    ipcMain.handle(
+      ToolChannel.SpawnTool,
+      async (_, { toolName, context, parameters }) => {
+        return this.spawnTool(toolName, context, parameters)
+      },
+    )
+
+    ipcMain.handle(ToolChannel.GetAvailableTools, async () => {
+      return this.getAvailableTools()
     })
   }
 }

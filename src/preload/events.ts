@@ -23,6 +23,7 @@ export enum UsageChannel {
 }
 
 export enum ToolChannel {
+  GetAvailableTools = 'tools:getAvailableTools',
   GetTool = 'tools:getTool',
   Fetch = 'tools:fetch',
   CrawlImages = 'tools:crawlImages',
