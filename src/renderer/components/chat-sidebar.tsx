@@ -188,7 +188,7 @@ function Node({ node, style, dragHandle }: NodeRendererProps<Thread>) {
             to={`/chats/${node.data.id}`}
             className="grid h-full group-hover/node:grid-cols-[minmax(0,1fr),_24px]"
           >
-            <div className="h-full overflow-hidden truncate pl-2">
+            <div className="h-full overflow-hidden truncate px-2">
               <span className="text-sm leading-[30px]">{node.data.title}</span>
             </div>
             <div className="flex h-full items-center">

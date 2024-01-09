@@ -188,17 +188,37 @@ export class ChatManager {
         !thread.activeToolIDs || thread.activeToolIDs.length === 0
       if (thread.activeToolIDs && thread.activeToolIDs.length > 0) {
         console.log('Checking if prompt can be handled by a tool')
+
+        let assistantMessageID = crypto.randomUUID()
+        const newAssistantMessage: Message = {
+          id: assistantMessageID,
+          role: 'tool',
+          message: '',
+          state: 'pending',
+
+          date: new Date().toISOString(),
+        }
+
+        this.historyManager.addMessage({
+          threadID,
+          message: newAssistantMessage,
+        })
+
         const possibleTools = await this.toolManager.getToolsForPrompt(
           message,
           thread.activeToolIDs,
         )
+
+        this.historyManager.deleteMessage({
+          threadID,
+          messageID: assistantMessageID,
+        })
+
         if (possibleTools && possibleTools.length > 0) {
           console.log('Found a tools:', possibleTools)
 
           let result: unknown
           const previousToolCalls: { id: string; result: unknown }[] = []
-
-          let assistantMessageID: string
 
           for (const [_idx, possibleTool] of possibleTools.entries()) {
             console.log(
