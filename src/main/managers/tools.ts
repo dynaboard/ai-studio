@@ -9,6 +9,7 @@ import { createServer, Server } from 'net'
 import { tmpdir } from 'os'
 import path from 'path'
 
+import { ElectronChatManager } from '@/managers/chats'
 import {
   CompletionParams,
   ElectronLlamaServerManager,
@@ -33,7 +34,10 @@ export class ElectronToolManager {
     }
   >()
 
-  constructor(readonly llamaServerManager: ElectronLlamaServerManager) {
+  constructor(
+    readonly llamaServerManager: ElectronLlamaServerManager,
+    readonly chatManager: ElectronChatManager,
+  ) {
     this.serverReady = llamaServerManager.launchServer({
       id: SERVER_ID,
       modelPath: path.join(
@@ -49,18 +53,51 @@ export class ElectronToolManager {
         keepAlive: true,
       },
       (socket) => {
-        socket.on('data', (data) => {
+        socket.on('data', async (data) => {
           try {
             const json = JSON.parse(data.toString())
 
-            if (json.type === 'message') {
-              const call = this.toolCalls.get(json.resolverID)
+            if (json.type === 'reply') {
+              const call = this.toolCalls.get(json.id)
               if (!call) {
                 console.error('Unknown tool call:', json)
               } else {
                 call.resolver(json.message)
                 call.process.kill()
-                this.toolCalls.delete(json.resolverID)
+                this.toolCalls.delete(json.id)
+              }
+            } else if (json.type === 'chat-message') {
+              const message = json.message
+
+              // we need to set the full model path
+              if (message.modelPath) {
+                message.modelPath = path.join(
+                  app.getPath('userData'),
+                  'models',
+                  json.modelPath,
+                )
+              }
+
+              if (json.message.outOfBand) {
+                const response = await chatManager.sendOutOfBandMessage(
+                  json.message,
+                )
+                socket.write(
+                  JSON.stringify({
+                    type: 'host',
+                    message: response,
+                    id: json.id,
+                  }),
+                )
+              } else {
+                const response = chatManager.sendMessage(json.message)
+                socket.write(
+                  JSON.stringify({
+                    type: 'host',
+                    message: response,
+                    id: json.id,
+                  }),
+                )
               }
             } else {
               console.error('Unknown message type:', json)

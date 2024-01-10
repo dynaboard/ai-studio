@@ -35,7 +35,7 @@ let filesManager: ElectronFilesManager | null = null
 let downloadManager: ElectronDownloadsManager | null = null
 const vectorStoreManager = new ElectronVectorStoreManager()
 const llamaServerManager = new ElectronLlamaServerManager()
-const toolManager = new ElectronToolManager(llamaServerManager)
+let toolManager: ElectronToolManager | null = null
 
 const usageManager = new SystemUsageManager(llamaServerManager)
 usageManager.addClientEventHandlers()
@@ -69,6 +69,7 @@ async function createWindow() {
     embeddingsManager,
     llamaServerManager,
   )
+  toolManager = new ElectronToolManager(llamaServerManager, chatManager)
   downloadManager = new ElectronDownloadsManager(win)
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

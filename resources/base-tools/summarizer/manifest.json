@@ -1,6 +1,13 @@
 {
-  "name": "Article Summarizer",
+  "name": "Summarize Article",
   "description": "Summarize an article from the internet",
   "requiredModels": ["Mistral 7B Instruct v0.1"],
-  "main": "main.ts"
+  "main": "main.ts",
+  "parameters": [
+    {
+      "name": "url",
+      "description": "The URL of the article to summarize",
+      "type": "string"
+    }
+  ]
 }

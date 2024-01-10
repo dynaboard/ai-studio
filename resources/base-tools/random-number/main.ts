@@ -24,6 +24,6 @@ const buffer = new Uint32Array(1)
 crypto.getRandomValues(buffer)
 const randomNumber = (buffer[0] / 0xffffffff) * range + minInput
 
-await studio.send(Math.round(randomNumber))
+await studio.reply(Math.round(randomNumber))
 
 Deno.exit(0)

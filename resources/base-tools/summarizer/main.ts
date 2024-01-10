@@ -1,4 +1,5 @@
 import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 import { Readability } from 'https://esm.sh/@mozilla/readability@0.4.4'
 
 import { DynaboardAIStudio } from '../dynaboard.ts'
@@ -18,16 +19,20 @@ const studio = new DynaboardAIStudio()
 const params = studio.getParams()
 const ctx = studio.getContext()
 
-console.log('CTX', ctx)
-console.log('PARAMS', params)
-
-const articleURL = params.url
+const [{ value: articleURL }] = z
+  .array(
+    z.object({
+      name: z.string(),
+      value: z.string(),
+    }),
+  )
+  .parse(params)
 
 console.log(`Summarizing article at ${articleURL}`)
 
 const article = await getReadableDocument(articleURL)
 
-const response = await new DynaboardAIStudio().sendChatMessage({
+const response = await studio.sendChatMessage({
   message: `Can you summarize this article for me? The article is called "${article?.title}" and it's contents are: "${article?.textContent}"`,
   assistantMessageID: ctx.assistantMessageID,
   threadID: ctx.threadID,
@@ -41,8 +46,6 @@ const response = await new DynaboardAIStudio().sendChatMessage({
 
 console.log(response)
 
-// await new DynaboardAIStudio().sendChatMessage({
-//   randomNumber: Math.round(randomNumber),
-// })
+studio.reply('Not working yet...')
 
 Deno.exit(0)

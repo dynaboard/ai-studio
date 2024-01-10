@@ -44,12 +44,11 @@ export class DynaboardAIStudio {
     return JSON.parse(args.context)
   }
 
-  async send(message: unknown) {
+  async reply(message: unknown) {
     const messageWithID = {
       message,
-      type: 'message',
-      id: this.getID(),
-      resolverID: args.resolverID,
+      type: 'reply',
+      id: args.resolverID,
     }
     const contents = JSON.stringify(messageWithID)
 
@@ -61,9 +60,9 @@ export class DynaboardAIStudio {
 
   async sendChatMessage(messageOptions: Record<string, unknown>) {
     const messageWithID = {
-      ...messageOptions,
+      message: messageOptions,
       type: 'chat-message',
-      id: this.getID(),
+      id: crypto.randomUUID(),
     }
 
     const contents = JSON.stringify(messageWithID)
